@@ -24,7 +24,9 @@ class TestObject(Object):
 class Actions(Object):
     actions = {
         "get": Action(parameters={"id": ObjectField(TestObject)}, return_value=StringField(), exec_fn=get),
-        "get_null": Action(parameters={"id": ObjectField(TestObject, nullable=True)}, return_value=StringField(), exec_fn=get)
+        "get_null": Action(parameters={"id": ObjectField(TestObject, nullable=True)}, return_value=StringField(), exec_fn=get),
+        "get_null_default": Action(parameters={"id": ObjectField(TestObject, nullable=True, default={"int1": 10, "int2": 20})},
+                                   return_value=StringField(), exec_fn=get)
     }
 
 
@@ -47,6 +49,7 @@ class Test(GraphQLTestCase):
                 type Query {
                   get(id: TestObject!): String!
                   getNull(id: TestObject): String!
+                  getNullDefault(id: TestObject = {int1: 10, int2: 20}): String!
                 }
                 
                 input TestObject {
@@ -116,6 +119,42 @@ class Test(GraphQLTestCase):
         exp = {
           "data": {
             "getNull": "no params passed"
+          }
+        }
+
+        self.assertResponseNoErrors(resp)
+        self.assertJSONEqual(resp.content, exp)
+
+    def test_request_null_default_no_param(self):
+        resp = self.query(
+            """
+            query{
+              getNullDefault
+            }
+            """
+        )
+
+        exp = {
+          "data": {
+            "getNullDefault": "10.20"
+          }
+        }
+
+        self.assertResponseNoErrors(resp)
+        self.assertJSONEqual(resp.content, exp)
+
+    def test_request_null_default_with_param(self):
+        resp = self.query(
+            """
+            query{
+              getNullDefault(id: {int1: 1, int2: 2})
+            }
+            """
+        )
+
+        exp = {
+          "data": {
+            "getNullDefault": "1.2"
           }
         }
 

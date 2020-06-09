@@ -4,8 +4,10 @@ from object.object import ObjectMeta, Object
 
 
 class Field:
-    def __init__(self):
+    def __init__(self, nullable=False, default=None):
         self.parent_class = None
+        self.nullable = nullable
+        self.default = default
 
     def __str__(self):
         return self.__class__.__name__
@@ -21,11 +23,6 @@ class Field:
 
 
 class PrimitiveField(Field):
-    def __init__(self, nullable=False, default=None):
-        super().__init__()
-        self.nullable = nullable
-        self.default = default
-
     def __str__(self):
         return super().__str__() + " nullable={}".format(self.nullable)
 
@@ -46,9 +43,9 @@ class BooleanField(PrimitiveField):
     pass
 
 
-class ObjectField(PrimitiveField):
-    def __init__(self, to, nullable=False):
-        super().__init__(nullable=nullable)
+class ObjectField(Field):
+    def __init__(self, to, nullable=False, default=None):
+        super().__init__(nullable=nullable, default=default)
         self.to = to
 
     def set_ref(self):
@@ -69,10 +66,10 @@ class ObjectField(PrimitiveField):
         return super().convert(adapter, **kwargs)
 
 
-class ListField(PrimitiveField):
-    def __init__(self, of, nullable=False):
-        super().__init__(nullable=nullable)
+class ListField(Field):
+    def __init__(self, of, nullable=False, default=None):
+        super().__init__(nullable=nullable, default=default)
         self.of = of
 
-    # def __str__(self):
-    #     return super().__str__() + " of " + str(self.of.model)
+    def __str__(self):
+        return super().__str__() + " of " + str(self.of.model)

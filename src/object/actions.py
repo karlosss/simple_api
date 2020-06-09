@@ -7,6 +7,10 @@ class Action:
         self.exec_fn = exec_fn
         self.parent_class = None
 
+        for name, param in parameters.items():
+            assert param.nullable or param.default is None, \
+                "Cannot set a default value for a non-null parameter `{}`.".format(name)
+
     def set_parent_class(self, cls):
         self.parent_class = cls
         for field in self.parameters.values():
