@@ -33,4 +33,11 @@ def convert_field_as_string(field, cls, **kwargs):
 
 @convert_field_as.register(ObjectField)
 def convert_field_as_object(field, cls, **kwargs):
-    return cls(get_class(field.to), required=not field.nullable, default_value=field.default, **kwargs)
+
+    # differentiate between Argument and Field (ObjectType vs. InputObjectType)
+    if cls == graphene.Argument:
+        to = get_class(field.to).input
+    else:
+        to = get_class(field.to).output
+
+    return cls(to, required=not field.nullable, default_value=field.default, **kwargs)

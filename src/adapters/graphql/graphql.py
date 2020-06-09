@@ -34,22 +34,18 @@ class GraphQLAdapter(Adapter):
         return out
 
     def generate(self):
-        obj_classes = []
         query_classes = []
 
         for obj in self.objects:
-            obj_class = get_class(obj)
 
             for name, field in self.convert_fields_for_object(obj).items():
-                obj_class._meta.fields[name] = field
+                # add field to both input and output class
+                get_class(obj).output._meta.fields[name] = field
+                get_class(obj).input._meta.fields[name] = field
 
-            obj_classes.append(obj_class)
-
-            actions = self.convert_actions_for_object(obj)
-
-            if actions:
-                query_class = type("Query", (graphene.ObjectType,), actions)
-                query_classes.append(query_class)
+            # add actions to per-object query class
+            query_class = type("Query", (graphene.ObjectType,), self.convert_actions_for_object(obj))
+            query_classes.append(query_class)
 
         query_class = type("Query", tuple(query_classes) + (graphene.ObjectType,), {})
         return graphene.Schema(query=query_class)
