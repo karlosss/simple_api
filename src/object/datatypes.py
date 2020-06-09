@@ -61,3 +61,7 @@ class PlainListType(Type):
     def __init__(self, of, nullable=False, default=None):
         super().__init__(nullable=nullable, default=default)
         self.of = of
+
+    def set_parent_class(self, cls):
+        self.of.set_parent_class(cls)
+        super().set_parent_class(cls)
