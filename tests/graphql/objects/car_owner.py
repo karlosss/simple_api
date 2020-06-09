@@ -3,7 +3,7 @@ from graphene_django.utils import GraphQLTestCase
 from adapters.utils import generate
 from adapters.graphql.graphql import GraphQLAdapter
 from object.actions import Action
-from object.fields import StringField, ObjectField, IntegerField
+from object.datatypes import StringType, ObjectType, IntegerType
 from object.object import Object
 from tests.graphql_test_utils import get_graphql_url, remove_ws
 from utils import AttrDict
@@ -15,19 +15,19 @@ def get_by_id(*args, **kwargs):
 
 class Car(Object):
     fields = {
-        "model": StringField(),
-        "color": StringField()
+        "model": StringType(),
+        "color": StringType()
     }
 
 
 class Owner(Object):
     fields = {
-        "id": IntegerField(),
-        "car": ObjectField(Car)
+        "id": IntegerType(),
+        "car": ObjectType(Car)
     }
 
     actions = {
-        "get_by_id": Action(parameters={"id": IntegerField()}, return_value=ObjectField("self"), exec_fn=get_by_id)
+        "get_by_id": Action(parameters={"id": IntegerType()}, return_value=ObjectType("self"), exec_fn=get_by_id)
     }
 
 

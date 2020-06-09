@@ -1,0 +1,1 @@
+OBJECT_SELF_REFERENCE = "self"

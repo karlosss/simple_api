@@ -3,7 +3,7 @@ from graphene_django.utils import GraphQLTestCase
 from adapters.utils import generate
 from adapters.graphql.graphql import GraphQLAdapter
 from object.actions import Action
-from object.fields import StringField, ObjectField
+from object.datatypes import StringType, ObjectType
 from object.object import Object
 from tests.graphql_test_utils import get_graphql_url, remove_ws
 from utils import AttrDict
@@ -23,15 +23,15 @@ def all(*args, **kwargs):
 
 class TestObject(Object):
     fields = {
-        "string_non_null": StringField(),
-        "string_null": StringField(nullable=True),
-        "string_default": StringField(default="default")
+        "string_non_null": StringType(),
+        "string_null": StringType(nullable=True),
+        "string_default": StringType(default="default")
     }
 
     actions = {
-        "non_null_only": Action(return_value=ObjectField("self"), exec_fn=non_null_only),
-        "non_null_and_null": Action(return_value=ObjectField("TestObject"), exec_fn=non_null_and_null),
-        "all": Action(return_value=ObjectField("tests.graphql.objects.object_primitive_fields_class_ref_by_string.TestObject"), exec_fn=all)
+        "non_null_only": Action(return_value=ObjectType("self"), exec_fn=non_null_only),
+        "non_null_and_null": Action(return_value=ObjectType("TestObject"), exec_fn=non_null_and_null),
+        "all": Action(return_value=ObjectType("tests.graphql.objects.object_primitive_fields_class_ref_by_string.TestObject"), exec_fn=all)
     }
 
 

@@ -3,7 +3,7 @@ from graphene_django.utils import GraphQLTestCase
 from adapters.utils import generate
 from adapters.graphql.graphql import GraphQLAdapter
 from object.actions import Action
-from object.fields import StringField, ObjectField, IntegerField
+from object.datatypes import StringType, ObjectType, IntegerType
 from object.object import Object
 from tests.graphql_test_utils import get_graphql_url, remove_ws
 
@@ -16,17 +16,17 @@ def get(*args, **kwargs):
 
 class TestObject(Object):
     fields = {
-        "int1": IntegerField(),
-        "int2": IntegerField(),
+        "int1": IntegerType(),
+        "int2": IntegerType(),
     }
 
 
 class Actions(Object):
     actions = {
-        "get": Action(parameters={"id": ObjectField(TestObject)}, return_value=StringField(), exec_fn=get),
-        "get_null": Action(parameters={"id": ObjectField(TestObject, nullable=True)}, return_value=StringField(), exec_fn=get),
-        "get_null_default": Action(parameters={"id": ObjectField(TestObject, nullable=True, default={"int1": 10, "int2": 20})},
-                                   return_value=StringField(), exec_fn=get)
+        "get": Action(parameters={"id": ObjectType(TestObject)}, return_value=StringType(), exec_fn=get),
+        "get_null": Action(parameters={"id": ObjectType(TestObject, nullable=True)}, return_value=StringType(), exec_fn=get),
+        "get_null_default": Action(parameters={"id": ObjectType(TestObject, nullable=True, default={"int1": 10, "int2": 20})},
+                                   return_value=StringType(), exec_fn=get)
     }
 
 

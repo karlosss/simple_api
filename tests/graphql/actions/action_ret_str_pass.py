@@ -3,7 +3,7 @@ from graphene_django.utils import GraphQLTestCase
 from adapters.utils import generate
 from adapters.graphql.graphql import GraphQLAdapter
 from object.actions import Action
-from object.fields import StringField
+from object.datatypes import StringType
 from object.object import Object
 from tests.graphql_test_utils import get_graphql_url, remove_ws
 
@@ -18,8 +18,8 @@ def null(*args, **kwargs):
 
 class Actions(Object):
     actions = {
-        "non_null": Action(return_value=StringField(), exec_fn=non_null),
-        "null": Action(return_value=StringField(nullable=True), exec_fn=null)
+        "non_null": Action(return_value=StringType(), exec_fn=non_null),
+        "null": Action(return_value=StringType(nullable=True), exec_fn=null)
     }
 
 

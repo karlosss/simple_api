@@ -1,13 +1,13 @@
 import graphene
 
 from adapters.base import Adapter
-from adapters.graphql.converter import convert_field
+from adapters.graphql.converter.converter import convert_type
 from adapters.graphql.registry import get_class
 
 
 class GraphQLAdapter(Adapter):
     def convert_field(self, field, **kwargs):
-        return convert_field(field, **kwargs)
+        return convert_type(field, self, **kwargs)
 
     def convert_action(self, action):
         params = {}

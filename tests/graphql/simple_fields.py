@@ -3,7 +3,7 @@ from graphene_django.utils import GraphQLTestCase
 from adapters.utils import generate
 from adapters.graphql.graphql import GraphQLAdapter
 from object.actions import Action
-from object.fields import IntegerField, StringField
+from object.datatypes import IntegerType, StringType
 from object.object import Object
 from tests.graphql_test_utils import get_graphql_url
 
@@ -14,12 +14,12 @@ def resolve_show(*args, **kwargs):
 
 class Book(Object):
     fields = {
-        "page_count": IntegerField(nullable=False),
-        "title": StringField(nullable=False),
+        "page_count": IntegerType(nullable=False),
+        "title": StringType(nullable=False),
     }
 
     actions = {
-        "show": Action({"id": IntegerField()}, StringField(), resolve_show)
+        "show": Action({"id": IntegerType()}, StringType(), resolve_show)
     }
 
 

@@ -4,7 +4,7 @@ from graphene_django.utils import GraphQLTestCase
 from adapters.utils import generate
 from adapters.graphql.graphql import GraphQLAdapter
 from object.actions import Action
-from object.fields import IntegerField, StringField, ObjectField
+from object.datatypes import IntegerType, StringType, ObjectType
 from object.object import Object
 
 
@@ -14,11 +14,11 @@ def resolve_show(*args, **kwargs):
 
 class Publisher(Object):
     fields = {
-        "name": StringField()
+        "name": StringType()
     }
 
     actions = {
-        "show": Action({"id": IntegerField()}, StringField(), resolve_show)
+        "show": Action({"id": IntegerType()}, StringType(), resolve_show)
     }
 
 

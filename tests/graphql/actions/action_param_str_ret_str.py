@@ -3,7 +3,7 @@ from graphene_django.utils import GraphQLTestCase
 from adapters.utils import generate
 from adapters.graphql.graphql import GraphQLAdapter
 from object.actions import Action
-from object.fields import StringField
+from object.datatypes import StringType
 from object.object import Object
 from tests.graphql_test_utils import get_graphql_url, remove_ws
 
@@ -14,9 +14,9 @@ def echo(*args, **kwargs):
 
 class Actions(Object):
     actions = {
-        "echo_non_null": Action(parameters={"string": StringField()}, return_value=StringField(), exec_fn=echo),
-        "echo_default": Action(parameters={"string": StringField(nullable=True, default="default")}, return_value=StringField(), exec_fn=echo),
-        "echo_null_fail": Action(parameters={"string": StringField(nullable=True)}, return_value=StringField(), exec_fn=echo),
+        "echo_non_null": Action(parameters={"string": StringType()}, return_value=StringType(), exec_fn=echo),
+        "echo_default": Action(parameters={"string": StringType(nullable=True, default="default")}, return_value=StringType(), exec_fn=echo),
+        "echo_null_fail": Action(parameters={"string": StringType(nullable=True)}, return_value=StringType(), exec_fn=echo),
     }
 
 
