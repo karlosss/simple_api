@@ -48,12 +48,12 @@ class Test(GraphQLTestCase):
                 }
                 
                 type Query {
-                  get(id: TestObject!): String!
-                  getNull(id: TestObject): String!
-                  getNullDefault(id: TestObject = {int1: 10, int2: 20}): String!
+                  get(id: TestObjectInput!): String!
+                  getNull(id: TestObjectInput): String!
+                  getNullDefault(id: TestObjectInput = {int1: 10, int2: 20}): String!
                 }
                 
-                input TestObject {
+                input TestObjectInput {
                   int1: Int!
                   int2: Int!
                 }
