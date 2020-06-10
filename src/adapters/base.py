@@ -9,5 +9,8 @@ class Adapter:
     def convert_action(self, action):  # called in double dispatch from action
         raise NotImplementedError
 
+    def convert_function(self, function, **kwargs):
+        raise NotImplementedError
+
     def generate(self):
         raise NotImplementedError

@@ -4,13 +4,14 @@ from adapters.utils import generate
 from adapters.graphql.graphql import GraphQLAdapter
 from object.actions import Action
 from object.datatypes import StringType, ObjectType, IntegerType
+from object.function import Function
 from object.object import Object
 from tests.graphql_test_utils import get_graphql_url, remove_ws
 from utils import AttrDict
 
 
-def get_by_id(*args, **kwargs):
-    return AttrDict(id=kwargs["id"], car=AttrDict(model="BMW", color="blue"))
+def get_by_id(request, params):
+    return AttrDict(id=params["id"], car=AttrDict(model="BMW", color="blue"))
 
 
 class Car(Object):
@@ -27,7 +28,7 @@ class Owner(Object):
     }
 
     actions = {
-        "get_by_id": Action(parameters={"id": IntegerType()}, return_value=ObjectType("self"), exec_fn=get_by_id)
+        "get_by_id": Action(parameters={"id": IntegerType()}, return_value=ObjectType("self"), exec_fn=Function(get_by_id))
     }
 
 

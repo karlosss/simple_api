@@ -4,22 +4,23 @@ from adapters.utils import generate
 from adapters.graphql.graphql import GraphQLAdapter
 from object.actions import Action
 from object.datatypes import StringType
+from object.function import Function
 from object.object import Object
 from tests.graphql_test_utils import get_graphql_url, remove_ws
 
 
-def non_null(*args, **kwargs):
+def non_null(request, params):
     return "nonNull"
 
 
-def null(*args, **kwargs):
+def null(request, params):
     return None
 
 
 class Actions(Object):
     actions = {
-        "non_null": Action(return_value=StringType(), exec_fn=null),
-        "null": Action(return_value=StringType(nullable=True), exec_fn=non_null)
+        "non_null": Action(return_value=StringType(), exec_fn=Function(null)),
+        "null": Action(return_value=StringType(nullable=True), exec_fn=Function(non_null))
     }
 
 

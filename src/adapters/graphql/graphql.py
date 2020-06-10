@@ -1,7 +1,7 @@
 import graphene
 
 from adapters.base import Adapter
-from adapters.graphql.converter.converter import convert_type
+from adapters.graphql.converter.converter import convert_type, convert_function
 from adapters.graphql.registry import get_class
 
 
@@ -17,9 +17,12 @@ class GraphQLAdapter(Adapter):
         field = action.return_value.convert(self, **params)
 
         def resolve_field(*args, **kwargs):
-            return action.exec_fn(*args, **kwargs)
+            return action.exec_fn.convert(self)(*args, **kwargs)
 
         return field, resolve_field
+
+    def convert_function(self, function, **kwargs):
+        return convert_function(function, **kwargs)
 
     def convert_fields_for_object(self, obj):
         out = {}

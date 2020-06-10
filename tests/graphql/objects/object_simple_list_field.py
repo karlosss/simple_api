@@ -4,28 +4,29 @@ from adapters.utils import generate
 from adapters.graphql.graphql import GraphQLAdapter
 from object.actions import Action
 from object.datatypes import IntegerType, PlainListType
+from object.function import Function
 from object.object import Object
 from tests.graphql_test_utils import get_graphql_url, remove_ws
 
 
-def non_null(*args, **kwargs):
+def non_null(request, params):
     return [i for i in range(10)]
 
 
-def null(*args, **kwargs):
+def null(request, params):
     return None
 
 
-def list_non_null_elem_null(*args, **kwargs):
+def list_non_null_elem_null(request, params):
     return [1, 2, 3, None, None, None, 7, 8, 9]
 
 
 class Actions(Object):
     actions = {
-        "get_non_null": Action(return_value=PlainListType(IntegerType()), exec_fn=non_null),
-        "get_null": Action(return_value=PlainListType(IntegerType(nullable=True), nullable=True), exec_fn=null),
-        "get_list_null_elem_non_null": Action(return_value=PlainListType(IntegerType(), nullable=True), exec_fn=null),
-        "get_list_non_null_elem_null": Action(return_value=PlainListType(IntegerType(nullable=True)), exec_fn=list_non_null_elem_null),
+        "get_non_null": Action(return_value=PlainListType(IntegerType()), exec_fn=Function(non_null)),
+        "get_null": Action(return_value=PlainListType(IntegerType(nullable=True), nullable=True), exec_fn=Function(null)),
+        "get_list_null_elem_non_null": Action(return_value=PlainListType(IntegerType(), nullable=True), exec_fn=Function(null)),
+        "get_list_non_null_elem_null": Action(return_value=PlainListType(IntegerType(nullable=True)), exec_fn=Function(list_non_null_elem_null)),
     }
 
 

@@ -4,13 +4,14 @@ from adapters.utils import generate
 from adapters.graphql.graphql import GraphQLAdapter
 from object.actions import Action
 from object.datatypes import StringType, ObjectType, IntegerType
+from object.function import Function
 from object.object import Object
 from tests.graphql_test_utils import get_graphql_url, remove_ws
 
 
-def get(*args, **kwargs):
-    if "id" in kwargs:
-        return "{}.{}".format(kwargs["id"]["int1"], kwargs["id"]["int2"])
+def get(request, params):
+    if "id" in params:
+        return "{}.{}".format(params["id"]["int1"], params["id"]["int2"])
     return "no params passed"
 
 
@@ -23,10 +24,10 @@ class TestObject(Object):
 
 class Actions(Object):
     actions = {
-        "get": Action(parameters={"id": ObjectType(TestObject)}, return_value=StringType(), exec_fn=get),
-        "get_null": Action(parameters={"id": ObjectType(TestObject, nullable=True)}, return_value=StringType(), exec_fn=get),
+        "get": Action(parameters={"id": ObjectType(TestObject)}, return_value=StringType(), exec_fn=Function(get)),
+        "get_null": Action(parameters={"id": ObjectType(TestObject, nullable=True)}, return_value=StringType(), exec_fn=Function(get)),
         "get_null_default": Action(parameters={"id": ObjectType(TestObject, nullable=True, default={"int1": 10, "int2": 20})},
-                                   return_value=StringType(), exec_fn=get)
+                                   return_value=StringType(), exec_fn=Function(get))
     }
 
 

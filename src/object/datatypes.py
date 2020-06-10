@@ -5,10 +5,12 @@ from object.object import ObjectMeta, Object
 
 
 class Type:
-    def __init__(self, nullable=False, default=None):
+    def __init__(self, nullable=False, default=None, parameters=None, resolver=None):
         self.parent_class = None
         self.nullable = nullable
         self.default = default
+        self.parameters = parameters or {}
+        self.resolver = resolver
 
     def set_parent_class(self, cls):
         self.parent_class = cls
@@ -38,8 +40,8 @@ class BooleanType(PrimitiveType):
 
 
 class ObjectType(Type):
-    def __init__(self, to, nullable=False, default=None):
-        super().__init__(nullable=nullable, default=default)
+    def __init__(self, to, nullable=False, default=None, parameters=None, resolver=None):
+        super().__init__(nullable=nullable, default=default, parameters=parameters, resolver=resolver)
         self.to = to
 
     def set_ref(self):
@@ -58,8 +60,8 @@ class ObjectType(Type):
 
 
 class PlainListType(Type):
-    def __init__(self, of, nullable=False, default=None):
-        super().__init__(nullable=nullable, default=default)
+    def __init__(self, of, nullable=False, default=None, parameters=None, resolver=None):
+        super().__init__(nullable=nullable, default=default, parameters=parameters, resolver=resolver)
         self.of = of
 
     def set_parent_class(self, cls):
