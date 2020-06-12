@@ -1,6 +1,6 @@
 from inspect import isclass
 
-from constants import OBJECT_SELF_REFERENCE, LIST_DEFAULT_OFFSET, LIST_DEFAULT_LIMIT
+from constants import OBJECT_SELF_REFERENCE
 from object.object import ObjectMeta, Object
 
 

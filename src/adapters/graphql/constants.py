@@ -1,0 +1,1 @@
+INPUT_CLASS_SUFFIX = "Input"
