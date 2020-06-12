@@ -17,18 +17,15 @@ def convert_type(type, adapter, **kwargs):
 
     if in_kwargs_and_true("input", kwargs) and not in_kwargs_and_true("list", kwargs):
         kwargs.pop("input")
-        check_no_params_and_resolver(type)
         return convert_input_type(type, adapter, **kwargs)
 
     if not in_kwargs_and_true("input", kwargs) and in_kwargs_and_true("list", kwargs):
         kwargs.pop("list")
-        check_no_params_and_resolver(type)
         return convert_list_output_type(type, adapter, **kwargs)
 
     if in_kwargs_and_true("input", kwargs) and in_kwargs_and_true("list", kwargs):
         kwargs.pop("input")
         kwargs.pop("list")
-        check_no_params_and_resolver(type)
         return convert_list_input_type(type, adapter, **kwargs)
 
 

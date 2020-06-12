@@ -24,10 +24,16 @@ class GraphQLAdapter(Adapter):
     def convert_function(self, function, **kwargs):
         return convert_function(function, **kwargs)
 
-    def convert_fields_for_object(self, obj):
+    def convert_output_fields_for_object(self, obj):
         out = {}
-        for name, field in obj.fields.items():
+        for name, field in obj.out_fields.items():
             out[name] = field.convert(self)
+        return out
+
+    def convert_input_fields_for_object(self, obj):
+        out = {}
+        for name, field in obj.in_fields.items():
+            out[name] = field.convert(self, input=True)
         return out
 
     def convert_actions_for_object(self, obj):
@@ -41,9 +47,10 @@ class GraphQLAdapter(Adapter):
 
         for obj in self.objects:
 
-            for name, field in self.convert_fields_for_object(obj).items():
-                # add field to both input and output class
+            for name, field in self.convert_output_fields_for_object(obj).items():
                 get_class(obj).output._meta.fields[name] = field
+
+            for name, field in self.convert_input_fields_for_object(obj).items():
                 get_class(obj).input._meta.fields[name] = field
 
             # add actions to per-object query class

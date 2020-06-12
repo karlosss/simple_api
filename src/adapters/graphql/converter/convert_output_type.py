@@ -33,8 +33,8 @@ def convert_output_list_type(type, adapter, **kwargs):
 
 def convert_output_class_type(type, cls, adapter, **kwargs):
     return graphene.Field(cls,
-                          required=not type.nullable,
-                          default_value=type.default,
+                          required=not type.nullable(),
+                          default_value=type.default(),
                           args={name: field.convert(adapter, input=True, **kwargs)
                                 for name, field in type.parameters.items()},
                           resolver=type.resolver.convert(adapter, resolver=True) if type.resolver is not None else None,

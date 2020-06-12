@@ -1,3 +1,6 @@
+from django.utils.decorators import classproperty
+
+
 class ObjectMeta(type):
     classes = {}
 
@@ -18,7 +21,7 @@ class ObjectMeta(type):
         # store class stub
         ObjectMeta.store_class(cls.__module__, name, cls)
 
-        for field in cls.fields.values():
+        for field in {**cls.fields, **cls.input_fields, **cls.output_fields}.values():
             field.set_parent_class(cls)
 
         for action in cls.actions.values():
@@ -29,6 +32,20 @@ class ObjectMeta(type):
 
 class Object(metaclass=ObjectMeta):
     fields = {}
+    input_fields = {}
+    output_fields = {}
     id_field = True
+
+    @classproperty
+    def in_fields(cls):
+        for f in cls.input_fields:
+            assert f not in cls.fields, "Redefinition of `{}` field.".format(f)
+        return {**cls.fields, **cls.input_fields}
+
+    @classproperty
+    def out_fields(cls):
+        for f in cls.output_fields:
+            assert f not in cls.fields, "Redefinition of `{}` field.".format(f)
+        return {**cls.fields, **cls.output_fields}
 
     actions = {}
