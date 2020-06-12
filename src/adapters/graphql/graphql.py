@@ -45,6 +45,8 @@ class GraphQLAdapter(Adapter):
     def generate(self):
         query_classes = []
 
+        at_least_one_action_exists = False
+
         for obj in self.objects:
 
             for name, field in self.convert_output_fields_for_object(obj).items():
@@ -54,8 +56,13 @@ class GraphQLAdapter(Adapter):
                 get_class(obj).input._meta.fields[name] = field
 
             # add actions to per-object query class
-            query_class = type("Query", (graphene.ObjectType,), self.convert_actions_for_object(obj))
+            actions = self.convert_actions_for_object(obj)
+            if actions:
+                at_least_one_action_exists = True
+            query_class = type("Query", (graphene.ObjectType,), actions)
             query_classes.append(query_class)
+
+        assert at_least_one_action_exists, "At least one action must exist in the API."
 
         query_class = type("Query", tuple(query_classes) + (graphene.ObjectType,), {})
         return graphene.Schema(query=query_class)
