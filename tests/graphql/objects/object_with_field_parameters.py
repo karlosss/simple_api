@@ -23,13 +23,12 @@ class TestObject(Object):
     }
 
 
-class Actions(Object):
-    actions = {
-        "get": Action(return_value=ObjectType(TestObject), exec_fn=Function(get))
-    }
+actions = {
+    "get": Action(return_value=ObjectType(TestObject), exec_fn=Function(get))
+}
 
 
-schema = generate(GraphQLAdapter, [TestObject, Actions])
+schema = generate(GraphQLAdapter, [TestObject], actions)
 
 
 class Test(GraphQLTestCase):

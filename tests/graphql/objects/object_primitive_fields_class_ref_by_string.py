@@ -53,9 +53,9 @@ class Test(GraphQLTestCase):
                 }
                 
                 type Query {
-                  nonNullOnly: TestObject!
-                  nonNullAndNull: TestObject!
-                  all: TestObject!
+                  testObjectNonNullOnly: TestObject!
+                  testObjectNonNullAndNull: TestObject!
+                  testObjectAll: TestObject!
                 }
                 
                 type TestObject {
@@ -71,7 +71,7 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              nonNullOnly{
+              testObjectNonNullOnly{
                 stringNonNull
                 stringNull
                 stringDefault
@@ -82,7 +82,7 @@ class Test(GraphQLTestCase):
 
         exp = {
             "data": {
-                "nonNullOnly": {
+                "testObjectNonNullOnly": {
                   "stringNonNull": "string",
                   "stringNull": None,
                   "stringDefault": "default"
@@ -97,7 +97,7 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              nonNullAndNull{
+              testObjectNonNullAndNull{
                 stringNonNull
                 stringNull
                 stringDefault
@@ -108,7 +108,7 @@ class Test(GraphQLTestCase):
 
         exp = {
           "data": {
-            "nonNullAndNull": {
+            "testObjectNonNullAndNull": {
               "stringNonNull": "string",
               "stringNull": "string",
               "stringDefault": "default"
@@ -123,7 +123,7 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              all{
+              testObjectAll{
                 stringNonNull
                 stringNull
                 stringDefault
@@ -134,7 +134,7 @@ class Test(GraphQLTestCase):
 
         exp = {
           "data": {
-            "all": {
+            "testObjectAll": {
               "stringNonNull": "string",
               "stringNull": "string",
               "stringDefault": "string"

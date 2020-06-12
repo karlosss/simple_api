@@ -41,13 +41,12 @@ def get(request, params):
     }
 
 
-class Actions(Object):
-    actions = {
-        "get": Action({"data": PlainListType(IntegerType())}, ObjectType(IntList), Function(get))
-    }
+actions = {
+    "get": Action({"data": PlainListType(IntegerType())}, ObjectType(IntList), Function(get))
+}
 
 
-schema = generate(GraphQLAdapter, [Actions, IntList])
+schema = generate(GraphQLAdapter, [IntList], actions)
 
 
 class Test(GraphQLTestCase):

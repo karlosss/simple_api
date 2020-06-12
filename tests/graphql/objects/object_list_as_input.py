@@ -13,15 +13,14 @@ def plus_one(request, params):
     return [i+1 for i in params["list"]]
 
 
-class Actions(Object):
-    actions = {
-        "plus_one": Action(parameters={"list": PlainListType(IntegerType())},
-                           return_value=PlainListType(IntegerType()),
-                           exec_fn=Function(plus_one)),
-    }
+actions = {
+    "plus_one": Action(parameters={"list": PlainListType(IntegerType())},
+                       return_value=PlainListType(IntegerType()),
+                       exec_fn=Function(plus_one)),
+}
 
 
-schema = generate(GraphQLAdapter, [Actions])
+schema = generate(GraphQLAdapter, [], actions)
 
 
 class Test(GraphQLTestCase):

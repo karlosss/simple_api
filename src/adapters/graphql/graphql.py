@@ -3,6 +3,7 @@ import graphene
 from adapters.base import Adapter
 from adapters.graphql.converter.converter import convert_type, convert_function
 from adapters.graphql.registry import get_class
+from adapters.graphql.utils import decapitalize
 
 
 class GraphQLAdapter(Adapter):
@@ -36,9 +37,11 @@ class GraphQLAdapter(Adapter):
             out[name] = field.convert(self, input=True)
         return out
 
-    def convert_actions_for_object(self, obj):
+    def convert_actions(self, actions_dict, prefix=""):
         out = {}
-        for name, action in obj.actions.items():
+        for name, action in actions_dict.items():
+            if prefix:  # add prefix to the action name
+                name = decapitalize(prefix) + name.capitalize()
             out[name], out["resolve_{}".format(name)] = action.convert(self)
         return out
 
@@ -56,13 +59,17 @@ class GraphQLAdapter(Adapter):
                 get_class(obj).input._meta.fields[name] = field
 
             # add actions to per-object query class
-            actions = self.convert_actions_for_object(obj)
+            actions = self.convert_actions(obj.actions, prefix=obj.__name__)
             if actions:
                 at_least_one_action_exists = True
             query_class = type("Query", (graphene.ObjectType,), actions)
             query_classes.append(query_class)
 
+        extra_actions = self.convert_actions(self.extra_actions)
+        if extra_actions:
+            at_least_one_action_exists = True
+
         assert at_least_one_action_exists, "At least one action must exist in the API."
 
-        query_class = type("Query", tuple(query_classes) + (graphene.ObjectType,), {})
+        query_class = type("Query", tuple(query_classes) + (graphene.ObjectType,), extra_actions)
         return graphene.Schema(query=query_class)

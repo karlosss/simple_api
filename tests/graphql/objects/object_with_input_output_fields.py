@@ -29,13 +29,12 @@ def get(request, params):
     }
 
 
-class Actions(Object):
-    actions = {
-        "get": Action({"in": ObjectType(TestObject)}, ObjectType(TestObject), Function(get))
-    }
+actions = {
+    "get": Action({"in": ObjectType(TestObject)}, ObjectType(TestObject), Function(get))
+}
 
 
-schema = generate(GraphQLAdapter, [Actions, TestObject])
+schema = generate(GraphQLAdapter, [TestObject], actions)
 
 
 class Test(GraphQLTestCase):

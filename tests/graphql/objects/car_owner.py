@@ -59,7 +59,7 @@ class Test(GraphQLTestCase):
                 }
                 
                 type Query {
-                  getById(id: Int!): Owner!
+                  ownerGetById(id: Int!): Owner!
                 }
                 """
             )
@@ -69,7 +69,7 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              getById(id: 42){
+              ownerGetById(id: 42){
                 id
                 car{
                   model
@@ -82,7 +82,7 @@ class Test(GraphQLTestCase):
 
         exp = {
           "data": {
-            "getById": {
+            "ownerGetById": {
               "id": 42,
               "car": {
                 "model": "BMW",

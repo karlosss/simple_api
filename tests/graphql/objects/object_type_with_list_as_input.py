@@ -43,13 +43,12 @@ def get(request, params):
     }
 
 
-class Actions(Object):
-    actions = {
-        "get": Action({"data": ObjectType(PersonList)}, ObjectType(PersonList), Function(get))
-    }
+actions = {
+    "get": Action({"data": ObjectType(PersonList)}, ObjectType(PersonList), Function(get))
+}
 
 
-schema = generate(GraphQLAdapter, [Actions, PersonList, Person])
+schema = generate(GraphQLAdapter, [PersonList, Person], actions)
 
 
 class Test(GraphQLTestCase):

@@ -22,16 +22,15 @@ class TestObject(Object):
     }
 
 
-class Actions(Object):
-    actions = {
-        "get": Action(parameters={"id": ObjectType(TestObject)}, return_value=StringType(), exec_fn=Function(get)),
-        "get_null": Action(parameters={"id": ObjectType(TestObject, nullable=True)}, return_value=StringType(), exec_fn=Function(get)),
-        "get_null_default": Action(parameters={"id": ObjectType(TestObject, nullable=True, default={"int1": 10, "int2": 20})},
-                                   return_value=StringType(), exec_fn=Function(get))
-    }
+actions = {
+    "get": Action(parameters={"id": ObjectType(TestObject)}, return_value=StringType(), exec_fn=Function(get)),
+    "get_null": Action(parameters={"id": ObjectType(TestObject, nullable=True)}, return_value=StringType(), exec_fn=Function(get)),
+    "get_null_default": Action(parameters={"id": ObjectType(TestObject, nullable=True, default={"int1": 10, "int2": 20})},
+                               return_value=StringType(), exec_fn=Function(get))
+}
 
 
-schema = generate(GraphQLAdapter, [Actions, TestObject])
+schema = generate(GraphQLAdapter, [TestObject], actions)
 
 
 class Test(GraphQLTestCase):

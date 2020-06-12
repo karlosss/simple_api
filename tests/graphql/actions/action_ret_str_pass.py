@@ -17,14 +17,13 @@ def null(request, params):
     return None
 
 
-class Actions(Object):
-    actions = {
-        "non_null": Action(return_value=StringType(), exec_fn=Function(non_null)),
-        "null": Action(return_value=StringType(nullable=True), exec_fn=Function(null))
-    }
+actions = {
+    "non_null": Action(return_value=StringType(), exec_fn=Function(non_null)),
+    "null": Action(return_value=StringType(nullable=True), exec_fn=Function(null))
+}
 
 
-schema = generate(GraphQLAdapter, [Actions])
+schema = generate(GraphQLAdapter, [], actions)
 
 
 class Test(GraphQLTestCase):

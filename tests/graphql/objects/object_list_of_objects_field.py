@@ -36,17 +36,15 @@ def list_non_null_elem_null(request, params):
     ]
 
 
-class Actions(Object):
-    actions = {
-        "get_non_null": Action(return_value=PlainListType(ObjectType(TestObject)), exec_fn=Function(non_null)),
-        "get_null": Action(return_value=PlainListType(ObjectType("TestObject", nullable=True), nullable=True), exec_fn=Function(null)),
-        "get_list_null_elem_non_null": Action(return_value=PlainListType(ObjectType(TestObject), nullable=True), exec_fn=Function(null)),
-        "get_list_non_null_elem_null": Action(return_value=PlainListType(ObjectType(TestObject, nullable=True)),
-                                              exec_fn=Function(list_non_null_elem_null)),
-    }
+actions = {
+    "get_non_null": Action(return_value=PlainListType(ObjectType(TestObject)), exec_fn=Function(non_null)),
+    "get_null": Action(return_value=PlainListType(ObjectType(TestObject, nullable=True), nullable=True), exec_fn=Function(null)),
+    "get_list_null_elem_non_null": Action(return_value=PlainListType(ObjectType(TestObject), nullable=True), exec_fn=Function(null)),
+    "get_list_non_null_elem_null": Action(return_value=PlainListType(ObjectType(TestObject, nullable=True)),
+                                          exec_fn=Function(list_non_null_elem_null)),
+}
 
-
-schema = generate(GraphQLAdapter, [Actions, TestObject])
+schema = generate(GraphQLAdapter, [TestObject], actions)
 
 
 class Test(GraphQLTestCase):
