@@ -12,4 +12,4 @@ def generate(adapter, objs, extra_actions=None):
     for obj in objs:
         add_id_field(obj)
 
-    return adapter(objs, extra_actions).generate()
+    return adapter(objs, extra_actions).generate_api()
