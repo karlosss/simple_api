@@ -13,7 +13,7 @@ class Adapter:
     def convert_field(self, field, **kwargs):  # called in double dispatch from field
         raise NotImplementedError
 
-    def convert_action(self, action):  # called in double dispatch from action
+    def convert_action(self, action, **kwargs):  # called in double dispatch from action
         raise NotImplementedError
 
     def convert_function(self, function, **kwargs):
