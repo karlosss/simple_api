@@ -15,12 +15,12 @@ class GraphQLAdapter(Adapter):
         for name, field in action.parameters.items():
             params[name] = field.convert(self, _as=ConversionType.PARAMETER)
 
-        field = action.return_value.convert(self, _as=ConversionType.OUTPUT, args=params)
-
         def resolve_field(*args, **kwargs):
             return action.exec_fn.convert(self, _as=ConversionType.EXEC_FN)(*args, **kwargs)
 
-        return field, resolve_field
+        field = action.return_value.convert(self, _as=ConversionType.OUTPUT, args=params, resolver=resolve_field)
+
+        return field
 
     def convert_function(self, function, **kwargs):
         return convert_function(function, **kwargs)
@@ -42,7 +42,7 @@ class GraphQLAdapter(Adapter):
         for name, action in actions_dict.items():
             if prefix:  # add prefix to the action name
                 name = decapitalize(prefix) + name.capitalize()
-            out[name], out["resolve_{}".format(name)] = action.convert(self)
+            out[name] = action.convert(self)
         return out
 
     def generate(self):

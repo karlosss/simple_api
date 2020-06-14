@@ -39,11 +39,11 @@ def convert_output_list_type(type, adapter, **kwargs):
 
 
 def convert_output_class_type(type, cls, adapter, **kwargs):
-    kwargs["args"] = kwargs.get("args") or {name: param.convert(adapter, _as=ConversionType.PARAMETER)
-                                            for name, param in type.parameters.items()}
+    kwargs["args"] = kwargs.get("args", {name: param.convert(adapter, _as=ConversionType.PARAMETER)
+                                         for name, param in type.parameters.items()})
+    kwargs["resolver"] = kwargs.get("resolver", type.resolver.convert(adapter, _as=ConversionType.RESOLVER)
+                                                if type.resolver is not None else None)
     return graphene.Field(cls,
                           required=not type.nullable(),
                           default_value=type.default(),
-                          resolver=type.resolver.convert(adapter, _as=ConversionType.RESOLVER)
-                                   if type.resolver is not None else None,
                           **kwargs)
