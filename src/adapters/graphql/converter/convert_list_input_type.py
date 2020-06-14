@@ -4,7 +4,7 @@ import graphene
 
 from adapters.graphql.registry import get_class
 from adapters.graphql.utils import ConversionType
-from object.datatypes import StringType, IntegerType, ObjectType, PlainListType
+from object.datatypes import StringType, IntegerType, ObjectType, PlainListType, BooleanType, FloatType
 
 
 @singledispatch
@@ -24,6 +24,20 @@ def convert_list_input_integer_type(type, adapter, **kwargs):
     if type.nullable(input=True):
         return graphene.Int
     return graphene.NonNull(graphene.Int)
+
+
+@convert_list_input_type.register(BooleanType)
+def convert_list_input_integer_type(type, adapter, **kwargs):
+    if type.nullable(input=True):
+        return graphene.Int
+    return graphene.NonNull(graphene.Boolean)
+
+
+@convert_list_input_type.register(FloatType)
+def convert_list_input_integer_type(type, adapter, **kwargs):
+    if type.nullable(input=True):
+        return graphene.Int
+    return graphene.NonNull(graphene.Float)
 
 
 @convert_list_input_type.register(ObjectType)

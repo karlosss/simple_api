@@ -4,7 +4,7 @@ import graphene
 
 from adapters.graphql.registry import get_class
 from adapters.graphql.utils import ConversionType
-from object.datatypes import StringType, IntegerType, ObjectType, PlainListType
+from object.datatypes import StringType, IntegerType, ObjectType, PlainListType, BooleanType, FloatType
 
 
 @singledispatch
@@ -20,6 +20,16 @@ def convert_parameter_string_type(type, adapter, **kwargs):
 @convert_parameter_type.register(IntegerType)
 def convert_parameter_integer_type(type, adapter, **kwargs):
     return convert_parameter_class_type(type, graphene.Int, adapter, **kwargs)
+
+
+@convert_parameter_type.register(BooleanType)
+def convert_parameter_integer_type(type, adapter, **kwargs):
+    return convert_parameter_class_type(type, graphene.Boolean, adapter, **kwargs)
+
+
+@convert_parameter_type.register(FloatType)
+def convert_parameter_integer_type(type, adapter, **kwargs):
+    return convert_parameter_class_type(type, graphene.Float, adapter, **kwargs)
 
 
 @convert_parameter_type.register(ObjectType)

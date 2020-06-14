@@ -4,6 +4,9 @@ from adapters.base import Adapter
 from adapters.graphql.converter.converter import convert_type, convert_function, ConversionType
 from adapters.graphql.registry import get_class, check_classes_for_fields
 from adapters.graphql.utils import decapitalize
+from object.actions import Action
+from object.datatypes import BooleanType
+from object.function import Function
 
 
 class GraphQLAdapter(Adapter):
@@ -93,7 +96,7 @@ class GraphQLAdapter(Adapter):
         query_classes = []
         mutation_classes = {}
 
-        at_least_one_action_exists = False
+        at_least_one_safe_action_exists = False
 
         for obj in self.objects:
             for name, field in self.convert_output_fields_for_object(obj).items():
@@ -104,19 +107,20 @@ class GraphQLAdapter(Adapter):
 
             safe_actions, unsafe_actions = self.convert_actions(obj.actions, obj.__name__)
             if safe_actions:
-                at_least_one_action_exists = True
+                at_least_one_safe_action_exists = True
 
             query_class = type("Query", (graphene.ObjectType,), safe_actions)
             query_classes.append(query_class)
             self.update_mutation_classes(unsafe_actions, mutation_classes)
 
         safe_actions, unsafe_actions = self.convert_actions(self.extra_actions)
-        if safe_actions:
-            at_least_one_action_exists = True
+        
+        # if there are no safe actions, create a dummy one, since graphene-python needs that
+        if not safe_actions and not at_least_one_safe_action_exists:
+            safe_actions = {"dummy": Action(return_value=BooleanType(),
+                                            exec_fn=Function(lambda request, params: False)).convert(self)}
 
         self.update_mutation_classes(unsafe_actions, mutation_classes)
-
-        assert at_least_one_action_exists, "At least one safe action must exist in the API."
 
         query_class = type("Query", tuple(query_classes) + (graphene.ObjectType,), safe_actions)
 
