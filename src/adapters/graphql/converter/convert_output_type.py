@@ -3,6 +3,7 @@ from functools import singledispatch
 import graphene
 
 from adapters.graphql.registry import get_class
+from adapters.graphql.utils import ConversionType
 from object.datatypes import StringType, IntegerType, ObjectType, PlainListType
 
 
@@ -23,19 +24,26 @@ def convert_output_integer_type(type, adapter, **kwargs):
 
 @convert_output_type.register(ObjectType)
 def convert_output_object_type(type, adapter, **kwargs):
-    return convert_output_class_type(type, get_class(type.to).output, adapter, **kwargs)
+    return convert_output_class_type(type,
+                                     get_class(type.to).output,
+                                     adapter,
+                                     **kwargs)
 
 
 @convert_output_type.register(PlainListType)
 def convert_output_list_type(type, adapter, **kwargs):
-    return convert_output_class_type(type, graphene.List(type.of.convert(adapter, list=True)), adapter, **kwargs)
+    return convert_output_class_type(type,
+                                     graphene.List(type.of.convert(adapter, _as=ConversionType.LIST_OUTPUT)),
+                                     adapter,
+                                     **kwargs)
 
 
 def convert_output_class_type(type, cls, adapter, **kwargs):
+    kwargs["args"] = kwargs.get("args") or {name: param.convert(adapter, _as=ConversionType.PARAMETER)
+                                            for name, param in type.parameters.items()}
     return graphene.Field(cls,
                           required=not type.nullable(),
                           default_value=type.default(),
-                          args={name: field.convert(adapter, input=True, **kwargs)
-                                for name, field in type.parameters.items()},
-                          resolver=type.resolver.convert(adapter, resolver=True) if type.resolver is not None else None,
+                          resolver=type.resolver.convert(adapter, _as=ConversionType.RESOLVER)
+                                   if type.resolver is not None else None,
                           **kwargs)

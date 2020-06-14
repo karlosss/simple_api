@@ -1,7 +1,7 @@
 import graphene
 
 from adapters.base import Adapter
-from adapters.graphql.converter.converter import convert_type, convert_function
+from adapters.graphql.converter.converter import convert_type, convert_function, ConversionType
 from adapters.graphql.registry import get_class
 from adapters.graphql.utils import decapitalize
 
@@ -13,12 +13,12 @@ class GraphQLAdapter(Adapter):
     def convert_action(self, action):
         params = {}
         for name, field in action.parameters.items():
-            params[name] = field.convert(self, input=True)
+            params[name] = field.convert(self, _as=ConversionType.PARAMETER)
 
-        field = action.return_value.convert(self, **params)
+        field = action.return_value.convert(self, _as=ConversionType.OUTPUT, args=params)
 
         def resolve_field(*args, **kwargs):
-            return action.exec_fn.convert(self)(*args, **kwargs)
+            return action.exec_fn.convert(self, _as=ConversionType.EXEC_FN)(*args, **kwargs)
 
         return field, resolve_field
 
@@ -28,13 +28,13 @@ class GraphQLAdapter(Adapter):
     def convert_output_fields_for_object(self, obj):
         out = {}
         for name, field in obj.out_fields.items():
-            out[name] = field.convert(self)
+            out[name] = field.convert(self, _as=ConversionType.OUTPUT)
         return out
 
     def convert_input_fields_for_object(self, obj):
         out = {}
         for name, field in obj.in_fields.items():
-            out[name] = field.convert(self, input=True)
+            out[name] = field.convert(self, _as=ConversionType.INPUT)
         return out
 
     def convert_actions(self, actions_dict, prefix=""):

@@ -1,10 +1,17 @@
-def in_kwargs_and_true(param, kwargs):
-    return param in kwargs and kwargs[param] is True
+from enum import Enum
 
 
-def pop_if_present(param, kwargs):
-    if param in kwargs:
-        kwargs.pop(param)
+class ConversionType(Enum):
+    # type conversions
+    OUTPUT = 1
+    INPUT = 2
+    LIST_OUTPUT = 3
+    LIST_INPUT = 4
+    PARAMETER = 5
+
+    # function conversions
+    EXEC_FN = 6
+    RESOLVER = 7
 
 
 def decapitalize(s):

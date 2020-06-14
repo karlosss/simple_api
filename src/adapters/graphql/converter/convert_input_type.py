@@ -3,6 +3,7 @@ from functools import singledispatch
 import graphene
 
 from adapters.graphql.registry import get_class
+from adapters.graphql.utils import ConversionType
 from object.datatypes import StringType, IntegerType, ObjectType, PlainListType
 
 
@@ -28,11 +29,14 @@ def convert_input_object_type(type, adapter, **kwargs):
 
 @convert_input_type.register(PlainListType)
 def convert_input_list_type(type, adapter, **kwargs):
-    return convert_input_class_type(type, graphene.List(type.of.convert(adapter, list=True, input=True)), adapter, **kwargs)
+    return convert_input_class_type(type,
+                                    graphene.List(type.of.convert(adapter, _as=ConversionType.LIST_INPUT)),
+                                    adapter,
+                                    **kwargs)
 
 
 def convert_input_class_type(type, cls, adapter, **kwargs):
-    return graphene.Argument(cls,
-                             required=not type.nullable(input=True),
-                             default_value=type.default(input=True),
-                             **kwargs)
+    return graphene.InputField(cls,
+                               required=not type.nullable(input=True),
+                               default_value=type.default(input=True),
+                               **kwargs)
