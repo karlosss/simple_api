@@ -25,7 +25,7 @@ def convert_output_integer_type(type, adapter, **kwargs):
 @convert_output_type.register(ObjectType)
 def convert_output_object_type(type, adapter, **kwargs):
     return convert_output_class_type(type,
-                                     get_class(type.to).output,
+                                     get_class(type.to),
                                      adapter,
                                      **kwargs)
 

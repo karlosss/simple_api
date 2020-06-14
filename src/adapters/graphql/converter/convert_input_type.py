@@ -24,7 +24,7 @@ def convert_input_integer_type(type, adapter, **kwargs):
 
 @convert_input_type.register(ObjectType)
 def convert_input_object_type(type, adapter, **kwargs):
-    return convert_input_class_type(type, get_class(type.to).input, adapter, **kwargs)
+    return convert_input_class_type(type, get_class(type.to, input=True), adapter, **kwargs)
 
 
 @convert_input_type.register(PlainListType)

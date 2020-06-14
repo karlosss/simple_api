@@ -29,8 +29,8 @@ def convert_list_output_integer_type(type, adapter, **kwargs):
 @convert_list_output_type.register(ObjectType)
 def convert_list_output_object_type(type, adapter, **kwargs):
     if type.nullable():
-        return get_class(type.to).output
-    return graphene.NonNull(get_class(type.to).output)
+        return get_class(type.to)
+    return graphene.NonNull(get_class(type.to))
 
 
 @convert_list_output_type.register(PlainListType)

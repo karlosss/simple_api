@@ -25,7 +25,7 @@ def convert_parameter_integer_type(type, adapter, **kwargs):
 @convert_parameter_type.register(ObjectType)
 def convert_parameter_object_type(type, adapter, **kwargs):
     return convert_parameter_class_type(type,
-                                        get_class(type.to).input,
+                                        get_class(type.to, input=True),
                                         adapter,
                                         **kwargs)
 

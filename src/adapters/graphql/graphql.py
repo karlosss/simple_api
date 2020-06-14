@@ -2,7 +2,7 @@ import graphene
 
 from adapters.base import Adapter
 from adapters.graphql.converter.converter import convert_type, convert_function, ConversionType
-from adapters.graphql.registry import get_class
+from adapters.graphql.registry import get_class, check_classes_for_fields
 from adapters.graphql.utils import decapitalize
 
 
@@ -53,10 +53,10 @@ class GraphQLAdapter(Adapter):
         for obj in self.objects:
 
             for name, field in self.convert_output_fields_for_object(obj).items():
-                get_class(obj).output._meta.fields[name] = field
+                get_class(obj)._meta.fields[name] = field
 
             for name, field in self.convert_input_fields_for_object(obj).items():
-                get_class(obj).input._meta.fields[name] = field
+                get_class(obj, input=True)._meta.fields[name] = field
 
             # add actions to per-object query class
             actions = self.convert_actions(obj.actions, prefix=obj.__name__)
@@ -72,4 +72,5 @@ class GraphQLAdapter(Adapter):
         assert at_least_one_action_exists, "At least one action must exist in the API."
 
         query_class = type("Query", tuple(query_classes) + (graphene.ObjectType,), extra_actions)
+        check_classes_for_fields()
         return graphene.Schema(query=query_class)
