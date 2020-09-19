@@ -34,7 +34,6 @@ class Object(metaclass=ObjectMeta):
     fields = {}
     input_fields = {}
     output_fields = {}
-    id_field = True
 
     @classproperty
     def in_fields(cls):
