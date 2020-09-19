@@ -56,6 +56,18 @@ class BooleanType(PrimitiveType):
     pass
 
 
+class DateType(PrimitiveType):
+    pass
+
+
+class TimeType(PrimitiveType):
+    pass
+
+
+class DateTimeType(PrimitiveType):
+    pass
+
+
 class ObjectType(Type):
     def __init__(self, to, nullable=False, default=None, parameters=None, resolver=None,
                  nullable_if_input=None, default_if_input=None):

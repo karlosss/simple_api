@@ -4,7 +4,8 @@ import graphene
 
 from adapters.graphql.registry import get_class
 from adapters.graphql.utils import ConversionType
-from object.datatypes import StringType, IntegerType, ObjectType, PlainListType, BooleanType, FloatType
+from object.datatypes import StringType, IntegerType, ObjectType, PlainListType, BooleanType, FloatType, DateType, \
+    TimeType, DateTimeType
 
 
 @singledispatch
@@ -23,13 +24,28 @@ def convert_output_integer_type(type, adapter, **kwargs):
 
 
 @convert_output_type.register(BooleanType)
-def convert_output_integer_type(type, adapter, **kwargs):
+def convert_output_boolean_type(type, adapter, **kwargs):
     return convert_output_class_type(type, graphene.Boolean, adapter, **kwargs)
 
 
 @convert_output_type.register(FloatType)
-def convert_output_integer_type(type, adapter, **kwargs):
+def convert_output_float_type(type, adapter, **kwargs):
     return convert_output_class_type(type, graphene.Float, adapter, **kwargs)
+
+
+@convert_output_type.register(DateType)
+def convert_output_date_type(type, adapter, **kwargs):
+    return convert_output_class_type(type, graphene.Date, adapter, **kwargs)
+
+
+@convert_output_type.register(TimeType)
+def convert_output_time_type(type, adapter, **kwargs):
+    return convert_output_class_type(type, graphene.Time, adapter, **kwargs)
+
+
+@convert_output_type.register(DateTimeType)
+def convert_output_date_time_type(type, adapter, **kwargs):
+    return convert_output_class_type(type, graphene.DateTime, adapter, **kwargs)
 
 
 @convert_output_type.register(ObjectType)
