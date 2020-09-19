@@ -15,7 +15,7 @@ def echo(request, params):
 
 actions = {
     "echo_safe": Action(parameters={"string": StringType()}, return_value=StringType(), exec_fn=Function(echo)),
-    "echo_unsafe": Action(parameters={"string": StringType()}, return_value=StringType(), exec_fn=Function(echo), unsafe=True),
+    "echo_unsafe": Action(parameters={"string": StringType()}, return_value=StringType(), exec_fn=Function(echo), mutation=True),
 }
 
 schema = generate(GraphQLAdapter, [], actions)

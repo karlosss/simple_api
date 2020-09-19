@@ -1,12 +1,12 @@
 class Action:
-    def __init__(self, parameters=None, return_value=None, exec_fn=None, unsafe=False):
+    def __init__(self, parameters=None, return_value=None, exec_fn=None, **kwargs):
         if parameters is None:
             parameters = {}
         self.parameters = parameters
         self.return_value = return_value
         self.exec_fn = exec_fn
         self.parent_class = None
-        self.unsafe = unsafe
+        self.kwargs = kwargs
 
         for name, param in parameters.items():
             assert param.nullable or param.default is None, \

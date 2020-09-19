@@ -14,9 +14,9 @@ class GraphQLAdapter(Adapter):
         return convert_type(field, self, **kwargs)
 
     def convert_action(self, action, **kwargs):
-        if action.unsafe:
-            return self.convert_unsafe_action(action, kwargs["name"])
-        return self.convert_safe_action(action)
+        if action.kwargs.get("mutation", False):
+            return self.convert_mutation_action(action, kwargs["name"])
+        return self.convert_query_action(action)
 
     def convert_action_params(self, action):
         params = {}
@@ -24,7 +24,7 @@ class GraphQLAdapter(Adapter):
             params[name] = field.convert(self, _as=ConversionType.PARAMETER)
         return params
 
-    def convert_safe_action(self, action):
+    def convert_query_action(self, action):
         params = self.convert_action_params(action)
 
         def resolve_field(*args, **kwargs):
@@ -34,7 +34,7 @@ class GraphQLAdapter(Adapter):
 
         return field
 
-    def convert_unsafe_action(self, action, name):
+    def convert_mutation_action(self, action, name):
         arguments = type("Arguments", (), self.convert_action_params(action))
         output = action.return_value.convert(self, _as=ConversionType.LIST_OUTPUT)
 
@@ -63,7 +63,7 @@ class GraphQLAdapter(Adapter):
             out[name] = field.convert(self, _as=ConversionType.INPUT)
         return out
 
-    def convert_safe_actions(self, actions_dict, prefix=""):
+    def convert_query_actions(self, actions_dict, prefix=""):
         out = {}
         for name, action in actions_dict.items():
             if prefix:  # add prefix to the action name
@@ -75,28 +75,28 @@ class GraphQLAdapter(Adapter):
         if prefix:
             prefix = decapitalize(prefix) + "_"
 
-        safe_actions = {}
-        unsafe_actions = {}
+        query_actions = {}
+        mutation_actions = {}
 
         for name, action in actions.items():
-            if action.unsafe:
-                unsafe_actions[prefix + name] = self.convert_unsafe_action(action, prefix+name)
+            if action.kwargs.get("mutation", False):
+                mutation_actions[prefix + name] = self.convert_mutation_action(action, prefix + name)
             else:
-                safe_actions[prefix + name] = self.convert_safe_action(action)
+                query_actions[prefix + name] = self.convert_query_action(action)
 
-        return safe_actions, unsafe_actions
+        return query_actions, mutation_actions
 
     @staticmethod
-    def update_mutation_classes(unsafe_actions, mutation_classes):
-        for name, action in unsafe_actions.items():
-            assert name not in mutation_classes, "Duplicate unsafe action name: `{}`".format(name)
+    def update_mutation_classes(mutation_actions, mutation_classes):
+        for name, action in mutation_actions.items():
+            assert name not in mutation_classes, "Duplicate mutation action name: `{}`".format(name)
             mutation_classes[name] = action
 
     def generate(self):
         query_classes = []
         mutation_classes = {}
 
-        at_least_one_safe_action_exists = False
+        at_least_one_query_action_exists = False
 
         for obj in self.objects:
             for name, field in self.convert_output_fields_for_object(obj).items():
@@ -105,24 +105,24 @@ class GraphQLAdapter(Adapter):
             for name, field in self.convert_input_fields_for_object(obj).items():
                 get_class(obj, input=True)._meta.fields[name] = field
 
-            safe_actions, unsafe_actions = self.convert_actions(obj.actions, obj.__name__)
-            if safe_actions:
-                at_least_one_safe_action_exists = True
+            query_actions, mutation_actions = self.convert_actions(obj.actions, obj.__name__)
+            if query_actions:
+                at_least_one_query_action_exists = True
 
-            query_class = type("Query", (graphene.ObjectType,), safe_actions)
+            query_class = type("Query", (graphene.ObjectType,), query_actions)
             query_classes.append(query_class)
-            self.update_mutation_classes(unsafe_actions, mutation_classes)
+            self.update_mutation_classes(mutation_actions, mutation_classes)
 
-        safe_actions, unsafe_actions = self.convert_actions(self.extra_actions)
+        query_actions, mutation_actions = self.convert_actions(self.extra_actions)
         
-        # if there are no safe actions, create a dummy one, since graphene-python needs that
-        if not safe_actions and not at_least_one_safe_action_exists:
-            safe_actions = {"dummy": Action(return_value=BooleanType(),
+        # if there are no query actions, create a dummy one, since graphene-python needs that
+        if not query_actions and not at_least_one_query_action_exists:
+            query_actions = {"dummy": Action(return_value=BooleanType(),
                                             exec_fn=Function(lambda request, params: False)).convert(self)}
 
-        self.update_mutation_classes(unsafe_actions, mutation_classes)
+        self.update_mutation_classes(mutation_actions, mutation_classes)
 
-        query_class = type("Query", tuple(query_classes) + (graphene.ObjectType,), safe_actions)
+        query_class = type("Query", tuple(query_classes) + (graphene.ObjectType,), query_actions)
 
         mutation_class = None
         if mutation_classes:

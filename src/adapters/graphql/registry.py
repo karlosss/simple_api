@@ -9,7 +9,7 @@ _output_classes = {}
 
 def get_class(cls, input=False):
     assert not cls.__name__.endswith(INPUT_CLASS_SUFFIX), \
-        "`{}`: An object name cannot end with `Input`.".format(cls.__name__)
+        "`{}`: An object name cannot end with `{}`.".format(cls.__name__, INPUT_CLASS_SUFFIX)
 
     cls_str = "{}.{}".format(cls.__module__, cls.__name__)
 
