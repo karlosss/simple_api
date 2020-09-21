@@ -10,7 +10,7 @@ from object.datatypes import StringType, IntegerType, ObjectType, PlainListType,
 
 @singledispatch
 def convert_list_input_type(type, adapter, **kwargs):
-    raise NotImplementedError
+    raise NotImplementedError(type.__class__)
 
 
 @convert_list_input_type.register(StringType)

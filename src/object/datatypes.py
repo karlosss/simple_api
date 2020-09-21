@@ -1,7 +1,8 @@
 from inspect import isclass
 
 from constants import OBJECT_SELF_REFERENCE
-from object.object import ObjectMeta, Object
+from object.object import Object
+from object.registry import object_meta_storage
 
 
 class Type:
@@ -35,37 +36,53 @@ class Type:
     def convert(self, adapter, **kwargs):
         return adapter.convert_field(self, **kwargs)
 
+    def to_string(self):
+        return "Type"
+
+    def __str__(self):
+        return "{}{}".format(self.to_string(), "" if self.nullable() else "!")
+
+    def __repr__(self):
+        return str(self)
+
 
 class PrimitiveType(Type):
     pass
 
 
 class IntegerType(PrimitiveType):
-    pass
+    def to_string(self):
+        return "Integer"
 
 
 class FloatType(PrimitiveType):
-    pass
+    def to_string(self):
+        return "Float"
 
 
 class StringType(PrimitiveType):
-    pass
+    def to_string(self):
+        return "String"
 
 
 class BooleanType(PrimitiveType):
-    pass
+    def to_string(self):
+        return "Boolean"
 
 
 class DateType(PrimitiveType):
-    pass
+    def to_string(self):
+        return "Date"
 
 
 class TimeType(PrimitiveType):
-    pass
+    def to_string(self):
+        return "Time"
 
 
 class DateTimeType(PrimitiveType):
-    pass
+    def to_string(self):
+        return "DateTime"
 
 
 class ObjectType(Type):
@@ -74,6 +91,7 @@ class ObjectType(Type):
         super().__init__(nullable=nullable, default=default, parameters=parameters, resolver=resolver,
                          nullable_if_input=nullable_if_input, default_if_input=default_if_input)
         self.to = to
+        self._set_ref_handler = None  # handler for Django models - this way we don't mix layers
 
     def get_parent_class(self):
         assert self.parent_class is not None, \
@@ -82,18 +100,24 @@ class ObjectType(Type):
         return self.parent_class
 
     def set_ref(self):
+        if self._set_ref_handler is not None:
+            self._set_ref_handler(self)
+
         if isclass(self.to) and issubclass(self.to, Object):
             pass
         elif self.to == OBJECT_SELF_REFERENCE:
             self.to = self.get_parent_class()
         elif "." not in self.to:
-            self.to = ObjectMeta.get_class(self.get_parent_class().__module__, self.to)
+            self.to = object_meta_storage.get_class(self.get_parent_class().__module__, self.to)
         else:
-            self.to = ObjectMeta.get_class(*self.to.rsplit(".", 1))
+            self.to = object_meta_storage.get_class(*self.to.rsplit(".", 1))
 
     def convert(self, adapter, **kwargs):
         self.set_ref()
         return super().convert(adapter, **kwargs)
+
+    def to_string(self):
+        return self.to.__name__
 
 
 class PlainListType(Type):
@@ -106,3 +130,6 @@ class PlainListType(Type):
     def set_parent_class(self, cls):
         self.of.set_parent_class(cls)
         super().set_parent_class(cls)
+
+    def to_string(self):
+        return "[{}]".format(self.of)
