@@ -86,12 +86,13 @@ class DateTimeType(PrimitiveType):
 
 
 class ObjectType(Type):
+    _set_ref_handler = None  # Django model handler goes here - this way, we don't mix layers
+
     def __init__(self, to, nullable=False, default=None, parameters=None, resolver=None,
                  nullable_if_input=None, default_if_input=None):
         super().__init__(nullable=nullable, default=default, parameters=parameters, resolver=resolver,
                          nullable_if_input=nullable_if_input, default_if_input=default_if_input)
         self.to = to
-        self._set_ref_handler = None  # handler for Django models - this way we don't mix layers
 
     def get_parent_class(self):
         assert self.parent_class is not None, \
@@ -100,8 +101,8 @@ class ObjectType(Type):
         return self.parent_class
 
     def set_ref(self):
-        if self._set_ref_handler is not None:
-            self._set_ref_handler(self)
+        if ObjectType._set_ref_handler is not None:
+            ObjectType._set_ref_handler(self)
 
         if isclass(self.to) and issubclass(self.to, Object):
             pass

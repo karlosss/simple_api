@@ -59,14 +59,12 @@ def convert_to_date_time_type(field):
 @convert_django_field.register(ForeignKey)
 def convert_to_object_type(field):
     target_model = field.remote_field.model
-    type = ObjectType(target_model, nullable=field.null)
-    type._set_ref_handler = model_set_ref_handler
-    return type
+    ObjectType._set_ref_handler = model_set_ref_handler
+    return ObjectType(target_model, nullable=field.null)
 
 
 @convert_django_field.register(ManyToOneRel)
 def convert_to_list_of_object_type(field):
     target_model = field.remote_field.model
-    type = ObjectType(target_model)
-    type._set_ref_handler = model_set_ref_handler
-    return PlainListType(type)
+    ObjectType._set_ref_handler = model_set_ref_handler
+    return PlainListType(ObjectType(target_model))

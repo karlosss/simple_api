@@ -18,7 +18,7 @@ class FKTarget(DjangoObject):
 
 
 actions = {
-    "a": Action(return_value=ObjectType(FKSource), exec_fn=1),
+    "a": Action(return_value=ObjectType(TestModelFKSource), exec_fn=1),
     "b": Action(return_value=ObjectType(FKTarget), exec_fn=1),
 }
 
