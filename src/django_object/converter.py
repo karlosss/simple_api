@@ -1,17 +1,10 @@
 from functools import singledispatch
-from inspect import isclass
 
 from django.db.models import AutoField, IntegerField, CharField, TextField, BooleanField, FloatField, DateField, \
-    TimeField, DateTimeField, ForeignKey, ManyToOneRel, Model
+    TimeField, DateTimeField, ForeignKey, ManyToOneRel, ManyToManyField, ManyToManyRel, OneToOneField
 
-from django_object.registry import django_object_meta_storage
 from object.datatypes import IntegerType, StringType, BooleanType, FloatType, DateType, TimeType, DateTimeType, \
     ObjectType, PlainListType
-
-
-def model_set_ref_handler(object_type):
-    if isclass(object_type.to) and issubclass(object_type.to, Model):
-        object_type.to = django_object_meta_storage.get_class(object_type.to)
 
 
 @singledispatch
@@ -57,14 +50,15 @@ def convert_to_date_time_type(field):
 
 
 @convert_django_field.register(ForeignKey)
+@convert_django_field.register(OneToOneField)
 def convert_to_object_type(field):
     target_model = field.remote_field.model
-    ObjectType._set_ref_handler = model_set_ref_handler
     return ObjectType(target_model, nullable=field.null)
 
 
 @convert_django_field.register(ManyToOneRel)
+@convert_django_field.register(ManyToManyField)
+@convert_django_field.register(ManyToManyRel)
 def convert_to_list_of_object_type(field):
     target_model = field.remote_field.model
-    ObjectType._set_ref_handler = model_set_ref_handler
     return PlainListType(ObjectType(target_model))

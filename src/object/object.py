@@ -7,7 +7,7 @@ class ObjectMeta(type):
     base_class = "object.object.Object"
 
     @classmethod
-    def set_parent_class(mcs, cls):
+    def inject_references(mcs, cls):
         for field in {**cls.fields, **cls.input_fields, **cls.output_fields}.values():
             field.set_parent_class(cls)
 
@@ -22,7 +22,8 @@ class ObjectMeta(type):
         # store class stub
         object_meta_storage.store_class(cls.__module__, name, cls)
 
-        mcs.set_parent_class(cls)
+        if not kwargs.get("no_inject", False):
+            mcs.inject_references(cls)
 
         return cls
 

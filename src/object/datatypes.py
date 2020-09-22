@@ -96,7 +96,7 @@ class ObjectType(Type):
 
     def get_parent_class(self):
         assert self.parent_class is not None, \
-            "\"{}\" is not allowed reference for actions without model. " \
+            "`{}` is not allowed reference for actions without associated object. " \
             "Pass either class reference, or an absolute module path.".format(self.to)
         return self.parent_class
 
@@ -118,7 +118,9 @@ class ObjectType(Type):
         return super().convert(adapter, **kwargs)
 
     def to_string(self):
-        return self.to.__name__
+        if isclass(self.to):
+            return self.to.__name__
+        return self.to
 
 
 class PlainListType(Type):

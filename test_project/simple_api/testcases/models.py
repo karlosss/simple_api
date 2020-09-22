@@ -1,5 +1,5 @@
 from django.db.models import Model, IntegerField, FloatField, CharField, TextField, DateField, TimeField, DateTimeField, \
-    BooleanField, ForeignKey, CASCADE
+    BooleanField, ForeignKey, CASCADE, ManyToManyField, OneToOneField
 
 
 class TestModelPrimitiveFields(Model):
@@ -18,4 +18,14 @@ class TestModelFKTarget(Model):
 
     
 class TestModelFKSource(Model):
-    fk_field = ForeignKey(TestModelFKTarget, on_delete=CASCADE, related_name="sources")
+    fk_field = ForeignKey(TestModelFKTarget, on_delete=CASCADE, related_name="fk_sources")
+    one_to_one_field = OneToOneField(TestModelFKTarget, on_delete=CASCADE)
+
+
+class TestModelM2MTarget(Model):
+    int_field = IntegerField()
+
+
+class TestModelM2MSource(Model):
+    m2m_field = ManyToManyField(TestModelM2MTarget, related_name="m2m_sources")
+

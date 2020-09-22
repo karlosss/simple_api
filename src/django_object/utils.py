@@ -75,3 +75,7 @@ def convert_fields_to_simple_api(fields):
     for k, v in fields.items():
         converted_fields[k] = convert_django_field(v)
     return converted_fields
+
+
+def filter_simple_api_fields_from_model(model, only_fields, exclude_fields):
+    return convert_fields_to_simple_api(filter_fields_from_model(model, only_fields, exclude_fields))

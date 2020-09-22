@@ -2,33 +2,29 @@ from graphene_django.utils import GraphQLTestCase
 
 from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
+from django_object.actions import DetailAction
 from django_object.django_object import DjangoObject
 from object.actions import Action
-from object.datatypes import ObjectType
-from testcases.models import TestModelFKSource, TestModelFKTarget
+from object.datatypes import ObjectType, IntegerType
+from object.object import Object
+from testcases.models import TestModelM2MSource, TestModelM2MTarget
 from tests.graphql_test_utils import get_graphql_url, remove_ws
 
 
-class FKSource(DjangoObject):
-    model = TestModelFKSource
+class M2MSource(DjangoObject):
+    model = TestModelM2MSource
 
 
-class FKTarget(DjangoObject):
-    model = TestModelFKTarget
-
-
-class FkTarget2(DjangoObject):
-    model = TestModelFKTarget
-    class_for_related = False
+class M2MTarget(DjangoObject):
+    model = TestModelM2MTarget
 
 
 actions = {
-    "a": Action(return_value=ObjectType(FKSource), exec_fn=1),
-    "b": Action(return_value=ObjectType(TestModelFKTarget), exec_fn=1),
-    "c": Action(return_value=ObjectType(FkTarget2), exec_fn=1),
+    "a": Action(return_value=ObjectType(M2MSource), exec_fn=1),
+    "b": Action(return_value=ObjectType(M2MTarget), exec_fn=1),
 }
 
-schema = generate(GraphQLAdapter, [FKSource, FKTarget, FkTarget2], actions)
+schema = generate(GraphQLAdapter, [M2MSource, M2MTarget])
 
 
 class Test(GraphQLTestCase):

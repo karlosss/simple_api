@@ -13,10 +13,10 @@ class GraphQLAdapter(Adapter):
     def convert_field(self, field, **kwargs):
         return convert_type(field, self, **kwargs)
 
-    def convert_action(self, action, **kwargs):
-        if action.kwargs.get("mutation", False):
-            return self.convert_mutation_action(action, kwargs["name"])
-        return self.convert_query_action(action)
+    # def convert_action(self, action, **kwargs):
+    #     if action.kwargs.get("mutation", False):
+    #         return self.convert_mutation_action(action, kwargs["name"])
+    #     return self.convert_query_action(action)
 
     def convert_action_params(self, action):
         params = {}
@@ -28,18 +28,18 @@ class GraphQLAdapter(Adapter):
         params = self.convert_action_params(action)
 
         def resolve_field(*args, **kwargs):
-            return action.exec_fn.convert(self, _as=ConversionType.EXEC_FN)(*args, **kwargs)
+            return action.get_exec_fn().convert(self, _as=ConversionType.EXEC_FN)(*args, **kwargs)
 
-        field = action.return_value.convert(self, _as=ConversionType.OUTPUT, args=params, resolver=resolve_field)
+        field = action.get_return_value().convert(self, _as=ConversionType.OUTPUT, args=params, resolver=resolve_field)
 
         return field
 
     def convert_mutation_action(self, action, name):
         arguments = type("Arguments", (), self.convert_action_params(action))
-        output = action.return_value.convert(self, _as=ConversionType.LIST_OUTPUT)
+        output = action.get_return_value().convert(self, _as=ConversionType.LIST_OUTPUT)
 
         def mutate(*args, **kwargs):
-            return action.exec_fn.convert(self, _as=ConversionType.EXEC_FN)(*args, **kwargs)
+            return action.get_exec_fn().convert(self, _as=ConversionType.EXEC_FN)(*args, **kwargs)
 
         cls = type(name, (graphene.Mutation,), {
             "Arguments": arguments,
@@ -118,7 +118,7 @@ class GraphQLAdapter(Adapter):
         # if there are no query actions, create a dummy one, since graphene-python needs that
         if not query_actions and not at_least_one_query_action_exists:
             query_actions = {"dummy": Action(return_value=BooleanType(),
-                                            exec_fn=Function(lambda request, params: False)).convert(self)}
+                                             exec_fn=Function(lambda request, params: False)).convert(self)}
 
         self.update_mutation_classes(mutation_actions, mutation_classes)
 
