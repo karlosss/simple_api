@@ -95,9 +95,6 @@ class ObjectType(Type):
         self.to = to
 
     def get_parent_class(self):
-        assert self.parent_class is not None, \
-            "`{}` is not allowed reference for actions without associated object. " \
-            "Pass either class reference, or an absolute module path.".format(self.to)
         return self.parent_class
 
     def set_ref(self):
@@ -109,7 +106,7 @@ class ObjectType(Type):
         elif self.to == OBJECT_SELF_REFERENCE:
             self.to = self.get_parent_class()
         elif "." not in self.to:
-            self.to = object_storage.get(self.get_parent_class().__module__, self.to)
+            self.to = object_storage.get(getattr(self.get_parent_class(), "__module__", None), self.to)
         else:
             self.to = object_storage.get(*self.to.rsplit(".", 1))
 
