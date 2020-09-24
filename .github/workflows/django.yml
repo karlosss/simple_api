@@ -27,4 +27,4 @@ jobs:
         pip install -r requirements.txt
     - name: Run Tests
       run: |
-        test_project/simple_api/manage.py test --pattern="*.py"
+        ./run_tests.sh
