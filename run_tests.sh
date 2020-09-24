@@ -12,8 +12,13 @@ rm -f test_project/simple_api/db.sqlite3
 # copy sources into test project
 cp tests/graphql/django_object_foreign_key/[!_]* test_project/simple_api/testcases
 
+# activate virtualenv if exists
+if [[ -d venv ]]
+then
+    . venv/bin/activate
+fi
+
 # migrate database
-. venv/bin/activate
 test_project/simple_api/manage.py makemigrations testcases
 test_project/simple_api/manage.py migrate
 
