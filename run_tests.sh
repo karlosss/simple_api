@@ -3,10 +3,7 @@
 cd "${0%/*}"
 
 # cleanup possible old runs
-rm -rf test_project/simple_api/testcases/migrations
-rm -f test_project/simple_api/testcases/models.py
-rm -f test_project/simple_api/testcases/objects.py
-rm -f test_project/simple_api/testcases/tests.py
+find test_project/simple_api/testcases ! \( -name '__init__.py' -o -name 'admin.py' -o -name 'apps.py' -o -name 'utils.py' -o -name 'views.py' \) -type f -exec rm -rf {} \;
 rm -f test_project/simple_api/db.sqlite3
 
 # copy sources into test project
