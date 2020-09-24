@@ -44,6 +44,58 @@ class Test(GraphQLTestCase):
             date_time_field=datetime.datetime(year=2020, month=1, day=1, hour=12, minute=34, second=56)
         )
 
+    def test_schema(self):
+        self.assertEqual(
+            remove_ws(str(self.GRAPHQL_SCHEMA)),
+            remove_ws(
+                """
+                schema {
+                  query: Query
+                }
+                
+                scalar Date
+                
+                scalar DateTime
+                
+                type Query {
+                  testModelObjectExcludeFieldsDetail(id: Int!): TestModelObjectExcludeFields!
+                  testModelObjectOnlyFieldsDetail(id: Int!): TestModelObjectOnlyFields!
+                  testModelObjectAllFieldsDetail(id: Int!): TestModelObjectAllFields!
+                }
+                
+                type TestModelObjectAllFields {
+                  id: Int!
+                  intField: Int!
+                  floatField: Float!
+                  stringCharField: String!
+                  stringTextField: String!
+                  boolField: Boolean!
+                  dateField: Date!
+                  timeField: Time!
+                  dateTimeField: DateTime!
+                }
+                
+                type TestModelObjectExcludeFields {
+                  id: Int!
+                  intField: Int!
+                  floatField: Float!
+                  boolField: Boolean!
+                  dateField: Date!
+                  timeField: Time!
+                  dateTimeField: DateTime!
+                }
+                
+                type TestModelObjectOnlyFields {
+                  intField: Int!
+                  floatField: Float!
+                }
+                
+                scalar Time
+
+                """
+            )
+        )
+
     def test_all(self):
         resp = self.query(
             """

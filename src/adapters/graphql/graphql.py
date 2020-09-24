@@ -3,7 +3,7 @@ import graphene
 from adapters.base import Adapter
 from adapters.graphql.converter.converter import convert_type, convert_function, ConversionType
 from adapters.graphql.registry import get_class, check_classes_for_fields
-from adapters.graphql.utils import decapitalize
+from adapters.graphql.utils import decapitalize, is_mutation
 from object.actions import Action
 from object.datatypes import BooleanType
 from object.function import Function
@@ -13,10 +13,10 @@ class GraphQLAdapter(Adapter):
     def convert_field(self, field, **kwargs):
         return convert_type(field, self, **kwargs)
 
-    # def convert_action(self, action, **kwargs):
-    #     if action.kwargs.get("mutation", False):
-    #         return self.convert_mutation_action(action, kwargs["name"])
-    #     return self.convert_query_action(action)
+    def convert_action(self, action, **kwargs):
+        if is_mutation(action):
+            return self.convert_mutation_action(action, kwargs["name"])
+        return self.convert_query_action(action)
 
     def convert_action_params(self, action):
         params = {}
@@ -79,10 +79,11 @@ class GraphQLAdapter(Adapter):
         mutation_actions = {}
 
         for name, action in actions.items():
-            if action.kwargs.get("mutation", False):
-                mutation_actions[prefix + name] = self.convert_mutation_action(action, prefix + name)
+            converted_action = action.convert(self, name=prefix+name)
+            if is_mutation(action):
+                mutation_actions[prefix + name] = converted_action
             else:
-                query_actions[prefix + name] = self.convert_query_action(action)
+                query_actions[prefix + name] = converted_action
 
         return query_actions, mutation_actions
 

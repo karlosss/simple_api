@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 
-if [[ $# -lt 1 ]]
-then
-    echo "Usage: $0 VENV_NAME [PATTERN]" >&2
-    exit 2
-fi
-
 cd "${0%/*}"
 
-. "$1/bin/activate"
+# cleanup possible old runs
+rm -rf test_project/simple_api/testcases/migrations
+rm -f test_project/simple_api/testcases/models.py
+rm -f test_project/simple_api/testcases/objects.py
+rm -f test_project/simple_api/testcases/tests.py
+rm -f test_project/simple_api/db.sqlite3
 
-pattern="*.py"
-if [[ -n "$2" ]]
-then
-    pattern=$2
-fi
+# copy sources into test project
+cp tests/graphql/django_object_foreign_key/[!_]* test_project/simple_api/testcases
 
-test_project/simple_api/manage.py test --pattern="$pattern"
+# migrate database
+. venv/bin/activate
+test_project/simple_api/manage.py makemigrations testcases
+test_project/simple_api/manage.py migrate
+
+# run tests
+test_project/simple_api/manage.py test testcases.tests

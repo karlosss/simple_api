@@ -8,7 +8,7 @@ from object.actions import Action
 from object.datatypes import ObjectType, DateType, TimeType, DateTimeType
 from object.function import Function
 from object.object import Object
-from tests.graphql_test_utils import get_graphql_url, remove_ws
+from tests.graphql_test_utils import get_graphql_url, remove_ws, CustomGraphQLTestCase
 
 
 def get_object(request, params):
@@ -59,7 +59,7 @@ actions = {
 schema = generate(GraphQLAdapter, [TestObject], actions)
 
 
-class Test(GraphQLTestCase):
+class Test(CustomGraphQLTestCase):
     GRAPHQL_SCHEMA = schema
     GRAPHQL_URL = get_graphql_url(__file__)
 

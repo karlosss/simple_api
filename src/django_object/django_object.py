@@ -1,10 +1,12 @@
 from copy import deepcopy
 
-from django_object.actions import DetailAction
-from django_object.utils import convert_fields_to_simple_api, filter_fields_from_model
+from django_object.actions import DetailAction, ListAction, ModelAction
+from django_object.filters import model_filters_storage
+from django_object.utils import filter_fields_from_model
+from django_object.converter import convert_fields_to_simple_api
 from object.object import Object, ObjectMeta
-from object.registry import object_meta_storage
-from django_object.registry import django_object_meta_storage
+from object.registry import object_storage
+from django_object.registry import model_django_object_storage
 
 
 class DjangoObjectMeta(ObjectMeta):
@@ -12,19 +14,17 @@ class DjangoObjectMeta(ObjectMeta):
 
     @classmethod
     def inject_references(mcs, cls):
-        if "detail" in cls.actions:
-            # sets just the class, parameters and return value are still None; this is important so that the action
-            # can read the model from it
-            cls.actions["detail"].set_parent_class(cls)
-
-            # with the knowledge of the model, we can now determine parameters and finish the setup
-            cls.actions["detail"].determine_parameters()
-            cls.actions["detail"].set_parent_class(cls)
+        for action in cls.actions.values():
+            # for a model action, set the class so that the action knows which model belongs to it and it can
+            # determine the parameters; after that, we can treat it normally
+            if isinstance(action, ModelAction):
+                action.set_parent_class(cls)
+                action.determine_parameters()
 
         super().inject_references(cls)
 
     def __new__(mcs, name, bases, attrs, **kwargs):
-        if kwargs.get("skip", False) or object_meta_storage.key_for_class(attrs["__module__"], name) == mcs.base_class:
+        if kwargs.get("skip", False) or object_storage.key_for_class(attrs["__module__"], name) == mcs.base_class:
             return super().__new__(mcs, name, bases, attrs, skip=True, **kwargs)
 
         assert "fields" not in attrs, "`DjangoObject` cannot override `fields`."
@@ -34,16 +34,19 @@ class DjangoObjectMeta(ObjectMeta):
 
         cls = super().__new__(mcs, name, bases, attrs, no_inject=True, **kwargs)
 
-        if cls.class_for_related:
-            django_object_meta_storage.store_class(cls.model, cls)
-
         cls.fields = convert_fields_to_simple_api(
             filter_fields_from_model(cls.model, cls.only_fields, cls.exclude_fields)
         )
 
+        if cls.class_for_related:
+            model_django_object_storage.store(cls.model, cls)
+            model_filters_storage.store(cls.model, cls)
+
         cls.actions = {}
         if cls.detail_action:
             cls.actions["detail"] = deepcopy(cls.detail_action)
+        # if cls.list_action:
+        #     cls.actions["list"] = deepcopy(cls.list_action)
 
         # todo check extra actions for reserved keyword actions
 
@@ -62,6 +65,11 @@ class DjangoObject(Object, metaclass=DjangoObjectMeta):
     exclude_fields = None
     extra_fields = {}
 
+    only_filters = None
+    exclude_filters = None
+    extra_filters = {}
+
     extra_actions = {}
 
     detail_action = DetailAction()
+    # list_action = ListAction()

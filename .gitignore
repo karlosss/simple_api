@@ -1,3 +1,8 @@
 venv/
 db.sqlite3
 __pycache__
+
+test_project/simple_api/testcases/migrations/
+test_project/simple_api/testcases/models.py
+test_project/simple_api/testcases/objects.py
+test_project/simple_api/testcases/tests.py

@@ -1,25 +1,24 @@
-class ObjectMetaStorage:
-    classes = {}
+from utils import Storage
 
+
+class ObjectStorage(Storage):
     @staticmethod
     def key_for_class(module_name, class_name):
         return "{}.{}".format(module_name, class_name)
 
-    @staticmethod
-    def store_class(module_name, class_name, cls):
-        key = ObjectMetaStorage.key_for_class(module_name, class_name)
-        ObjectMetaStorage.classes[key] = cls
+    def store(self, module_name, class_name, cls):
+        key = ObjectStorage.key_for_class(module_name, class_name)
+        ObjectStorage.storage[key] = cls
 
     @staticmethod
     def class_exists(module_name, class_name):
-        key = ObjectMetaStorage.key_for_class(module_name, class_name)
-        return key in ObjectMetaStorage.classes
+        key = ObjectStorage.key_for_class(module_name, class_name)
+        return key in ObjectStorage.storage
 
-    @staticmethod
-    def get_class(module_name, class_name):
-        key = ObjectMetaStorage.key_for_class(module_name, class_name)
-        assert key in ObjectMetaStorage.classes, "Class does not exist: `{}.{}`".format(module_name, class_name)
-        return ObjectMetaStorage.classes[key]
+    def get(self, module_name, class_name):
+        key = ObjectStorage.key_for_class(module_name, class_name)
+        assert key in ObjectStorage.storage, "Class does not exist: `{}.{}`".format(module_name, class_name)
+        return ObjectStorage.storage[key]
 
 
-object_meta_storage = ObjectMetaStorage()
+object_storage = ObjectStorage()

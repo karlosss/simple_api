@@ -1,8 +1,13 @@
+from collections import OrderedDict
 from functools import singledispatch
 
 from django.db.models import AutoField, IntegerField, CharField, TextField, BooleanField, FloatField, DateField, \
     TimeField, DateTimeField, ForeignKey, ManyToOneRel, ManyToManyField, ManyToManyRel, OneToOneField
 
+from django_object import model_django_object_storage
+from django_object.filters import determine_filters, model_filters_storage
+from django_object.objects import create_list
+from django_object.utils import filter_fields_from_model
 from object.datatypes import IntegerType, StringType, BooleanType, FloatType, DateType, TimeType, DateTimeType, \
     ObjectType, PlainListType
 
@@ -61,4 +66,16 @@ def convert_to_object_type(field):
 @convert_django_field.register(ManyToManyRel)
 def convert_to_list_of_object_type(field):
     target_model = field.remote_field.model
-    return PlainListType(ObjectType(target_model))
+    object_name = target_model.__name__
+    return create_list(ObjectType(target_model), object_name, filters=model_filters_storage.get(target_model))
+
+
+def convert_fields_to_simple_api(fields):
+    converted_fields = OrderedDict()
+    for k, v in fields.items():
+        converted_fields[k] = convert_django_field(v)
+    return converted_fields
+
+
+def filter_simple_api_fields_from_model(model, only_fields, exclude_fields):
+    return convert_fields_to_simple_api(filter_fields_from_model(model, only_fields, exclude_fields))

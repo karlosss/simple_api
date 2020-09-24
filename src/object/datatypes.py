@@ -2,7 +2,7 @@ from inspect import isclass
 
 from constants import OBJECT_SELF_REFERENCE
 from object.object import Object
-from object.registry import object_meta_storage
+from object.registry import object_storage
 
 
 class Type:
@@ -109,9 +109,9 @@ class ObjectType(Type):
         elif self.to == OBJECT_SELF_REFERENCE:
             self.to = self.get_parent_class()
         elif "." not in self.to:
-            self.to = object_meta_storage.get_class(self.get_parent_class().__module__, self.to)
+            self.to = object_storage.get(self.get_parent_class().__module__, self.to)
         else:
-            self.to = object_meta_storage.get_class(*self.to.rsplit(".", 1))
+            self.to = object_storage.get(*self.to.rsplit(".", 1))
 
     def convert(self, adapter, **kwargs):
         self.set_ref()

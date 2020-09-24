@@ -2,13 +2,10 @@ from graphene_django.utils import GraphQLTestCase
 
 from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
-from django_object.actions import DetailAction
 from django_object.django_object import DjangoObject
-from object.actions import Action
-from object.datatypes import ObjectType, IntegerType
-from object.object import Object
+from object.registry import object_storage
 from testcases.models import TestModelM2MSource, TestModelM2MTarget
-from tests.graphql_test_utils import get_graphql_url, remove_ws
+from tests.graphql_test_utils import get_graphql_url, remove_ws, CustomGraphQLTestCase
 
 
 class M2MSource(DjangoObject):
@@ -18,16 +15,13 @@ class M2MSource(DjangoObject):
 class M2MTarget(DjangoObject):
     model = TestModelM2MTarget
 
+print(object_storage.storage.values())
 
-actions = {
-    "a": Action(return_value=ObjectType(M2MSource), exec_fn=1),
-    "b": Action(return_value=ObjectType(M2MTarget), exec_fn=1),
-}
 
 schema = generate(GraphQLAdapter, [M2MSource, M2MTarget])
 
 
-class Test(GraphQLTestCase):
+class Test(CustomGraphQLTestCase):
     GRAPHQL_SCHEMA = schema
     GRAPHQL_URL = get_graphql_url(__file__)
 
@@ -39,45 +33,22 @@ class Test(GraphQLTestCase):
                 schema {
                   query: Query
                 }
-
-                scalar Date
-
-                scalar DateTime
-
+                
+                type M2MSource {
+                  id: Int!
+                  m2mField: [M2MTarget!]!
+                }
+                
+                type M2MTarget {
+                  id: Int!
+                  intField: Int!
+                  m2mSources: [M2MSource!]!
+                }
+                
                 type Query {
-                  a: TestModelObjectAllFields!
-                  b: TestModelObjectOnlyFields!
-                  c: TestModelObjectExcludeFields!
+                  m2MTargetDetail(id: Int!): M2MTarget!
+                  m2MSourceDetail(id: Int!): M2MSource!
                 }
-
-                type TestModelObjectAllFields {
-                  id: Int!
-                  intField: Int!
-                  floatField: Float!
-                  stringCharField: String!
-                  stringTextField: String!
-                  boolField: Boolean!
-                  dateField: Date!
-                  timeField: Time!
-                  dateTimeField: DateTime!
-                }
-
-                type TestModelObjectExcludeFields {
-                  id: Int!
-                  intField: Int!
-                  floatField: Float!
-                  boolField: Boolean!
-                  dateField: Date!
-                  timeField: Time!
-                  dateTimeField: DateTime!
-                }
-
-                type TestModelObjectOnlyFields {
-                  intField: Int!
-                  floatField: Float!
-                }
-
-                scalar Time
                 """
             )
         )

@@ -32,3 +32,31 @@ class AttrDict(dict):
 
     def values(self):
         return tuple(super().values())
+
+
+class StorageMeta(type):
+    classes = []
+
+    @classmethod
+    def store(mcs, cls):
+        mcs.classes.append(cls)
+
+    @classmethod
+    def reset(mcs):
+        for cls in mcs.classes:
+            cls.storage = {}
+
+    def __new__(mcs, *args, **kwargs):
+        cls = super().__new__(mcs, *args, **kwargs)
+        cls.storage = {}
+        return cls
+
+
+class Storage(metaclass=StorageMeta):
+    storage = {}
+
+    def store(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def get(self, *args, **kwargs):
+        raise NotImplementedError

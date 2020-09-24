@@ -1,21 +1,20 @@
-class DjangoObjectMetaStorage:
-    classes_for_related = {}
 
+from utils import Storage
+
+
+class ModelDjangoObjectStorage(Storage):
     @staticmethod
     def same_class(a, b):
         return a.__module__ == b.__module__ and a.__name__ == b.__name__
 
-    @staticmethod
-    def store_class(model, cls):
-        assert model not in DjangoObjectMetaStorage.classes_for_related or DjangoObjectMetaStorage.same_class(DjangoObjectMetaStorage.classes_for_related[model], cls), \
-            "Multiple related classes for model `{}`: `{}` and `{}`.".format(model, DjangoObjectMetaStorage.classes_for_related[model], cls)
-        DjangoObjectMetaStorage.classes_for_related[model] = cls
+    def get(self, model):
+        assert model in self.storage, "Related class for model `{}` does not exist.".format(model)
+        return self.storage[model]
 
-    @staticmethod
-    def get_class(model):
-        assert model in DjangoObjectMetaStorage.classes_for_related, \
-            "Related class for model `{}` does not exist.".format(model)
-        return DjangoObjectMetaStorage.classes_for_related[model]
+    def store(self, model, cls):
+        assert model not in self.storage or self.same_class(self.storage[model], cls), \
+            "Multiple related classes for model `{}`: `{}` and `{}`.".format(model, self.storage[model],cls)
+        self.storage[model] = cls
 
 
-django_object_meta_storage = DjangoObjectMetaStorage()
+model_django_object_storage = ModelDjangoObjectStorage()
