@@ -4,12 +4,11 @@ from functools import singledispatch
 from django.db.models import AutoField, IntegerField, CharField, TextField, BooleanField, FloatField, DateField, \
     TimeField, DateTimeField, ForeignKey, ManyToOneRel, ManyToManyField, ManyToManyRel, OneToOneField
 
-from django_object import model_django_object_storage
-from django_object.filters import determine_filters, model_filters_storage
+from django_object.filters import model_filters_storage
 from django_object.objects import create_list
 from django_object.utils import filter_fields_from_model
 from object.datatypes import IntegerType, StringType, BooleanType, FloatType, DateType, TimeType, DateTimeType, \
-    ObjectType, PlainListType
+    ObjectType
 
 
 @singledispatch

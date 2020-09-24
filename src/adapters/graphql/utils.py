@@ -14,9 +14,5 @@ class ConversionType(Enum):
     RESOLVER = 7
 
 
-def decapitalize(s):
-    return s[:1].lower() + s[1:] if s else ''
-
-
 def is_mutation(action):
     return action.kwargs.get("mutation", False)  # todo list of mutation actions

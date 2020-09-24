@@ -3,7 +3,7 @@ import graphene
 from adapters.base import Adapter
 from adapters.graphql.converter.converter import convert_type, convert_function, ConversionType
 from adapters.graphql.registry import get_class, check_classes_for_fields
-from adapters.graphql.utils import decapitalize, is_mutation
+from adapters.graphql.utils import is_mutation
 from object.actions import Action
 from object.datatypes import BooleanType
 from object.function import Function
@@ -67,13 +67,13 @@ class GraphQLAdapter(Adapter):
         out = {}
         for name, action in actions_dict.items():
             if prefix:  # add prefix to the action name
-                name = decapitalize(prefix) + name.capitalize()
+                name = prefix + "_" + name
             out[name] = action.convert(self)
         return out
 
     def convert_actions(self, actions, prefix=""):
         if prefix:
-            prefix = decapitalize(prefix) + "_"
+            prefix = prefix + "_"
 
         query_actions = {}
         mutation_actions = {}
@@ -130,4 +130,4 @@ class GraphQLAdapter(Adapter):
             mutation_class = type("Mutation", (graphene.ObjectType,), mutation_classes)
 
         check_classes_for_fields()
-        return graphene.Schema(query=query_class, mutation=mutation_class)
+        return graphene.Schema(query=query_class, mutation=mutation_class, auto_camelcase=False)

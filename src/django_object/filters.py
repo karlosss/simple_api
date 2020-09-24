@@ -16,13 +16,13 @@ def determine_filters_for_django_field(field):
 @determine_filters_for_django_field.register(IntegerField)
 def determine_filters_for_integer(field):
     return {
-        "exact": IntegerType(),
-        "gt": IntegerType(),
-        "gte": IntegerType(),
-        "in": PlainListType(IntegerType()),
-        "isnull": BooleanType(),
-        "lt": IntegerType(),
-        "lte": IntegerType(),
+        "exact": IntegerType(nullable=True),
+        "gt": IntegerType(nullable=True),
+        "gte": IntegerType(nullable=True),
+        "in": PlainListType(IntegerType(), nullable=True),
+        "isnull": BooleanType(nullable=True),
+        "lt": IntegerType(nullable=True),
+        "lte": IntegerType(nullable=True),
     }
 
 
@@ -30,14 +30,14 @@ def determine_filters_for_integer(field):
 @determine_filters_for_django_field.register(TextField)
 def determine_filters_for_string(field):
     return {
-        "contains": StringType(),
-        "endswith": StringType(),
-        "icontains": StringType(),
-        "in": PlainListType(StringType()),
-        "iregex": StringType(),
-        "isnull": BooleanType(),
-        "regex": StringType(),
-        "startswith": StringType(),
+        "contains": StringType(nullable=True),
+        "endswith": StringType(nullable=True),
+        "icontains": StringType(nullable=True),
+        "in": PlainListType(StringType(), nullable=True),
+        "iregex": StringType(nullable=True),
+        "isnull": BooleanType(nullable=True),
+        "regex": StringType(nullable=True),
+        "startswith": StringType(nullable=True),
     }
 
 
