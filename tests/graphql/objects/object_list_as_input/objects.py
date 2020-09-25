@@ -11,9 +11,9 @@ def plus_one(request, params):
 
 
 actions = {
-    "plus_one": Action(parameters={"list": PlainListType(IntegerType())},
-                       return_value=PlainListType(IntegerType()),
-                       exec_fn=Function(plus_one)),
+    "plusOne": Action(parameters={"list": PlainListType(IntegerType())},
+                      return_value=PlainListType(IntegerType()),
+                      exec_fn=Function(plus_one)),
 }
 
 schema = generate(GraphQLAdapter, actions)

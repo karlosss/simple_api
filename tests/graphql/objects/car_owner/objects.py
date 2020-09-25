@@ -26,7 +26,7 @@ class Owner(Object):
     }
 
     actions = {
-        "get_by_id": Action(parameters={"id": IntegerType()}, return_value=ObjectType("self"), exec_fn=Function(get_by_id))
+        "getById": Action(parameters={"id": IntegerType()}, return_value=ObjectType("self"), exec_fn=Function(get_by_id))
     }
 
 

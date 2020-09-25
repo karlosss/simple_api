@@ -13,11 +13,11 @@ class Test(GraphQLTestCase):
                 schema {
                   query: Query
                 }
-
+                
                 type Query {
-                  echoNonNull(string: String!): String!
-                  echoDefault(string: String = "default"): String!
-                  echoNullFail(string: String): String!
+                  echo_non_null(string: String!): String!
+                  echo_default(string: String = "default"): String!
+                  echo_null_fail(string: String): String!
                 }
                 """
             )
@@ -27,14 +27,14 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              echoNonNull(string: "hello")
+              echo_non_null(string: "hello")
             }
             """
         )
 
         exp = {
           "data": {
-            "echoNonNull": "hello"
+            "echo_non_null": "hello"
           }
         }
 
@@ -45,14 +45,14 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              echoDefault(string: "hello")
+              echo_default(string: "hello")
             }
             """
         )
 
         exp = {
           "data": {
-            "echoDefault": "hello"
+            "echo_default": "hello"
           }
         }
 
@@ -63,14 +63,14 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              echoDefault
+              echo_default
             }
             """
         )
 
         exp = {
           "data": {
-            "echoDefault": "default"
+            "echo_default": "default"
           }
         }
 
@@ -81,7 +81,7 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              echoNullFail
+              echo_null_fail
             }
             """
         )

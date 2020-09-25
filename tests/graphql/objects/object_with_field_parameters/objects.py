@@ -5,10 +5,11 @@ from object.datatypes import IntegerType, ObjectType
 from object.function import Function
 from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
+from utils import AttrDict
 
 
 def get(request, params):
-    return 20
+    return AttrDict(number=20, number_def=5)
 
 
 def get_number(request, parent_val, params):

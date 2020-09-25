@@ -16,3 +16,7 @@ class ConversionType(Enum):
 
 def is_mutation(action):
     return action.kwargs.get("mutation", False)  # todo list of mutation actions
+
+
+def capitalize(string):
+    return string[0].upper() + string[1:]

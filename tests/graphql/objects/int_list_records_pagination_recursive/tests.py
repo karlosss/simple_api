@@ -16,7 +16,7 @@ class Test(GraphQLTestCase):
 
                 type IntList {
                   count: Int!
-                  allRecords: [Int!]!
+                  all_records: [Int!]!
                   records(limit: Int = 20, offset: Int = 0): IntList!
                 }
 
@@ -33,7 +33,7 @@ class Test(GraphQLTestCase):
             query{
               get(data: [1,2,3,4,5,6,7,8,9]){
                 count
-                allRecords
+                all_records
               }
             }
             """
@@ -43,7 +43,7 @@ class Test(GraphQLTestCase):
             "data": {
                 "get": {
                     "count": 9,
-                    "allRecords": [
+                    "all_records": [
                         1,
                         2,
                         3,
@@ -67,10 +67,10 @@ class Test(GraphQLTestCase):
             query{
               get(data: [1,2,3,4,5,6,7,8,9]){
                 count
-                allRecords
+                all_records
                 records(limit: 5, offset: 2){
                   count
-                  allRecords
+                  all_records
                 }
               }
             }
@@ -81,7 +81,7 @@ class Test(GraphQLTestCase):
             "data": {
                 "get": {
                     "count": 9,
-                    "allRecords": [
+                    "all_records": [
                         1,
                         2,
                         3,
@@ -94,7 +94,7 @@ class Test(GraphQLTestCase):
                     ],
                     "records": {
                         "count": 5,
-                        "allRecords": [
+                        "all_records": [
                             3,
                             4,
                             5,
@@ -115,13 +115,13 @@ class Test(GraphQLTestCase):
             query{
               get(data: [1,2,3,4,5,6,7,8,9]){
                 count
-                allRecords
+                all_records
                 records(limit: 5, offset: 2){
                   count
-                  allRecords
+                  all_records
                   records(limit: 3, offset: 1){
                     count
-                    allRecords
+                    all_records
                   }
                 }
               }
@@ -133,7 +133,7 @@ class Test(GraphQLTestCase):
             "data": {
                 "get": {
                     "count": 9,
-                    "allRecords": [
+                    "all_records": [
                         1,
                         2,
                         3,
@@ -146,7 +146,7 @@ class Test(GraphQLTestCase):
                     ],
                     "records": {
                         "count": 5,
-                        "allRecords": [
+                        "all_records": [
                             3,
                             4,
                             5,
@@ -155,7 +155,7 @@ class Test(GraphQLTestCase):
                         ],
                         "records": {
                             "count": 3,
-                            "allRecords": [
+                            "all_records": [
                                 4,
                                 5,
                                 6

@@ -5,10 +5,11 @@ from object.datatypes import IntegerType, PlainListType, ObjectType, StringType
 from object.function import Function
 from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
+from utils import AttrDict
 
 
 def resolve(request, parent_val, params):
-    return parent_val["records"][params["offset"]:(params["offset"] + params["limit"])]
+    return parent_val[params["offset"]:(params["offset"] + params["limit"])]
 
 
 class Person(Object):
@@ -33,10 +34,7 @@ class PersonList(Object):
 
 
 def get(request, params):
-    return {
-        "count": len(params["data"]),
-        "records": params["data"]
-    }
+    return AttrDict(count=len(params["data"]), records=params["data"])
 
 
 actions = {

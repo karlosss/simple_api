@@ -15,15 +15,15 @@ class Test(GraphQLTestCase):
                 }
 
                 type Query {
-                  testObjectNonNullOnly: TestObject!
-                  testObjectNonNullAndNull: TestObject!
-                  testObjectAll: TestObject!
+                  TestObjectNonNullOnly: TestObject!
+                  TestObjectNonNullAndNull: TestObject!
+                  TestObjectAll: TestObject!
                 }
 
                 type TestObject {
-                  stringNonNull: String!
-                  stringNull: String
-                  stringDefault: String!
+                  string_non_null: String!
+                  string_null: String
+                  string_default: String!
                 }
                 """
             )
@@ -33,10 +33,10 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              testObjectNonNullOnly{
-                stringNonNull
-                stringNull
-                stringDefault
+              TestObjectNonNullOnly{
+                string_non_null
+                string_null
+                string_default
               }
             }
             """
@@ -44,10 +44,10 @@ class Test(GraphQLTestCase):
 
         exp = {
             "data": {
-                "testObjectNonNullOnly": {
-                    "stringNonNull": "string",
-                    "stringNull": None,
-                    "stringDefault": "default"
+                "TestObjectNonNullOnly": {
+                    "string_non_null": "string",
+                    "string_null": None,
+                    "string_default": "default"
                 }
             }
         }
@@ -59,10 +59,10 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              testObjectNonNullAndNull{
-                stringNonNull
-                stringNull
-                stringDefault
+              TestObjectNonNullAndNull{
+                string_non_null
+                string_null
+                string_default
               }
             }
             """
@@ -70,10 +70,10 @@ class Test(GraphQLTestCase):
 
         exp = {
             "data": {
-                "testObjectNonNullAndNull": {
-                    "stringNonNull": "string",
-                    "stringNull": "string",
-                    "stringDefault": "default"
+                "TestObjectNonNullAndNull": {
+                    "string_non_null": "string",
+                    "string_null": "string",
+                    "string_default": "default"
                 }
             }
         }
@@ -85,10 +85,10 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              testObjectAll{
-                stringNonNull
-                stringNull
-                stringDefault
+              TestObjectAll{
+                string_non_null
+                string_null
+                string_default
               }
             }
             """
@@ -96,10 +96,10 @@ class Test(GraphQLTestCase):
 
         exp = {
             "data": {
-                "testObjectAll": {
-                    "stringNonNull": "string",
-                    "stringNull": "string",
-                    "stringDefault": "string"
+                "TestObjectAll": {
+                    "string_non_null": "string",
+                    "string_null": "string",
+                    "string_default": "string"
                 }
             }
         }

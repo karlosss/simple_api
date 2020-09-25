@@ -20,7 +20,7 @@ class Test(GraphQLTestCase):
 
                 type TestObject {
                   number(num: Int): Int!
-                  numberDef(num: Int = 5): Int!
+                  number_def(num: Int = 5): Int!
                 }
                 """
             )
@@ -75,7 +75,7 @@ class Test(GraphQLTestCase):
             """
             query{
               get{
-                numberDef
+                number_def
               }
             }
             """
@@ -84,7 +84,7 @@ class Test(GraphQLTestCase):
         exp = {
             "data": {
                 "get": {
-                    "numberDef": 5
+                    "number_def": 5
                 }
             }
         }
@@ -97,7 +97,7 @@ class Test(GraphQLTestCase):
             """
             query{
               get{
-                numberDef(num: 60)
+                number_def(num: 60)
               }
             }
             """
@@ -106,7 +106,7 @@ class Test(GraphQLTestCase):
         exp = {
             "data": {
                 "get": {
-                    "numberDef": 60
+                    "number_def": 60
                 }
             }
         }

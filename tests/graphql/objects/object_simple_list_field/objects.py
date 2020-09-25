@@ -19,10 +19,10 @@ def list_non_null_elem_null(request, params):
 
 
 actions = {
-    "get_non_null": Action(return_value=PlainListType(IntegerType()), exec_fn=Function(non_null)),
-    "get_null": Action(return_value=PlainListType(IntegerType(nullable=True), nullable=True), exec_fn=Function(null)),
-    "get_list_null_elem_non_null": Action(return_value=PlainListType(IntegerType(), nullable=True), exec_fn=Function(null)),
-    "get_list_non_null_elem_null": Action(return_value=PlainListType(IntegerType(nullable=True)), exec_fn=Function(list_non_null_elem_null)),
+    "getNonNull": Action(return_value=PlainListType(IntegerType()), exec_fn=Function(non_null)),
+    "getNull": Action(return_value=PlainListType(IntegerType(nullable=True), nullable=True), exec_fn=Function(null)),
+    "getListNullElemNonNull": Action(return_value=PlainListType(IntegerType(), nullable=True), exec_fn=Function(null)),
+    "getListNonNullElemNull": Action(return_value=PlainListType(IntegerType(nullable=True)), exec_fn=Function(list_non_null_elem_null)),
 }
 
 

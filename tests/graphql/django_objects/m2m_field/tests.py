@@ -16,18 +16,18 @@ class Test(GraphQLTestCase):
                 
                 type M2MSource {
                   id: Int!
-                  m2mField(id_Exact: Int!, id_Gt: Int!, id_Gte: Int!, id_In: [Int!]!, id_Isnull: Boolean!, id_Lt: Int!, id_Lte: Int!, intField_Exact: Int!, intField_Gt: Int!, intField_Gte: Int!, intField_In: [Int!]!, intField_Isnull: Boolean!, intField_Lt: Int!, intField_Lte: Int!): TestModelM2MTargetList!
+                  m2m_field(id__exact: Int, id__gt: Int, id__gte: Int, id__in: [Int!], id__isnull: Boolean, id__lt: Int, id__lte: Int, int_field__exact: Int, int_field__gt: Int, int_field__gte: Int, int_field__in: [Int!], int_field__isnull: Boolean, int_field__lt: Int, int_field__lte: Int, ordering: [String!]): TestModelM2MTargetList!
                 }
                 
                 type M2MTarget {
                   id: Int!
-                  intField: Int!
-                  m2mSources(id_Exact: Int!, id_Gt: Int!, id_Gte: Int!, id_In: [Int!]!, id_Isnull: Boolean!, id_Lt: Int!, id_Lte: Int!): TestModelM2MSourceList!
+                  int_field: Int!
+                  m2m_sources(id__exact: Int, id__gt: Int, id__gte: Int, id__in: [Int!], id__isnull: Boolean, id__lt: Int, id__lte: Int, ordering: [String!]): TestModelM2MSourceList!
                 }
                 
                 type Query {
-                  m2MTargetDetail(id: Int!): M2MTarget!
-                  m2MSourceDetail(id: Int!): M2MSource!
+                  M2MTargetDetail(id: Int!): M2MTarget!
+                  M2MSourceDetail(id: Int!): M2MSource!
                 }
                 
                 type TestModelM2MSourceList {

@@ -20,14 +20,14 @@ class Test(GraphQLTestCase):
 
                 type TestObject {
                   field: Int!
-                  nullableIfInputField: Int!
-                  onlyOutputField: Int
+                  nullable_if_input_field: Int!
+                  only_output_field: Int
                 }
 
                 input TestObjectInput {
                   field: Int!
-                  nullableIfInputField: Int
-                  onlyInputField: Int!
+                  nullable_if_input_field: Int
+                  only_input_field: Int!
                 }
                 """
             )
@@ -37,10 +37,10 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              get(in: {field: 4, onlyInputField: 6}){
+              get(in: {field: 4, only_input_field: 6}){
                 field
-                nullableIfInputField
-                onlyOutputField
+                nullable_if_input_field
+                only_output_field
               }
             }
             """
@@ -50,8 +50,8 @@ class Test(GraphQLTestCase):
             "data": {
                 "get": {
                     "field": 1,
-                    "nullableIfInputField": 2,
-                    "onlyOutputField": None
+                    "nullable_if_input_field": 2,
+                    "only_output_field": None
                 }
             }
         }

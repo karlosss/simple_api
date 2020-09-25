@@ -28,8 +28,8 @@ class TestObject(Object):
     }
 
     actions = {
-        "non_null_only": Action(return_value=ObjectType("self"), exec_fn=Function(non_null_only)),
-        "non_null_and_null": Action(return_value=ObjectType("TestObject"), exec_fn=Function(non_null_and_null)),
+        "nonNullOnly": Action(return_value=ObjectType("self"), exec_fn=Function(non_null_only)),
+        "nonNullAndNull": Action(return_value=ObjectType("TestObject"), exec_fn=Function(non_null_and_null)),
         "all": Action(return_value=ObjectType("testcases.objects.TestObject"), exec_fn=Function(all))
     }
 

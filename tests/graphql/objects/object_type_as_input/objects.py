@@ -22,9 +22,9 @@ class TestObject(Object):
 
 actions = {
     "get": Action(parameters={"id": ObjectType(TestObject)}, return_value=StringType(), exec_fn=Function(get)),
-    "get_null": Action(parameters={"id": ObjectType(TestObject, nullable=True)}, return_value=StringType(), exec_fn=Function(get)),
-    "get_null_default": Action(parameters={"id": ObjectType(TestObject, nullable=True, default={"int1": 10, "int2": 20})},
-                               return_value=StringType(), exec_fn=Function(get))
+    "getNull": Action(parameters={"id": ObjectType(TestObject, nullable=True)}, return_value=StringType(), exec_fn=Function(get)),
+    "getNullDefault": Action(parameters={"id": ObjectType(TestObject, nullable=True, default={"int1": 10, "int2": 20})},
+                             return_value=StringType(), exec_fn=Function(get))
 }
 
 

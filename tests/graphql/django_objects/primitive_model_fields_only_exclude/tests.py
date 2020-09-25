@@ -28,46 +28,45 @@ class Test(GraphQLTestCase):
                 schema {
                   query: Query
                 }
-
+                
                 scalar Date
-
+                
                 scalar DateTime
-
+                
                 type Query {
-                  testModelObjectExcludeFieldsDetail(id: Int!): TestModelObjectExcludeFields!
-                  testModelObjectOnlyFieldsDetail(id: Int!): TestModelObjectOnlyFields!
-                  testModelObjectAllFieldsDetail(id: Int!): TestModelObjectAllFields!
+                  TestModelObjectExcludeFieldsDetail(id: Int!): TestModelObjectExcludeFields!
+                  TestModelObjectOnlyFieldsDetail(id: Int!): TestModelObjectOnlyFields!
+                  TestModelObjectAllFieldsDetail(id: Int!): TestModelObjectAllFields!
                 }
-
+                
                 type TestModelObjectAllFields {
                   id: Int!
-                  intField: Int!
-                  floatField: Float!
-                  stringCharField: String!
-                  stringTextField: String!
-                  boolField: Boolean!
-                  dateField: Date!
-                  timeField: Time!
-                  dateTimeField: DateTime!
+                  int_field: Int!
+                  float_field: Float!
+                  string_char_field: String!
+                  string_text_field: String!
+                  bool_field: Boolean!
+                  date_field: Date!
+                  time_field: Time!
+                  date_time_field: DateTime!
                 }
-
+                
                 type TestModelObjectExcludeFields {
                   id: Int!
-                  intField: Int!
-                  floatField: Float!
-                  boolField: Boolean!
-                  dateField: Date!
-                  timeField: Time!
-                  dateTimeField: DateTime!
+                  int_field: Int!
+                  float_field: Float!
+                  bool_field: Boolean!
+                  date_field: Date!
+                  time_field: Time!
+                  date_time_field: DateTime!
                 }
-
+                
                 type TestModelObjectOnlyFields {
-                  intField: Int!
-                  floatField: Float!
+                  int_field: Int!
+                  float_field: Float!
                 }
-
+                
                 scalar Time
-
                 """
             )
         )
@@ -76,16 +75,16 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              testModelObjectAllFieldsDetail(id: 1){
+              TestModelObjectAllFieldsDetail(id: 1){
                 id
-                intField
-                floatField
-                stringCharField
-                stringTextField
-                boolField
-                dateField
-                timeField
-                dateTimeField
+                int_field
+                float_field
+                string_char_field
+                string_text_field
+                bool_field
+                date_field
+                time_field
+                date_time_field
               }
             }
             """
@@ -93,16 +92,16 @@ class Test(GraphQLTestCase):
 
         exp = {
             "data": {
-                "testModelObjectAllFieldsDetail": {
+                "TestModelObjectAllFieldsDetail": {
                     "id": 1,
-                    "intField": 0,
-                    "floatField": 1.5,
-                    "stringCharField": "CharField holding a short text",
-                    "stringTextField": "TextField holding a loooooooooooooooooong text",
-                    "boolField": True,
-                    "dateField": "2020-01-01",
-                    "timeField": "12:34:56",
-                    "dateTimeField": "2020-01-01T12:34:56+00:00"
+                    "int_field": 0,
+                    "float_field": 1.5,
+                    "string_char_field": "CharField holding a short text",
+                    "string_text_field": "TextField holding a loooooooooooooooooong text",
+                    "bool_field": True,
+                    "date_field": "2020-01-01",
+                    "time_field": "12:34:56",
+                    "date_time_field": "2020-01-01T12:34:56+00:00"
                 }
             }
         }

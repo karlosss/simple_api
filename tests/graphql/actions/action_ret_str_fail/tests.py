@@ -15,7 +15,7 @@ class Test(GraphQLTestCase):
                 }
 
                 type Query {
-                  nonNull: String!
+                  non_null: String!
                   null: String
                 }
                 """
@@ -26,7 +26,7 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              nonNull
+              non_null
             }
             """
         )

@@ -8,6 +8,9 @@ DEFAULT_LIMIT = 20
 
 
 def create_list(of_type, object_name, filters=None, default_limit=DEFAULT_LIMIT):
+    if filters is None:
+        filters = {}
+
     def resolve_pagination(request, parent_val, params):
         return parent_val[params["offset"]:(params["offset"] + params["limit"])]
 

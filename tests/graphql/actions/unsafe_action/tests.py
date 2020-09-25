@@ -16,11 +16,11 @@ class Test(GraphQLTestCase):
                 }
 
                 type Mutation {
-                  echoUnsafe(string: String!): String!
+                  echo_unsafe(string: String!): String!
                 }
 
                 type Query {
-                  echoSafe(string: String!): String!
+                  echo_safe(string: String!): String!
                 }
                 """
             )
@@ -30,14 +30,14 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             mutation m{
-              echoUnsafe(string: "Hello")
+              echo_unsafe(string: "Hello")
             }
             """
         )
 
         exp = {
             "data": {
-                "echoUnsafe": "Hello"
+                "echo_unsafe": "Hello"
             }
         }
 
@@ -48,14 +48,14 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              echoSafe(string: "Hello")
+              echo_safe(string: "Hello")
             }
             """
         )
 
         exp = {
             "data": {
-                "echoSafe": "Hello"
+                "echo_safe": "Hello"
             }
         }
 
