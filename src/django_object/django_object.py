@@ -1,7 +1,8 @@
 from copy import deepcopy
 
 from django_object.actions import DetailAction, ListAction, ModelAction
-from django_object.filters import model_filters_storage
+from django_object.datatypes import create_associated_list_type
+from django_object.filters import model_filters_storage, determine_filters
 from django_object.utils import filter_fields_from_model
 from django_object.converter import convert_fields_to_simple_api
 from object.object import Object, ObjectMeta
@@ -30,13 +31,15 @@ class DjangoObjectMeta(ObjectMeta):
         assert "fields" not in attrs, "`DjangoObject` cannot override `fields`."
         assert "input_fields" not in attrs, "`DjangoObject` cannot override `input_fields`."
         assert "output_fields" not in attrs, "`DjangoObject` cannot override `output_fields`."
-        # assert "actions" not in attrs, "`DjangoObject` cannot override `actions`."
+        assert "actions" not in attrs, "`DjangoObject` cannot override `actions`."
 
         cls = super().__new__(mcs, name, bases, attrs, no_inject=True, **kwargs)
 
         cls.fields = convert_fields_to_simple_api(
             filter_fields_from_model(cls.model, cls.only_fields, cls.exclude_fields)
         )
+
+        cls.filters = determine_filters(cls.model, cls.only_fields, cls.exclude_fields)
 
         if cls.class_for_related:
             model_django_object_storage.store(cls.model, cls)
@@ -45,14 +48,16 @@ class DjangoObjectMeta(ObjectMeta):
         cls.actions = {}
         if cls.detail_action:
             cls.actions["detail"] = deepcopy(cls.detail_action)
-        # if cls.list_action:
-        #     cls.actions["list"] = deepcopy(cls.list_action)
+        if cls.list_action:
+            cls.actions["list"] = deepcopy(cls.list_action)
 
         # todo check extra actions for reserved keyword actions
 
         cls.actions.update(cls.extra_actions)
 
         mcs.inject_references(cls)
+
+        create_associated_list_type(cls)
 
         return cls
 
@@ -72,4 +77,4 @@ class DjangoObject(Object, metaclass=DjangoObjectMeta):
     extra_actions = {}
 
     detail_action = DetailAction()
-    # list_action = ListAction()
+    list_action = ListAction()

@@ -4,11 +4,12 @@ from functools import singledispatch
 from django.db.models import AutoField, IntegerField, CharField, TextField, BooleanField, FloatField, DateField, \
     TimeField, DateTimeField, ForeignKey, ManyToOneRel, ManyToManyField, ManyToManyRel, OneToOneField
 
+from django_object.datatypes import PaginatedList, build_parameters_for_paginated_list, resolve_filtering
 from django_object.filters import model_filters_storage
-from django_object.objects import create_list
 from django_object.utils import filter_fields_from_model
 from object.datatypes import IntegerType, StringType, BooleanType, FloatType, DateType, TimeType, DateTimeType, \
     ObjectType
+from object.function import Function
 
 
 @singledispatch
@@ -65,8 +66,7 @@ def convert_to_object_type(field):
 @convert_django_field.register(ManyToManyRel)
 def convert_to_list_of_object_type(field):
     target_model = field.remote_field.model
-    object_name = target_model.__name__
-    return create_list(ObjectType(target_model), object_name, filters=model_filters_storage.get(target_model))
+    return PaginatedList(target_model, filters=model_filters_storage.get(target_model))
 
 
 def convert_fields_to_simple_api(fields):

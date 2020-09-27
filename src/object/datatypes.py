@@ -5,7 +5,12 @@ from object.object import Object
 from object.registry import object_storage
 
 
-class Type:
+class ConvertMixin:
+    def convert(self, adapter, **kwargs):
+        return adapter.convert_field(self, **kwargs)
+
+
+class Type(ConvertMixin):
     def __init__(self, nullable=False, default=None, parameters=None, resolver=None,
                  nullable_if_input=None, default_if_input=None):
         self.parent_class = None
@@ -32,9 +37,6 @@ class Type:
         if self._default_if_input is None:
             return self._default
         return self._default_if_input
-
-    def convert(self, adapter, **kwargs):
-        return adapter.convert_field(self, **kwargs)
 
     def to_string(self):
         return "Type"

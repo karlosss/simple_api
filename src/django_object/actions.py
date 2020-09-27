@@ -1,7 +1,10 @@
 from django_object.converter import filter_simple_api_fields_from_model
+from django_object.datatypes import PaginatedList
+from django_object.paginated_list import resolve_filtering, build_parameters_for_paginated_list
 from object.actions import Action
-from object.datatypes import ObjectType, PlainListType
+from object.datatypes import ObjectType, PlainListType, StringType
 from object.function import Function
+from utils import AttrDict
 
 
 class ModelAction(Action):
@@ -45,13 +48,18 @@ class DetailAction(DefaultModelAction):
 class ListAction(DefaultModelAction):
     def default_exec_fn(self):
         def exec_fn(request, params):
-            return self.model.objects.all()
+            return resolve_filtering(request, self.model.objects, params)
         return Function(exec_fn)
+
+    def determine_parameters(self):
+        super().determine_parameters()
+        self.parameters.update(build_parameters_for_paginated_list(self.parent_class.filters))
 
     def __init__(self, exec_fn=None, **kwargs):
         assert "return_value" not in kwargs, "`return_value` cannot be set for `DetailAction`."
-        assert "only_fields" not in kwargs, "`return_value` cannot be set for `ListAction`."
-        assert "exclude_fields" not in kwargs, "`return_value` cannot be set for `ListAction`."
-        super().__init__(exec_fn=exec_fn, **kwargs)
-        self.only_fields = ()
-        self.return_value = PlainListType(ObjectType("self"))
+        assert "only_fields" not in kwargs, "`only_fields` cannot be set for `ListAction`."
+        assert "exclude_fields" not in kwargs, "`exclude_fields` cannot be set for `ListAction`."
+        super().__init__(only_fields=(), exec_fn=exec_fn, **kwargs)
+
+        # filters need to be added in determine_parameters, as the knowledge of the parent class is essential
+        self.return_value = PaginatedList("self")

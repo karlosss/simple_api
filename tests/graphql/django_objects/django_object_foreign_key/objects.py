@@ -9,6 +9,11 @@ class FKSource(DjangoObject):
     model = TestModelFKSource
 
 
+class FKSource2(DjangoObject):
+    model = TestModelFKSource
+    class_for_related = False
+
+
 class FKTarget(DjangoObject):
     model = TestModelFKTarget
 

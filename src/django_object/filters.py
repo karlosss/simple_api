@@ -2,7 +2,7 @@ from functools import singledispatch
 
 from django.db.models import IntegerField, AutoField, CharField, TextField
 
-from django_object.utils import extract_fields_from_model, filter_fields_from_model
+from django_object.utils import filter_fields_from_model
 from object.datatypes import IntegerType, PlainListType, BooleanType, StringType
 from utils import Storage
 

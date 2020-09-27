@@ -20,7 +20,10 @@ class ObjectMeta(type):
             return cls
 
         # store class stub
-        object_storage.store(cls.__module__, name, cls)
+        object_storage.store(kwargs.get("module", None) or cls.__module__, name, cls)
+
+        if "module" in kwargs:
+            cls.__module__ = kwargs["module"]
 
         if not kwargs.get("no_inject", False):
             mcs.inject_references(cls)
