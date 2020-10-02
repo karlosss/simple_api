@@ -15,19 +15,19 @@ def build_parameters_for_paginated_list(filters=None):
 
 
 def resolve_filtering(request, parent_val, params):
-    ordering = params.pop("ordering", None)
+    ordering = params.pop("ordering", ())
     qs = parent_val.filter(**params).order_by(*ordering)
     return AttrDict(count=qs.count(), data=qs)
 
 
 class PaginatedList(ObjectType):
     def __init__(self, to, filters=None, nullable=False, default=None,
-                 nullable_if_input=None, default_if_input=None):
+                 nullable_if_input=None, default_if_input=None, **kwargs):
         if filters is None:
             filters = {}
         super().__init__(to=to, nullable=nullable, default=default,
                          parameters=build_parameters_for_paginated_list(filters), resolver=Function(resolve_filtering),
-                         nullable_if_input=nullable_if_input, default_if_input=default_if_input)
+                         nullable_if_input=nullable_if_input, default_if_input=default_if_input, **kwargs)
 
     def convert(self, adapter, **kwargs):
         self.set_ref()

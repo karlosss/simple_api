@@ -1,21 +1,37 @@
+from collections import OrderedDict
 from functools import singledispatch
 
-from django.db.models import IntegerField, AutoField, CharField, TextField
-
-from django_object.utils import filter_fields_from_model
-from object.datatypes import IntegerType, PlainListType, BooleanType, StringType
+from django_object.datatypes import PaginatedList
+from object.datatypes import IntegerType, PlainListType, BooleanType, StringType, ObjectType
 from utils import Storage
 
 
-@singledispatch
-def determine_filters_for_django_field(field):
-    return {}
+def build_filters_for_field(filters, field_name):
+    out = OrderedDict()
+    for filter_name, filter in filters.items():
+        key = "{}{}{}".format(field_name, "__" if filter_name else "", filter_name)
+        out[key] = filter
+    return out
 
 
-@determine_filters_for_django_field.register(AutoField)
-@determine_filters_for_django_field.register(IntegerField)
-def determine_filters_for_integer(field):
-    return {
+def string_filters(field_name):
+    return build_filters_for_field(OrderedDict({
+        "": StringType(nullable=True),
+        "contains": StringType(nullable=True),
+        "endswith": StringType(nullable=True),
+        "exact": StringType(nullable=True),
+        "icontains": StringType(nullable=True),
+        "in": PlainListType(StringType(), nullable=True),
+        "iregex": StringType(nullable=True),
+        "isnull": BooleanType(nullable=True),
+        "regex": StringType(nullable=True),
+        "startswith": StringType(nullable=True),
+    }), field_name)
+
+
+def integer_filters(field_name):
+    return build_filters_for_field(OrderedDict({
+        "": IntegerType(nullable=True),
         "exact": IntegerType(nullable=True),
         "gt": IntegerType(nullable=True),
         "gte": IntegerType(nullable=True),
@@ -23,44 +39,51 @@ def determine_filters_for_integer(field):
         "isnull": BooleanType(nullable=True),
         "lt": IntegerType(nullable=True),
         "lte": IntegerType(nullable=True),
-    }
+    }), field_name)
 
 
-@determine_filters_for_django_field.register(CharField)
-@determine_filters_for_django_field.register(TextField)
-def determine_filters_for_string(field):
-    return {
-        "contains": StringType(nullable=True),
-        "endswith": StringType(nullable=True),
-        "icontains": StringType(nullable=True),
-        "in": PlainListType(StringType(), nullable=True),
-        "iregex": StringType(nullable=True),
-        "isnull": BooleanType(nullable=True),
-        "regex": StringType(nullable=True),
-        "startswith": StringType(nullable=True),
-    }
+@singledispatch
+def determine_filters_for_type(type, field_name):
+    return OrderedDict()
 
 
-def determine_filters(model, only_fields, exclude_fields):
-    fields = filter_fields_from_model(model, only_fields, exclude_fields)
-    filters = {}
-    for name, field in fields.items():
-        for filter_name, filter_type in determine_filters_for_django_field(field).items():
-            filters["{}__{}".format(name, filter_name)] = filter_type
+@determine_filters_for_type.register(IntegerType)
+def determine_filters_for_integer(type, field_name):
+    return integer_filters(field_name)
+
+
+@determine_filters_for_type.register(StringType)
+def determine_filters_for_string(type, field_name):
+    return string_filters(field_name)
+
+
+@determine_filters_for_type.register(ObjectType)
+def determine_filters_for_object(type, field_name):
+    return integer_filters(field_name + "_id")
+
+
+@determine_filters_for_type.register(PaginatedList)
+def determine_filters_for_object(type, field_name):
+    return OrderedDict()
+
+
+def determine_filters(cls):
+    filters = OrderedDict()
+    for name, field in cls.out_fields.items():
+        if field.kwargs.get("generate_filters", True):
+            filters.update(determine_filters_for_type(field, name))
     return filters
 
 
 class ModelFiltersStorage(Storage):
     def store(self, model, cls):
         self.get(model)
-        to_keep = set(determine_filters(model, tuple(cls.fields.keys()), None).keys())
-        to_remove = set(self.storage[model].keys()).difference(to_keep)
-        for key in to_remove:
-            del self.storage[model][key]
+        filters = determine_filters(cls)
+        self.storage[model].update(filters)
 
     def get(self, model):
         if model not in self.storage:
-            self.storage[model] = determine_filters(model, None, None)
+            self.storage[model] = OrderedDict()
         return self.storage[model]
 
 

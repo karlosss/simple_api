@@ -11,8 +11,9 @@ class ObjectMeta(type):
         for field in {**cls.fields, **cls.input_fields, **cls.output_fields}.values():
             field.set_parent_class(cls)
 
-        for action in cls.actions.values():
+        for action_name, action in cls.actions.items():
             action.set_parent_class(cls)
+            action.set_name(action_name)
 
     def __new__(mcs, name, bases, attrs, **kwargs):
         cls = super().__new__(mcs, name, bases, attrs)

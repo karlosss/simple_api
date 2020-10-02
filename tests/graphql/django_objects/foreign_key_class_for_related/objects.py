@@ -18,7 +18,7 @@ class FKTarget(DjangoObject):
     model = TestModelFKTarget
 
 
-class FkTarget2(DjangoObject):
+class FKTarget2(DjangoObject):
     model = TestModelFKTarget
     class_for_related = False
 

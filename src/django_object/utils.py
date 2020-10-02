@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from django.db.models import ManyToOneRel, ManyToManyRel
+from django.db.models import ManyToOneRel, ManyToManyRel, OneToOneRel
 
 
 def extract_fields_from_model(model):
@@ -18,8 +18,8 @@ def extract_fields_from_model(model):
         if name in fields:
             continue
 
-        related = getattr(attr, "rel", None)
-        if isinstance(related, ManyToOneRel) or (isinstance(related, ManyToManyRel) and not related.symmetrical):
+        related = getattr(attr, "rel", getattr(attr, "related", None))
+        if isinstance(related, (ManyToOneRel, ManyToManyRel, OneToOneRel)):
             fields[name] = related
 
     return fields

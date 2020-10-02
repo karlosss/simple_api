@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from django_object.actions import DetailAction, ListAction, ModelAction
+from django_object.actions import DetailAction, ListAction, ModelAction, CreateAction, UpdateAction, DeleteAction
 from django_object.datatypes import create_associated_list_type
 from django_object.filters import model_filters_storage, determine_filters
 from django_object.utils import filter_fields_from_model
@@ -15,11 +15,12 @@ class DjangoObjectMeta(ObjectMeta):
 
     @classmethod
     def inject_references(mcs, cls):
-        for action in cls.actions.values():
+        for action_name, action in cls.actions.items():
             # for a model action, set the class so that the action knows which model belongs to it and it can
             # determine the parameters; after that, we can treat it normally
             if isinstance(action, ModelAction):
                 action.set_parent_class(cls)
+                action.set_name(action_name)
                 action.determine_parameters()
 
         super().inject_references(cls)
@@ -35,11 +36,11 @@ class DjangoObjectMeta(ObjectMeta):
 
         cls = super().__new__(mcs, name, bases, attrs, no_inject=True, **kwargs)
 
-        cls.fields = convert_fields_to_simple_api(
+        cls.fields, cls.input_fields, cls.output_fields = convert_fields_to_simple_api(
             filter_fields_from_model(cls.model, cls.only_fields, cls.exclude_fields)
         )
 
-        cls.filters = determine_filters(cls.model, cls.only_fields, cls.exclude_fields)
+        cls.filters = determine_filters(cls)
 
         if cls.class_for_related:
             model_django_object_storage.store(cls.model, cls)
@@ -50,10 +51,14 @@ class DjangoObjectMeta(ObjectMeta):
             cls.actions["detail"] = deepcopy(cls.detail_action)
         if cls.list_action:
             cls.actions["list"] = deepcopy(cls.list_action)
+        if cls.create_action:
+            cls.actions["create"] = deepcopy(cls.create_action)
+        if cls.update_action:
+            cls.actions["update"] = deepcopy(cls.update_action)
+        if cls.delete_action:
+            cls.actions["delete"] = deepcopy(cls.delete_action)
 
         # todo check extra actions for reserved keyword actions
-
-        cls.actions.update(cls.extra_actions)
 
         mcs.inject_references(cls)
 
@@ -68,13 +73,9 @@ class DjangoObject(Object, metaclass=DjangoObjectMeta):
 
     only_fields = None
     exclude_fields = None
-    extra_fields = {}
-
-    only_filters = None
-    exclude_filters = None
-    extra_filters = {}
-
-    extra_actions = {}
 
     detail_action = DetailAction()
     list_action = ListAction()
+    create_action = CreateAction()
+    update_action = UpdateAction()
+    delete_action = DeleteAction()
