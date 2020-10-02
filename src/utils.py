@@ -60,3 +60,6 @@ class Storage(metaclass=StorageMeta):
 
     def get(self, *args, **kwargs):
         raise NotImplementedError
+
+    def reset(self):
+        self.storage = {}

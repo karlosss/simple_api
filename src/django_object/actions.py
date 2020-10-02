@@ -61,19 +61,21 @@ class ListAction(DefaultModelAction):
 
 class InputDataMixin:
     def determine_parameters(self, **kwargs):
-        attrs = {
-            "fields": filter_simple_api_fields_from_model(self.model, self.only_fields,
-                                                          self.exclude_fields, input=True,
-                                                          nullable=kwargs.get("nullable", False))
-        }
-        input_cls = ObjectMeta(self.parent_class.__name__ + capitalize(self.name), (Object,), attrs)
-        self.parameters = {"data": ObjectType(input_cls)}
+        fields = filter_simple_api_fields_from_model(self.model, self.only_fields,
+                                                     self.exclude_fields, input=True,
+                                                     nullable=kwargs.get("nullable", False))
+        if not fields:
+            self.parameters = {}
+        else:
+            attrs = {"fields": fields}
+            input_cls = ObjectMeta(self.parent_class.__name__ + capitalize(self.name), (Object,), attrs)
+            self.parameters = {"data": ObjectType(input_cls)}
 
 
 class CreateAction(InputDataMixin, DefaultModelAction):
     def default_exec_fn(self):
         def exec_fn(request, params):
-            return self.model.objects.create(**params["data"])
+            return self.model.objects.create(**params.get("data", {}))
         return Function(exec_fn)
 
     def __init__(self, only_fields=None, exclude_fields=("id",), exec_fn=None,

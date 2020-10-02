@@ -1,10 +1,32 @@
 import graphene
 
 from adapters.graphql.constants import INPUT_CLASS_SUFFIX
-from utils import ClassStub
+from utils import ClassStub, Storage
 
-_input_classes = {}
-_output_classes = {}
+
+class InputClassStorage(Storage):
+    def get(self, cls_str, cls):
+        if cls_str not in self.storage:
+            self.storage[cls_str] = ClassStub("{}{}".format(cls.__name__, INPUT_CLASS_SUFFIX),
+                                              (graphene.InputObjectType,)).build()
+        return self.storage[cls_str]
+
+    def store(self, *args, **kwargs):
+        raise NotImplementedError
+
+
+class OutputClassStorage(Storage):
+    def get(self, cls_str, cls):
+        if cls_str not in self.storage:
+            self.storage[cls_str] = ClassStub(cls.__name__, (graphene.ObjectType,)).build()
+        return self.storage[cls_str]
+
+    def store(self, *args, **kwargs):
+        raise NotImplementedError
+
+
+input_class_storage = InputClassStorage()
+output_class_storage = OutputClassStorage()
 
 
 def get_class(cls, input=False):
@@ -14,27 +36,14 @@ def get_class(cls, input=False):
     cls_str = "{}.{}".format(cls.__module__, cls.__name__)
 
     if input:
-        if cls_str not in _input_classes:
-            _input_classes[cls_str] = {"cls": ClassStub("{}{}".format(cls.__name__, INPUT_CLASS_SUFFIX),
-                                                        (graphene.InputObjectType,)).build(),
-                                       "used": False}
-        else:
-            _input_classes[cls_str]["used"] = True
-        return _input_classes[cls_str]["cls"]
+        return input_class_storage.get(cls_str, cls)
     else:
-        if cls_str not in _output_classes:
-            _output_classes[cls_str] = {"cls": ClassStub(cls.__name__, (graphene.ObjectType,)).build(),
-                                        "used": False}
-        else:
-            _output_classes[cls_str]["used"] = True
-        return _output_classes[cls_str]["cls"]
+        return output_class_storage.get(cls_str, cls)
 
 
 def check_classes_for_fields():
-    for name, cls in _input_classes.items():
-        assert cls["cls"]._meta.fields or not cls["used"], \
-            "Object `{}` is used as input, but does not contain any input fields.".format(name)
+    for name, cls in input_class_storage.storage.items():
+        assert cls._meta.fields, "Object `{}` is used as input, but does not contain any input fields.".format(name)
 
-    for name, cls in _output_classes.items():
-        assert cls["cls"]._meta.fields or not cls["used"], \
-            "Object `{}` is used as output, but does not contain any output fields.".format(name)
+    for name, cls in output_class_storage.storage.items():
+        assert cls._meta.fields, "Object `{}` is used as output, but does not contain any output fields.".format(name)
