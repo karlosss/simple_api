@@ -7,13 +7,6 @@ from utils import AttrDict
 DEFAULT_LIMIT = 20
 
 
-def build_parameters_for_paginated_list(filters=None):
-    if filters is None:
-        filters = {}
-    filters.update({"ordering": PlainListType(StringType(), nullable=True)})
-    return filters
-
-
 def resolve_filtering(request, parent_val, params):
     ordering = params.pop("ordering", ())
     qs = parent_val.filter(**params).order_by(*ordering)
@@ -21,20 +14,21 @@ def resolve_filtering(request, parent_val, params):
 
 
 class PaginatedList(ObjectType):
-    def __init__(self, to, filters=None, nullable=False, default=None,
+    def __init__(self, to, nullable=False, default=None,
                  nullable_if_input=None, default_if_input=None, **kwargs):
-        if filters is None:
-            filters = {}
-        super().__init__(to=to, nullable=nullable, default=default,
-                         parameters=build_parameters_for_paginated_list(filters), resolver=Function(resolve_filtering),
+        super().__init__(to=to, nullable=nullable, default=default, resolver=Function(resolve_filtering),
                          nullable_if_input=nullable_if_input, default_if_input=default_if_input, **kwargs)
 
     def convert(self, adapter, **kwargs):
         self.set_ref()
-        object_name = self.to.__name__ + "List"
+        object_name = self.to.__name__
         object_module = self.to.__module__
+
         cls = object_storage.get(object_module, object_name)
-        obj = ObjectType(cls, parameters=self.parameters, resolver=self.resolver)
+        self.parameters = cls.filters
+
+        list_cls = object_storage.get(object_module, object_name + "List")
+        obj = ObjectType(list_cls, parameters=self.parameters, resolver=self.resolver)
         return obj.convert(adapter, **kwargs)
 
     def to_string(self):

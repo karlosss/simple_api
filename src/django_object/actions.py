@@ -1,6 +1,6 @@
 from adapters.graphql.utils import capitalize
-from django_object.converter import filter_simple_api_fields_from_model
-from django_object.datatypes import PaginatedList, resolve_filtering, build_parameters_for_paginated_list
+from django_object.datatypes import PaginatedList, resolve_filtering
+from django_object.utils import determine_items
 from object.actions import Action
 from object.datatypes import ObjectType, BooleanType
 from object.function import Function
@@ -13,13 +13,14 @@ class ModelAction(Action):
         return self.parent_class.model
 
     def determine_parameters(self, **kwargs):
-        self.parameters = filter_simple_api_fields_from_model(self.model, self.only_fields,
-                                                              self.exclude_fields, input=True)
+        self.parameters = determine_items(self.parent_class.in_fields, self.only_fields,
+                                          self.exclude_fields, self.custom_fields)
 
-    def __init__(self, only_fields=None, exclude_fields=None, exec_fn=None, **kwargs):
+    def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None, exec_fn=None, **kwargs):
         super().__init__(exec_fn, **kwargs)
         self.only_fields = only_fields
         self.exclude_fields = exclude_fields
+        self.custom_fields = custom_fields or {}
 
 
 class DefaultModelAction(ModelAction):
@@ -52,7 +53,7 @@ class ListAction(DefaultModelAction):
     def determine_parameters(self, **kwargs):
         # filters need to be added here, as the knowledge of the parent class is essential
         super().determine_parameters()
-        self.parameters.update(build_parameters_for_paginated_list(self.parent_class.filters))
+        self.parameters.update(self.parent_class.filters)
 
     def __init__(self, exec_fn=None, **kwargs):
         super().__init__(only_fields=(), exec_fn=exec_fn, **kwargs)
@@ -61,9 +62,11 @@ class ListAction(DefaultModelAction):
 
 class InputDataMixin:
     def determine_parameters(self, **kwargs):
-        fields = filter_simple_api_fields_from_model(self.model, self.only_fields,
-                                                     self.exclude_fields, input=True,
-                                                     nullable=kwargs.get("nullable", False))
+        fields = determine_items(self.parent_class.in_fields, self.only_fields, self.exclude_fields, self.custom_fields)
+        if kwargs.get("force_nullable", False):
+            for f in fields.values():
+                f._nullable = True
+
         if not fields:
             self.parameters = {}
         else:
@@ -78,10 +81,10 @@ class CreateAction(InputDataMixin, DefaultModelAction):
             return self.model.objects.create(**params.get("data", {}))
         return Function(exec_fn)
 
-    def __init__(self, only_fields=None, exclude_fields=("id",), exec_fn=None,
+    def __init__(self, only_fields=None, exclude_fields=("id",), custom_fields=None, exec_fn=None,
                  **kwargs):
         # todo move mutation=True somewhere else so that the generic action is not graphql-biased
-        super().__init__(only_fields, exclude_fields, exec_fn, mutation=True, **kwargs)
+        super().__init__(only_fields, exclude_fields, custom_fields, exec_fn, mutation=True, **kwargs)
         self.return_value = ObjectType("self")
 
 
@@ -97,12 +100,12 @@ class UpdateAction(InputDataMixin, DefaultModelAction):
         return Function(exec_fn)
 
     def determine_parameters(self, **kwargs):
-        super().determine_parameters(nullable=True, **kwargs)
-        self.parameters.update(filter_simple_api_fields_from_model(self.model, self.lookup_fields, None, input=True))
+        super().determine_parameters(force_nullable=True, **kwargs)
+        self.parameters.update(determine_items(self.parent_class.in_fields, self.lookup_fields, None, None))
 
-    def __init__(self, lookup_fields=("id",), only_fields=None, exclude_fields=("id",), exec_fn=None,
-                 **kwargs):
-        super().__init__(only_fields, exclude_fields, exec_fn, mutation=True, **kwargs)
+    def __init__(self, lookup_fields=("id",), only_fields=None, exclude_fields=("id",), custom_fields=None,
+                 exec_fn=None, **kwargs):
+        super().__init__(only_fields, exclude_fields, custom_fields, exec_fn, mutation=True, **kwargs)
         self.lookup_fields = lookup_fields
         self.return_value = ObjectType("self")
 

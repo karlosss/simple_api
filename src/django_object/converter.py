@@ -5,8 +5,7 @@ from django.db.models import AutoField, IntegerField, CharField, TextField, Bool
     TimeField, DateTimeField, ForeignKey, ManyToOneRel, ManyToManyField, ManyToManyRel, OneToOneField, OneToOneRel
 
 from django_object.datatypes import PaginatedList
-from django_object.filters import model_filters_storage
-from django_object.utils import filter_fields_from_model
+from django_object.utils import extract_fields_from_model, determine_items
 from object.datatypes import IntegerType, StringType, BooleanType, FloatType, DateType, TimeType, DateTimeType, \
     ObjectType
 
@@ -65,7 +64,7 @@ def convert_to_object_type(field, field_name, both_fields, input_fields, output_
 def convert_to_readonly_object_type(field, field_name, both_fields, input_fields, output_fields):
     target_model = field.remote_field.model
     # for OneToOneRel, we don't want to generate filters, as one_to_one_rel_id does not exist in Django
-    output_fields[field_name] = ObjectType(target_model, nullable=field.null, generate_filters=False)
+    output_fields[field_name] = ObjectType(target_model, nullable=field.null, only_filters=())
 
 
 @convert_django_field.register(ManyToOneRel)
@@ -73,10 +72,10 @@ def convert_to_readonly_object_type(field, field_name, both_fields, input_fields
 @convert_django_field.register(ManyToManyRel)
 def convert_to_readonly_list_of_object_type(field, field_name, both_fields, input_fields, output_fields):
     target_model = field.remote_field.model
-    output_fields[field_name] = PaginatedList(target_model, filters=model_filters_storage.get(target_model))
+    output_fields[field_name] = PaginatedList(target_model)
 
 
-def convert_fields_to_simple_api(fields):
+def get_all_simple_api_model_fields(fields):
     both_fields = OrderedDict()
     input_fields = OrderedDict()
     output_fields = OrderedDict()
@@ -85,14 +84,15 @@ def convert_fields_to_simple_api(fields):
     return both_fields, input_fields, output_fields
 
 
-def filter_simple_api_fields_from_model(model, only_fields, exclude_fields, input=False, nullable=False):
-    both_fields, input_fields, output_fields = convert_fields_to_simple_api(
-        filter_fields_from_model(model, only_fields, exclude_fields))
-    if input:
-        both_fields.update(input_fields)
-    else:
-        both_fields.update(output_fields)
-    if nullable:
-        for field in both_fields.values():
-            field._nullable = True
-    return both_fields
+def determine_simple_api_fields(model,
+                                only_fields=None, exclude_fields=None, custom_fields=None,
+                                input_only_fields=None, input_exclude_fields=None, input_custom_fields=None,
+                                output_only_fields=None, output_exclude_fields=None, output_custom_fields=None,
+                                ):
+    all_model_fields = extract_fields_from_model(model)
+    all_fields, all_input_fields, all_output_fields = get_all_simple_api_model_fields(all_model_fields)
+
+    fields = determine_items(all_fields, only_fields, exclude_fields, custom_fields)
+    input_fields = determine_items(all_input_fields, input_only_fields, input_exclude_fields, input_custom_fields)
+    output_fields = determine_items(all_output_fields, output_only_fields, output_exclude_fields, output_custom_fields)
+    return fields, input_fields, output_fields

@@ -2,9 +2,8 @@ from copy import deepcopy
 
 from django_object.actions import DetailAction, ListAction, ModelAction, CreateAction, UpdateAction, DeleteAction
 from django_object.datatypes import create_associated_list_type
-from django_object.filters import model_filters_storage, determine_filters
-from django_object.utils import filter_fields_from_model
-from django_object.converter import convert_fields_to_simple_api
+from django_object.filters import generate_filters
+from django_object.converter import determine_simple_api_fields
 from object.object import Object, ObjectMeta
 from object.registry import object_storage
 from django_object.registry import model_django_object_storage
@@ -36,17 +35,23 @@ class DjangoObjectMeta(ObjectMeta):
 
         cls = super().__new__(mcs, name, bases, attrs, no_inject=True, **kwargs)
 
-        cls.fields, cls.input_fields, cls.output_fields = convert_fields_to_simple_api(
-            filter_fields_from_model(cls.model, cls.only_fields, cls.exclude_fields)
+        if cls.only_fields is not None and "id" not in cls.only_fields:
+            cls.only_fields = cls.only_fields + ("id",)
+
+        cls.fields, cls.input_fields, cls.output_fields = determine_simple_api_fields(
+            cls.model,
+            cls.only_fields, cls.exclude_fields, cls.custom_fields,
+            cls.input_only_fields, cls.input_exclude_fields, cls.input_custom_fields,
+            cls.output_only_fields, cls.output_exclude_fields, cls.output_custom_fields,
         )
 
-        cls.filters = determine_filters(cls)
+        cls.filters = generate_filters(cls)
 
         if cls.class_for_related:
             model_django_object_storage.store(cls.model, cls)
-            model_filters_storage.store(cls.model, cls)
 
         cls.actions = {}
+
         if cls.detail_action:
             cls.actions["detail"] = deepcopy(cls.detail_action)
         if cls.list_action:
@@ -59,7 +64,6 @@ class DjangoObjectMeta(ObjectMeta):
             cls.actions["delete"] = deepcopy(cls.delete_action)
 
         # todo check extra actions for reserved keyword actions
-
         mcs.inject_references(cls)
 
         create_associated_list_type(cls)
@@ -73,9 +77,19 @@ class DjangoObject(Object, metaclass=DjangoObjectMeta):
 
     only_fields = None
     exclude_fields = None
+    custom_fields = {}
+
+    input_only_fields = None
+    input_exclude_fields = None
+    input_custom_fields = {}
+
+    output_only_fields = None
+    output_exclude_fields = None
+    output_custom_fields = {}
 
     detail_action = DetailAction()
     list_action = ListAction()
     create_action = CreateAction()
     update_action = UpdateAction()
     delete_action = DeleteAction()
+    # custom_actions = {}

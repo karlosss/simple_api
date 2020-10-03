@@ -2,6 +2,7 @@ from collections import OrderedDict
 from functools import singledispatch
 
 from django_object.datatypes import PaginatedList
+from django_object.utils import determine_items
 from object.datatypes import IntegerType, PlainListType, BooleanType, StringType, ObjectType
 from utils import Storage
 
@@ -67,24 +68,15 @@ def determine_filters_for_object(type, field_name):
     return OrderedDict()
 
 
-def determine_filters(cls):
+def generate_filters(cls):
     filters = OrderedDict()
     for name, field in cls.out_fields.items():
-        if field.kwargs.get("generate_filters", True):
-            filters.update(determine_filters_for_type(field, name))
+        all_filters = determine_filters_for_type(field, name)
+        determined_filters = determine_items(all_filters,
+                                             field.kwargs.get("only_filters", None),
+                                             field.kwargs.get("exclude_filters", None),
+                                             field.kwargs.get("custom_filters", None),
+                                             )
+        filters.update(determined_filters)
+    filters["ordering"] = PlainListType(StringType(), nullable=True)
     return filters
-
-
-class ModelFiltersStorage(Storage):
-    def store(self, model, cls):
-        self.get(model)
-        filters = determine_filters(cls)
-        self.storage[model].update(filters)
-
-    def get(self, model):
-        if model not in self.storage:
-            self.storage[model] = OrderedDict()
-        return self.storage[model]
-
-
-model_filters_storage = ModelFiltersStorage()
