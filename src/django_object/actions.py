@@ -66,6 +66,7 @@ class InputDataMixin:
         if kwargs.get("force_nullable", False):
             for f in fields.values():
                 f._nullable = True
+                f._nullable_if_input = True
 
         if not fields:
             self.parameters = {}

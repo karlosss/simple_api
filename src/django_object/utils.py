@@ -30,7 +30,7 @@ def all_field_names(model):
     return tuple(extract_fields_from_model(model).keys())
 
 
-def determine_items(all, only, exclude, custom, in_place=False):
+def determine_items(all, only, exclude, custom, in_place=False, all_on_none=True):
     assert only is None or exclude is None, "Cannot define both `only` and `exclude` on item filtering."
 
     if not in_place:
@@ -40,7 +40,10 @@ def determine_items(all, only, exclude, custom, in_place=False):
         custom = {}
 
     if only is None and exclude is None:
-        exclude = ()
+        if all_on_none:
+            exclude = ()
+        else:
+            only = ()
 
     if only is not None and not isinstance(only, (list, tuple)):
         only = only,

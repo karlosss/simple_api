@@ -4,7 +4,6 @@ from functools import singledispatch
 from django_object.datatypes import PaginatedList
 from django_object.utils import determine_items
 from object.datatypes import IntegerType, PlainListType, BooleanType, StringType, ObjectType
-from utils import Storage
 
 
 def build_filters_for_field(filters, field_name):
@@ -76,6 +75,7 @@ def generate_filters(cls):
                                              field.kwargs.get("only_filters", None),
                                              field.kwargs.get("exclude_filters", None),
                                              field.kwargs.get("custom_filters", None),
+                                             all_on_none=False
                                              )
         filters.update(determined_filters)
     filters["ordering"] = PlainListType(StringType(), nullable=True)
