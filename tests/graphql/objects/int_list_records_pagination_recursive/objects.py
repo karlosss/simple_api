@@ -8,7 +8,7 @@ from tests.graphql.graphql_test_utils import build_patterns
 from utils import AttrDict
 
 
-def resolve(request, parent_val, params):
+def resolve(request, parent_val, params, **kwargs):
     res = parent_val[params["offset"]:(params["offset"]+params["limit"])]
     return AttrDict(count=len(res), all_records=res, records=res)
 

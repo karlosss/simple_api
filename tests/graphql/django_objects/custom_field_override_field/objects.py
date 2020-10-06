@@ -7,7 +7,7 @@ from .models import TestModel
 from tests.graphql.graphql_test_utils import build_patterns
 
 
-def hide_if_short(request, parent_val, params):
+def hide_if_short(request, parent_val, params, **kwargs):
     if len(parent_val) < 3:
         return None
     return parent_val

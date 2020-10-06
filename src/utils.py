@@ -22,7 +22,9 @@ class AttrDict(dict):
             self[k] = v
 
     def __getattr__(self, item):
-        return self[item]
+        if item in self:
+            return self[item]
+        return None
 
     def __setattr__(self, key, value):
         self[key] = value

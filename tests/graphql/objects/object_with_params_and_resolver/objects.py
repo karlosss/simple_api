@@ -12,7 +12,7 @@ def get(request, params):
     return AttrDict(number=params["default"]["number"], number_def=5)
 
 
-def get_number(request, parent_val, params):
+def get_number(request, parent_val, params, **kwargs):
     return params.get("num") or parent_val
 
 

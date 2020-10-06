@@ -63,7 +63,8 @@ class DjangoObjectMeta(ObjectMeta):
         if cls.delete_action:
             cls.actions["delete"] = deepcopy(cls.delete_action)
 
-        # todo check extra actions for reserved keyword actions
+        cls.actions.update(cls.custom_actions)
+
         mcs.inject_references(cls)
 
         create_associated_list_type(cls)
@@ -92,4 +93,4 @@ class DjangoObject(Object, metaclass=DjangoObjectMeta):
     create_action = CreateAction()
     update_action = UpdateAction()
     delete_action = DeleteAction()
-    # custom_actions = {}
+    custom_actions = {}

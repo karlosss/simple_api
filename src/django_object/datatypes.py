@@ -7,7 +7,7 @@ from utils import AttrDict
 DEFAULT_LIMIT = 20
 
 
-def resolve_filtering(request, parent_val, params):
+def resolve_filtering(request, parent_val, params, **kwargs):
     ordering = params.pop("ordering", ())
     qs = parent_val.filter(**params).order_by(*ordering)
     return AttrDict(count=qs.count(), data=qs)
@@ -36,7 +36,7 @@ class PaginatedList(ObjectType):
 
 
 def create_associated_list_type(cls):
-    def resolve_pagination(request, parent_val, params):
+    def resolve_pagination(request, parent_val, params, **kwargs):
         return parent_val[params["offset"]:(params["offset"] + params["limit"])]
 
     attrs = {
