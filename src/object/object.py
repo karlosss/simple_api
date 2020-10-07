@@ -1,5 +1,6 @@
 from django.utils.decorators import classproperty
 
+from object.permissions import AllowAll, permissions_pre_hook
 from object.registry import object_storage
 
 
@@ -10,10 +11,14 @@ class ObjectMeta(type):
     def inject_references(mcs, cls):
         for field in {**cls.fields, **cls.input_fields, **cls.output_fields}.values():
             field.set_parent_class(cls)
+            if not field.resolver.pre_hook_set:
+                field.resolver.set_pre_hook(permissions_pre_hook(cls.default_fields_permission))
 
         for action_name, action in cls.actions.items():
             action.set_parent_class(cls)
             action.set_name(action_name)
+            if not action.fn.pre_hook_set:
+                action.fn.set_pre_hook(permissions_pre_hook(cls.default_actions_permission))
 
     def __new__(mcs, name, bases, attrs, **kwargs):
         cls = super().__new__(mcs, name, bases, attrs)
@@ -37,6 +42,9 @@ class Object(metaclass=ObjectMeta):
     input_fields = {}
     output_fields = {}
     actions = {}
+
+    default_fields_permission = AllowAll
+    default_actions_permission = AllowAll
 
     @classproperty
     def in_fields(cls):

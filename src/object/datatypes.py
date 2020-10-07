@@ -1,8 +1,9 @@
 from inspect import isclass
 
 from constants import OBJECT_SELF_REFERENCE
-from object.function import Function, TemplateFunction
+from object.function import TemplateFunction
 from object.object import Object
+from object.permissions import permissions_pre_hook
 from object.registry import object_storage
 
 
@@ -17,16 +18,18 @@ def default_resolver(request, parent_val, params, **kwargs):
 
 class Type(ConvertMixin):
     def __init__(self, nullable=False, default=None, parameters=None, resolver=None,
-                 nullable_if_input=None, default_if_input=None, **kwargs):
+                 nullable_if_input=None, default_if_input=None, permissions=None, **kwargs):
         self.parent_class = None
         self._nullable = nullable
         self._default = default
         self.parameters = parameters or {}
+        self.permissions = permissions
         self._nullable_if_input = nullable_if_input
         self._default_if_input = default_if_input
         self.kwargs = kwargs
-        self.resolver = resolver or TemplateFunction(default_resolver)\
-            .set_default_hook(lambda *a, **kwa: self._default)
+        self.resolver = TemplateFunction(resolver or default_resolver)\
+            .set_default_hook(lambda *a, **kwa: self._default)\
+            .set_pre_hook(permissions_pre_hook(self.permissions))
 
     def set_parent_class(self, cls):
         self.parent_class = cls

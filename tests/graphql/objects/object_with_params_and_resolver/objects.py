@@ -2,7 +2,6 @@ from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from object.actions import Action
 from object.datatypes import IntegerType, ObjectType
-from object.function import Function
 from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
 from utils import AttrDict
@@ -18,17 +17,17 @@ def get_number(request, parent_val, params, **kwargs):
 
 class TestObject(Object):
     fields = {
-        "number": IntegerType(parameters={"num": IntegerType(nullable=True)}, resolver=Function(get_number)),
+        "number": IntegerType(parameters={"num": IntegerType(nullable=True)}, resolver=get_number),
     }
 
     output_fields = {
         "number_def": IntegerType(parameters={"num": IntegerType(nullable=True, default=5)},
-                                  resolver=Function(get_number)),
+                                  resolver=get_number),
     }
 
 
 actions = {
-    "get": Action(parameters={"default": ObjectType(TestObject)}, return_value=ObjectType(TestObject), exec_fn=Function(get))
+    "get": Action(parameters={"default": ObjectType(TestObject)}, return_value=ObjectType(TestObject), exec_fn=get)
 }
 
 

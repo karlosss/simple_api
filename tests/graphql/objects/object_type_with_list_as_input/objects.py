@@ -2,7 +2,6 @@ from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from object.actions import Action
 from object.datatypes import IntegerType, ObjectType, StringType, PlainListType
-from object.function import Function
 from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
 from utils import AttrDict
@@ -30,7 +29,7 @@ class PersonList(Object):
                 "limit": IntegerType(nullable=True, default=20),
                 "offset": IntegerType(nullable=True, default=0),
             },
-            resolver=Function(resolve)
+            resolver=resolve
         )
     }
 
@@ -40,7 +39,7 @@ def get(request, params):
 
 
 actions = {
-    "get": Action({"data": ObjectType(PersonList)}, ObjectType(PersonList), Function(get))
+    "get": Action({"data": ObjectType(PersonList)}, ObjectType(PersonList), get)
 }
 
 

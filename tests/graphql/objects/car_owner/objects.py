@@ -2,7 +2,6 @@ from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from object.actions import Action
 from object.datatypes import StringType, IntegerType, ObjectType
-from object.function import Function
 from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
 from utils import AttrDict
@@ -26,7 +25,7 @@ class Owner(Object):
     }
 
     actions = {
-        "getById": Action(parameters={"id": IntegerType()}, return_value=ObjectType("self"), exec_fn=Function(get_by_id))
+        "getById": Action(parameters={"id": IntegerType()}, return_value=ObjectType("self"), exec_fn=get_by_id)
     }
 
 

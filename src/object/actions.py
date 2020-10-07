@@ -1,10 +1,15 @@
+from object.function import TemplateFunction
+from object.permissions import permissions_pre_hook
+
+
 class Action:
-    def __init__(self, parameters=None, return_value=None, exec_fn=None, **kwargs):
+    def __init__(self, parameters=None, return_value=None, exec_fn=None, permissions=None, **kwargs):
         if parameters is None:
             parameters = {}
         self.parameters = parameters
         self.return_value = return_value
-        self.exec_fn = exec_fn
+        self.permissions = permissions
+        self.fn = TemplateFunction(exec_fn).set_pre_hook(permissions_pre_hook(self.permissions))
         self.parent_class = None
         self.name = None
         self.kwargs = kwargs
@@ -23,8 +28,8 @@ class Action:
         if self.return_value is not None:
             self.return_value.set_parent_class(cls)
 
-    def get_exec_fn(self):
-        return self.exec_fn
+    def get_fn(self):
+        return self.fn
 
     def get_return_value(self):
         return self.return_value

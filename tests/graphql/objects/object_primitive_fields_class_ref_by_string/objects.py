@@ -2,7 +2,6 @@ from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from object.actions import Action
 from object.datatypes import ObjectType, StringType
-from object.function import Function
 from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
 from utils import AttrDict
@@ -28,9 +27,9 @@ class TestObject(Object):
     }
 
     actions = {
-        "nonNullOnly": Action(return_value=ObjectType("self"), exec_fn=Function(non_null_only)),
-        "nonNullAndNull": Action(return_value=ObjectType("TestObject"), exec_fn=Function(non_null_and_null)),
-        "all": Action(return_value=ObjectType("testcases.objects.TestObject"), exec_fn=Function(all))
+        "nonNullOnly": Action(return_value=ObjectType("self"), exec_fn=non_null_only),
+        "nonNullAndNull": Action(return_value=ObjectType("TestObject"), exec_fn=non_null_and_null),
+        "all": Action(return_value=ObjectType("testcases.objects.TestObject"), exec_fn=all)
     }
 
 

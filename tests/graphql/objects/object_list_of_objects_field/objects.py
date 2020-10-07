@@ -2,7 +2,6 @@ from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from object.actions import Action
 from object.datatypes import IntegerType, PlainListType, ObjectType
-from object.function import Function
 from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
 
@@ -35,11 +34,11 @@ def list_non_null_elem_null(request, params):
 
 
 actions = {
-    "getNonNull": Action(return_value=PlainListType(ObjectType(TestObject)), exec_fn=Function(non_null)),
-    "getNull": Action(return_value=PlainListType(ObjectType(TestObject, nullable=True), nullable=True), exec_fn=Function(null)),
-    "getListNullElemNonNull": Action(return_value=PlainListType(ObjectType(TestObject), nullable=True), exec_fn=Function(null)),
+    "getNonNull": Action(return_value=PlainListType(ObjectType(TestObject)), exec_fn=non_null),
+    "getNull": Action(return_value=PlainListType(ObjectType(TestObject, nullable=True), nullable=True), exec_fn=null),
+    "getListNullElemNonNull": Action(return_value=PlainListType(ObjectType(TestObject), nullable=True), exec_fn=null),
     "getListNonNullElemNull": Action(return_value=PlainListType(ObjectType(TestObject, nullable=True)),
-                                     exec_fn=Function(list_non_null_elem_null)),
+                                     exec_fn=list_non_null_elem_null),
 }
 
 schema = generate(GraphQLAdapter, actions)

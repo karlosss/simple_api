@@ -4,7 +4,6 @@ from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from object.actions import Action
 from object.datatypes import DateType, TimeType, DateTimeType, ObjectType
-from object.function import Function
 from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
 
@@ -46,12 +45,12 @@ class TestObject(Object):
 
 
 actions = {
-    "getObject": Action(return_value=ObjectType(TestObject), exec_fn=Function(get_object)),
-    "getDate": Action(return_value=DateType(), exec_fn=Function(get_date)),
-    "getTime": Action(return_value=TimeType(), exec_fn=Function(get_time)),
-    "getDatetime": Action(return_value=DateTimeType(), exec_fn=Function(get_datetime)),
+    "getObject": Action(return_value=ObjectType(TestObject), exec_fn=get_object),
+    "getDate": Action(return_value=DateType(), exec_fn=get_date),
+    "getTime": Action(return_value=TimeType(), exec_fn=get_time),
+    "getDatetime": Action(return_value=DateTimeType(), exec_fn=get_datetime),
     "echo": Action(parameters={"date": DateType(), "time": TimeType(), "datetime": DateTimeType()},
-                   return_value=ObjectType(TestObject), exec_fn=Function(echo)),
+                   return_value=ObjectType(TestObject), exec_fn=echo),
 }
 
 

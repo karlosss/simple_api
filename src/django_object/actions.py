@@ -3,7 +3,6 @@ from django_object.datatypes import PaginatedList, resolve_filtering
 from django_object.utils import determine_items
 from object.actions import Action
 from object.datatypes import ObjectType, BooleanType
-from object.function import Function
 from object.object import ObjectMeta, Object
 
 
@@ -16,47 +15,46 @@ class ModelAction(Action):
         self.parameters = determine_items(self.parent_class.in_fields, self.only_fields,
                                           self.exclude_fields, self.custom_fields)
 
-    def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None, exec_fn=None, **kwargs):
-        super().__init__(exec_fn, **kwargs)
+    def get_exec_fn(self):
+        raise NotImplementedError
+
+    def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None, return_value=None,
+                 exec_fn=None, permissions=None, **kwargs):
+        super().__init__(return_value=return_value, exec_fn=exec_fn, permissions=permissions, **kwargs)
         self.only_fields = only_fields
         self.exclude_fields = exclude_fields
         self.custom_fields = custom_fields or {}
 
+    def convert(self, adapter, **kwargs):
+        if self.fn.main_hook is None:
+            self.fn.set_main_hook(self.get_exec_fn())
+        return super().convert(adapter, **kwargs)
 
-class DefaultModelAction(ModelAction):
-    def default_exec_fn(self):
-        raise NotImplementedError
 
+class DetailAction(ModelAction):
     def get_exec_fn(self):
-        if self.exec_fn is not None:
-            return self.exec_fn
-        return self.default_exec_fn()
-
-
-class DetailAction(DefaultModelAction):
-    def default_exec_fn(self):
         def exec_fn(request, params):
             return self.model.objects.get(**params)
-        return Function(exec_fn)
+        return exec_fn
 
-    def __init__(self, lookup_fields=("id",), exec_fn=None, **kwargs):
-        super().__init__(only_fields=lookup_fields, exec_fn=exec_fn, **kwargs)
+    def __init__(self, lookup_fields=("id",), exec_fn=None, permissions=None, **kwargs):
+        super().__init__(only_fields=lookup_fields, exec_fn=exec_fn, permissions=permissions, **kwargs)
         self.return_value = ObjectType("self")
 
 
-class ListAction(DefaultModelAction):
-    def default_exec_fn(self):
+class ListAction(ModelAction):
+    def get_exec_fn(self):
         def exec_fn(request, params):
             return resolve_filtering(request, self.model.objects, params)
-        return Function(exec_fn)
+        return exec_fn
 
     def determine_parameters(self, **kwargs):
         # filters need to be added here, as the knowledge of the parent class is essential
         super().determine_parameters()
         self.parameters.update(self.parent_class.filters)
 
-    def __init__(self, exec_fn=None, **kwargs):
-        super().__init__(only_fields=(), exec_fn=exec_fn, **kwargs)
+    def __init__(self, exec_fn=None, permissions=None, **kwargs):
+        super().__init__(only_fields=(), exec_fn=exec_fn, permissions=permissions, **kwargs)
         self.return_value = PaginatedList("self")
 
 
@@ -76,21 +74,22 @@ class InputDataMixin:
             self.parameters = {"data": ObjectType(input_cls)}
 
 
-class CreateAction(InputDataMixin, DefaultModelAction):
-    def default_exec_fn(self):
+class CreateAction(InputDataMixin, ModelAction):
+    def get_exec_fn(self):
         def exec_fn(request, params):
             return self.model.objects.create(**params.get("data", {}))
-        return Function(exec_fn)
+        return exec_fn
 
-    def __init__(self, only_fields=None, exclude_fields=("id",), custom_fields=None, exec_fn=None,
+    def __init__(self, only_fields=None, exclude_fields=("id",), custom_fields=None, exec_fn=None, permissions=None,
                  **kwargs):
         # todo move mutation=True somewhere else so that the generic action is not graphql-biased
-        super().__init__(only_fields, exclude_fields, custom_fields, exec_fn, mutation=True, **kwargs)
+        super().__init__(only_fields=only_fields, exclude_fields=exclude_fields, custom_fields=custom_fields,
+                         exec_fn=exec_fn, permissions=permissions, mutation=True, **kwargs)
         self.return_value = ObjectType("self")
 
 
-class UpdateAction(InputDataMixin, DefaultModelAction):
-    def default_exec_fn(self):
+class UpdateAction(InputDataMixin, ModelAction):
+    def get_exec_fn(self):
         def exec_fn(request, params):
             data = params.pop("data")
             obj = self.model.objects.get(**params)
@@ -98,26 +97,27 @@ class UpdateAction(InputDataMixin, DefaultModelAction):
                 setattr(obj, k, v)
             obj.save()
             return obj
-        return Function(exec_fn)
+        return exec_fn
 
     def determine_parameters(self, **kwargs):
         super().determine_parameters(force_nullable=True, **kwargs)
         self.parameters.update(determine_items(self.parent_class.in_fields, self.lookup_fields, None, None))
 
     def __init__(self, lookup_fields=("id",), only_fields=None, exclude_fields=("id",), custom_fields=None,
-                 exec_fn=None, **kwargs):
-        super().__init__(only_fields, exclude_fields, custom_fields, exec_fn, mutation=True, **kwargs)
+                 exec_fn=None, permissions=None, **kwargs):
+        super().__init__(only_fields=only_fields, exclude_fields=exclude_fields, custom_fields=custom_fields,
+                         exec_fn=exec_fn, permissions=permissions, mutation=True, **kwargs)
         self.lookup_fields = lookup_fields
         self.return_value = ObjectType("self")
 
 
-class DeleteAction(DefaultModelAction):
-    def default_exec_fn(self):
+class DeleteAction(ModelAction):
+    def get_exec_fn(self):
         def exec_fn(request, params):
             self.model.objects.get(**params).delete()
             return True
-        return Function(exec_fn)
+        return exec_fn
 
-    def __init__(self, lookup_fields=("id",), exec_fn=None, **kwargs):
-        super().__init__(only_fields=lookup_fields, exec_fn=exec_fn, mutation=True, **kwargs)
+    def __init__(self, lookup_fields=("id",), exec_fn=None, permissions=None, **kwargs):
+        super().__init__(only_fields=lookup_fields, exec_fn=exec_fn, permissions=permissions, mutation=True, **kwargs)
         self.return_value = BooleanType()

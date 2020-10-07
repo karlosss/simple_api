@@ -2,7 +2,6 @@ from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from object.actions import Action
 from object.datatypes import IntegerType, ObjectType
-from object.function import Function
 from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
 
@@ -28,7 +27,7 @@ def get(request, params):
 
 
 actions = {
-    "get": Action({"in": ObjectType(TestObject)}, ObjectType(TestObject), Function(get))
+    "get": Action({"in": ObjectType(TestObject)}, ObjectType(TestObject), get)
 }
 
 

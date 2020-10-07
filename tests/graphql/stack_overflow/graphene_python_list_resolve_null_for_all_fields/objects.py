@@ -3,7 +3,6 @@ from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from object.actions import Action
 from object.datatypes import IntegerType, StringType, PlainListType, ObjectType
-from object.function import Function
 from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
 
@@ -24,7 +23,7 @@ class User(Object):
 
 
 actions = {
-    "users": Action(return_value=PlainListType(ObjectType(User)), exec_fn=Function(get))
+    "users": Action(return_value=PlainListType(ObjectType(User)), exec_fn=get)
 }
 
 schema = generate(GraphQLAdapter, actions)

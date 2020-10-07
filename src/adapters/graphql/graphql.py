@@ -28,7 +28,7 @@ class GraphQLAdapter(Adapter):
         params = self.convert_action_params(action)
 
         def resolve_field(*args, **kwargs):
-            return action.get_exec_fn().convert(self, _as=ConversionType.EXEC_FN)(*args, **kwargs)
+            return action.get_fn().convert(self, _as=ConversionType.EXEC_FN)(*args, **kwargs)
 
         field = action.get_return_value().convert(self, _as=ConversionType.OUTPUT, args=params, resolver=resolve_field)
 
@@ -39,7 +39,7 @@ class GraphQLAdapter(Adapter):
         output = action.get_return_value().convert(self, _as=ConversionType.LIST_OUTPUT)
 
         def mutate(*args, **kwargs):
-            return action.get_exec_fn().convert(self, _as=ConversionType.EXEC_FN)(*args, **kwargs)
+            return action.get_fn().convert(self, _as=ConversionType.EXEC_FN)(*args, **kwargs)
 
         cls = type(name, (graphene.Mutation,), {
             "Arguments": arguments,

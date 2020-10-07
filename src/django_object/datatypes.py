@@ -1,5 +1,4 @@
-from object.datatypes import ObjectType, PlainListType, StringType, IntegerType
-from object.function import Function
+from object.datatypes import ObjectType, PlainListType, IntegerType
 from object.object import Object, ObjectMeta
 from object.registry import object_storage
 from utils import AttrDict
@@ -16,7 +15,7 @@ def resolve_filtering(request, parent_val, params, **kwargs):
 class PaginatedList(ObjectType):
     def __init__(self, to, nullable=False, default=None,
                  nullable_if_input=None, default_if_input=None, **kwargs):
-        super().__init__(to=to, nullable=nullable, default=default, resolver=Function(resolve_filtering),
+        super().__init__(to=to, nullable=nullable, default=default, resolver=resolve_filtering,
                          nullable_if_input=nullable_if_input, default_if_input=default_if_input, **kwargs)
 
     def convert(self, adapter, **kwargs):
@@ -28,7 +27,8 @@ class PaginatedList(ObjectType):
         self.parameters = cls.filters
 
         list_cls = object_storage.get(object_module, object_name + "List")
-        obj = ObjectType(list_cls, parameters=self.parameters, resolver=self.resolver)
+        obj = ObjectType(list_cls, parameters=self.parameters)
+        obj.resolver = self.resolver
         return obj.convert(adapter, **kwargs)
 
     def to_string(self):
@@ -48,7 +48,7 @@ def create_associated_list_type(cls):
                     "limit": IntegerType(nullable=True, default=20),
                     "offset": IntegerType(nullable=True, default=0),
                 },
-                resolver=Function(resolve_pagination)
+                resolver=resolve_pagination
             )
         }
     }

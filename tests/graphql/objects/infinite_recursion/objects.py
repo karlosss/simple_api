@@ -2,7 +2,6 @@ from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from object.actions import Action
 from object.datatypes import ObjectType
-from object.function import Function
 from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
 
@@ -18,7 +17,7 @@ class TestObject(Object):
 
 
 actions = {
-    "get": Action(return_value=ObjectType(TestObject, nullable=True), exec_fn=Function(get))
+    "get": Action(return_value=ObjectType(TestObject, nullable=True), exec_fn=get)
 }
 
 schema = generate(GraphQLAdapter, actions)

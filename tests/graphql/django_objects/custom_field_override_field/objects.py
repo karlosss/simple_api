@@ -2,7 +2,6 @@ from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from django_object.django_object import DjangoObject
 from object.datatypes import IntegerType, StringType
-from object.function import Function
 from .models import TestModel
 from tests.graphql.graphql_test_utils import build_patterns
 
@@ -20,7 +19,7 @@ class TestObject(DjangoObject):
     }
     custom_fields = {
         "string_field": StringType(nullable=True, nullable_if_input=False,
-                                   resolver=Function(hide_if_short), exclude_filters=())
+                                   resolver=hide_if_short, exclude_filters=())
     }
 
 
