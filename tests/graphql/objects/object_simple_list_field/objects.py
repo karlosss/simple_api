@@ -5,15 +5,15 @@ from object.datatypes import PlainListType, IntegerType
 from tests.graphql.graphql_test_utils import build_patterns
 
 
-def non_null(request, params):
+def non_null(request, params, **kwargs):
     return [i for i in range(10)]
 
 
-def null(request, params):
+def null(request, params, **kwargs):
     return None
 
 
-def list_non_null_elem_null(request, params):
+def list_non_null_elem_null(request, params, **kwargs):
     return [1, 2, 3, None, None, None, 7, 8, 9]
 
 

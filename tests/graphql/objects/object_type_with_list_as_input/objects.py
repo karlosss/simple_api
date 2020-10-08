@@ -34,7 +34,7 @@ class PersonList(Object):
     }
 
 
-def get(request, params):
+def get(request, params, **kwargs):
     return AttrDict(count=len(params["data"]), records=params["data"])
 
 

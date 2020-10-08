@@ -8,7 +8,7 @@ from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
 
 
-def get_object(request, params):
+def get_object(request, params, **kwargs):
     return {
         "date": datetime.date(2020, 1, 1),
         "time": datetime.time(12, 34, 56),
@@ -16,19 +16,19 @@ def get_object(request, params):
     }
 
 
-def get_date(request, params):
+def get_date(request, params, **kwargs):
     return datetime.date(2020, 1, 1)
 
 
-def get_time(request, params):
+def get_time(request, params, **kwargs):
     return datetime.time(12, 34, 56)
 
 
-def get_datetime(request, params):
+def get_datetime(request, params, **kwargs):
     return datetime.datetime(2020, 1, 1, 12, 34, 56)
 
 
-def echo(request, params):
+def echo(request, params, **kwargs):
     return {
         "date": params.get("date"),
         "time": params.get("time"),

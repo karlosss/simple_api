@@ -19,7 +19,7 @@ class TestObject(Object):
     }
 
 
-def get(request, params):
+def get(request, params, **kwargs):
     return {
         "field": 1,
         "nullable_if_input_field": 2

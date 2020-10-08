@@ -33,7 +33,7 @@ class ModelAction(Action):
 
 class DetailAction(ModelAction):
     def get_exec_fn(self):
-        def exec_fn(request, params):
+        def exec_fn(request, params, **kwargs):
             return self.model.objects.get(**params)
         return exec_fn
 
@@ -44,7 +44,7 @@ class DetailAction(ModelAction):
 
 class ListAction(ModelAction):
     def get_exec_fn(self):
-        def exec_fn(request, params):
+        def exec_fn(request, params, **kwargs):
             return resolve_filtering(request, self.model.objects, params)
         return exec_fn
 
@@ -76,7 +76,7 @@ class InputDataMixin:
 
 class CreateAction(InputDataMixin, ModelAction):
     def get_exec_fn(self):
-        def exec_fn(request, params):
+        def exec_fn(request, params, **kwargs):
             return self.model.objects.create(**params.get("data", {}))
         return exec_fn
 
@@ -90,7 +90,7 @@ class CreateAction(InputDataMixin, ModelAction):
 
 class UpdateAction(InputDataMixin, ModelAction):
     def get_exec_fn(self):
-        def exec_fn(request, params):
+        def exec_fn(request, params, **kwargs):
             data = params.pop("data")
             obj = self.model.objects.get(**params)
             for k, v in data.items():
@@ -113,7 +113,7 @@ class UpdateAction(InputDataMixin, ModelAction):
 
 class DeleteAction(ModelAction):
     def get_exec_fn(self):
-        def exec_fn(request, params):
+        def exec_fn(request, params, **kwargs):
             self.model.objects.get(**params).delete()
             return True
         return exec_fn

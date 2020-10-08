@@ -6,7 +6,7 @@ from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
 
 
-def get(request, params):
+def get(request, params, **kwargs):
     if "id" in params:
         return "{}.{}".format(params["id"]["int1"], params["id"]["int2"])
     return "no params passed"

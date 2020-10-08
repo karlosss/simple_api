@@ -20,7 +20,7 @@ class Location(Object):
     }
 
 
-def echo(request, params):
+def echo(request, params, **kwargs):
     return params["loc"]
 
 

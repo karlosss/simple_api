@@ -3,7 +3,7 @@ from object.object import Object
 from .a import A
 
 
-def get(request, params):
+def get(request, params, **kwargs):
     return {
         "a": {
             "s1": "A"

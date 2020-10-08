@@ -7,7 +7,7 @@ from tests.graphql.graphql_test_utils import build_patterns
 from utils import AttrDict
 
 
-def get(request, params):
+def get(request, params, **kwargs):
     return AttrDict(number=params["default"]["number"], number_def=5)
 
 

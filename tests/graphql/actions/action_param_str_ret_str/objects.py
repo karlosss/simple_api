@@ -5,7 +5,7 @@ from object.datatypes import StringType
 from tests.graphql.graphql_test_utils import build_patterns
 
 
-def echo(request, params):
+def echo(request, params, **kwargs):
     return params["string"]
 
 

@@ -6,7 +6,7 @@ from object.object import Object
 from tests.graphql.graphql_test_utils import build_patterns
 
 
-def get(request, params):
+def get(request, params, **kwargs):
     return None
 
 

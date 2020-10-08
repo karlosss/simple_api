@@ -5,7 +5,7 @@ from object.datatypes import IntegerType, PlainListType
 from tests.graphql.graphql_test_utils import build_patterns
 
 
-def plus_one(request, params):
+def plus_one(request, params, **kwargs):
     return [i+1 for i in params["list"]]
 
 

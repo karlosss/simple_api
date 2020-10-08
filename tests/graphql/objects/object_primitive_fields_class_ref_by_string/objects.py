@@ -7,15 +7,15 @@ from tests.graphql.graphql_test_utils import build_patterns
 from utils import AttrDict
 
 
-def non_null_only(request, params):
+def non_null_only(request, params, **kwargs):
     return AttrDict(string_non_null="string")
 
 
-def non_null_and_null(request, params):
+def non_null_and_null(request, params, **kwargs):
     return AttrDict(string_non_null="string", string_null="string")
 
 
-def all(request, params):
+def all(request, params, **kwargs):
     return AttrDict(string_non_null="string", string_null="string", string_default="string")
 
 

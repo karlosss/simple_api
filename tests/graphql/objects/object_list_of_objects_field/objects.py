@@ -13,7 +13,7 @@ class TestObject(Object):
     }
 
 
-def non_null(request, params):
+def non_null(request, params, **kwargs):
     return [
         {"int1": 0, "int2": 10},
         {"int1": 1, "int2": 11},
@@ -21,11 +21,11 @@ def non_null(request, params):
     ]
 
 
-def null(request, params):
+def null(request, params, **kwargs):
     return None
 
 
-def list_non_null_elem_null(request, params):
+def list_non_null_elem_null(request, params, **kwargs):
     return [
         {"int1": 0, "int2": 10},
         None,

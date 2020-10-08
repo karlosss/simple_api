@@ -5,11 +5,11 @@ from object.datatypes import StringType
 from tests.graphql.graphql_test_utils import build_patterns
 
 
-def non_null(request, params):
+def non_null(request, params, **kwargs):
     return "nonNull"
 
 
-def null(request, params):
+def null(request, params, **kwargs):
     return None
 
 

@@ -7,7 +7,7 @@ from object.permissions import AllowNone
 from tests.graphql.graphql_test_utils import build_patterns
 
 
-def exec_fn(request, params):
+def exec_fn(request, params, **kwargs):
     return {
         "allowed_field": None,
         "forbidden_field": None
