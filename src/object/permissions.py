@@ -13,23 +13,90 @@ def permissions_pre_hook(permission_classes):
     return callable
 
 
-class Permission:
-    def __init__(self, *args, **kwargs):
-        self.args = args
+class BasePermission:
+    def __init__(self, **kwargs):
         self.kwargs = kwargs
 
-    def has_permission(self, *args, **kwargs):
+    def permission_statement(self):
         raise NotImplementedError
+
+    def has_permission(self):
+        for cls in reversed(self.__class__.__mro__):
+            if cls in (object, BasePermission, OrResolver, AndResolver, NotResolver):
+                continue
+            if not cls.permission_statement(self):
+                return False
+        return True
 
     def error_message(self):
         return "You do not have permission to access this."
 
 
-class AllowAll(Permission):
-    def has_permission(self, *args, **kwargs):
+class Or:
+    def __init__(self, *permissions):
+        self.permissions = permissions
+
+    def __call__(self, **kwargs):
+        return OrResolver(self.permissions, **kwargs)
+
+
+class And:
+    def __init__(self, *permissions):
+        self.permissions = permissions
+
+    def __call__(self, **kwargs):
+        return AndResolver(self.permissions, **kwargs)
+
+
+class Not:
+    def __init__(self, permission_class):
+        self.permission_class = permission_class
+
+    def __call__(self, **kwargs):
+        return NotResolver(self.permission_class, **kwargs)
+
+
+class OrResolver(BasePermission):
+    def __init__(self, permission_classes, **kwargs):
+        super().__init__(**kwargs)
+        self.permission_classes = permission_classes
+
+    def has_permission(self):
+        for permission_class in self.permission_classes:
+            pc = permission_class(**self.kwargs)
+            if pc.has_permission():
+                return True
+        return False
+
+
+class AndResolver(BasePermission):
+    def __init__(self, permission_classes, **kwargs):
+        super().__init__(**kwargs)
+        self.permission_classes = permission_classes
+
+    def has_permission(self):
+        for permission_class in self.permission_classes:
+            pc = permission_class(**self.kwargs)
+            if not pc.has_permission():
+                return False
         return True
 
 
-class AllowNone(Permission):
-    def has_permission(self, *args, **kwargs):
+class NotResolver(BasePermission):
+    def __init__(self, permission_class, **kwargs):
+        super().__init__(**kwargs)
+        self.permission_class = permission_class
+
+    def has_permission(self):
+        pc = self.permission_class(**self.kwargs)
+        return not pc.has_permission()
+
+
+class AllowAll(BasePermission):
+    def permission_statement(self):
+        return True
+
+
+class AllowNone(BasePermission):
+    def permission_statement(self):
         return False
