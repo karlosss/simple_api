@@ -97,6 +97,11 @@ class DateTimeType(PrimitiveType):
         return "DateTime"
 
 
+class DurationType(PrimitiveType):
+    def to_string(self):
+        return "Duration"
+
+
 class ObjectType(Type):
     _set_ref_handler = None  # Django model handler goes here - this way, we don't mix layers
     _create_handler = None

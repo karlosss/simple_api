@@ -2,10 +2,11 @@ from functools import singledispatch
 
 import graphene
 
+from adapters.graphql.converter.datatypes import Duration
 from adapters.graphql.registry import get_class
 from adapters.graphql.utils import ConversionType
 from object.datatypes import StringType, IntegerType, ObjectType, PlainListType, BooleanType, FloatType, DateType, \
-    TimeType, DateTimeType
+    TimeType, DateTimeType, DurationType
 
 
 @singledispatch
@@ -46,6 +47,11 @@ def convert_parameter_time_type(type, adapter, **kwargs):
 @convert_parameter_type.register(DateTimeType)
 def convert_parameter_date_time_type(type, adapter, **kwargs):
     return convert_parameter_class_type(type, graphene.DateTime, adapter, **kwargs)
+
+
+@convert_parameter_type.register(DurationType)
+def convert_parameter_duration_type(type, adapter, **kwargs):
+    return convert_parameter_class_type(type, Duration, adapter, **kwargs)
 
 
 @convert_parameter_type.register(ObjectType)
