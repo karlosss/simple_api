@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 from object.actions import Action
+from object.datatypes import StringType
 from object.object import ObjectMeta
 from object.permissions import AllowAll
 from object.registry import object_storage
@@ -24,5 +25,6 @@ def generate(adapter, extra_actions=None):
                 action.set_permissions(AllowAll)
 
     extra_actions["__actions"] = Action(return_value=ObjectMeta.get_action_type(),
+                                        parameters={"name": StringType(nullable=True)},
                                         exec_fn=build_action_type_resolver(deepcopy(extra_actions)))
     return adapter(tuple(object_storage.storage.values()), extra_actions).generate_api()

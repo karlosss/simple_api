@@ -2,7 +2,7 @@ from object.datatypes import PlainListType, ObjectType, DurationType, StringType
 
 
 def build_action_type(obj):
-    return PlainListType(ObjectType(obj))
+    return PlainListType(ObjectType(obj), parameters={"name": StringType(nullable=True)})
 
 
 def build_action_type_fields():
@@ -18,8 +18,11 @@ def build_action_type_fields():
 
 def build_action_type_resolver(actions):
     def resolver(**kwargs):
+        filter_name = kwargs["params"].get("name")
         out = []
         for name, action in actions.items():
+            if filter_name and name != filter_name:
+                continue
             try:
                 action.has_permission(**kwargs)
                 permitted = True
