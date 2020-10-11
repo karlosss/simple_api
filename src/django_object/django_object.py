@@ -38,6 +38,11 @@ class DjangoObjectMeta(ObjectMeta):
         if cls.only_fields is not None and "id" not in cls.only_fields:
             cls.only_fields = cls.only_fields + ("id",)
 
+        cls.custom_fields = deepcopy(cls.custom_fields)
+        cls.custom_input_fields = deepcopy(cls.custom_input_fields)
+        cls.custom_output_fields = deepcopy(cls.custom_output_fields)
+        cls.custom_actions = deepcopy(cls.custom_actions)
+
         cls.fields, cls.input_fields, cls.output_fields = determine_simple_api_fields(
             cls.model,
             cls.only_fields, cls.exclude_fields, cls.custom_fields,

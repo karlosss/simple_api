@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from django.utils.decorators import classproperty
 
 from object.permissions import AllowAll, permissions_pre_hook
@@ -6,9 +8,20 @@ from object.registry import object_storage
 
 class ObjectMeta(type):
     base_class = "object.object.Object"
+    action_type = None
+
+    @staticmethod
+    def get_action_type():
+        if ObjectMeta.action_type is None:
+            from object.utils import build_action_type, build_action_type_fields
+            ObjectMeta.action_type = build_action_type(ObjectMeta("__Action", (Object,),
+                                                                  build_action_type_fields(), no_inject=True))
+        return ObjectMeta.action_type
 
     @classmethod
     def inject_references(mcs, cls):
+        cls.output_fields["__actions"] = ObjectMeta.get_action_type()
+
         for field in {**cls.fields, **cls.input_fields, **cls.output_fields}.values():
             field.set_parent_class(cls)
             if not field.resolver.pre_hook_set:
@@ -17,8 +30,11 @@ class ObjectMeta(type):
         for action_name, action in cls.actions.items():
             action.set_parent_class(cls)
             action.set_name(action_name)
-            if not action.fn.pre_hook_set:
-                action.fn.set_pre_hook(permissions_pre_hook(cls.default_actions_permission))
+            if not action.permissions:
+                action.set_permissions(cls.default_actions_permission)
+
+        from object.utils import build_action_type_resolver
+        cls.output_fields["__actions"].resolver.set_main_hook(build_action_type_resolver(cls.actions))
 
     def __new__(mcs, name, bases, attrs, **kwargs):
         cls = super().__new__(mcs, name, bases, attrs)
@@ -27,6 +43,11 @@ class ObjectMeta(type):
 
         # store class stub
         object_storage.store(kwargs.get("module", None) or cls.__module__, name, cls)
+
+        cls.fields = deepcopy(cls.fields)
+        cls.input_fields = deepcopy(cls.input_fields)
+        cls.output_fields = deepcopy(cls.output_fields)
+        cls.actions = deepcopy(cls.actions)
 
         if "module" in kwargs:
             cls.__module__ = kwargs["module"]

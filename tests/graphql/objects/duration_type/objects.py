@@ -1,9 +1,8 @@
 from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from object.actions import Action
-from object.datatypes import StringType, ObjectType, BooleanType, DurationType
+from object.datatypes import ObjectType, DurationType
 from object.object import Object
-from object.permissions import AllowNone, Not, AllowAll, Or, And
 from tests.graphql.graphql_test_utils import build_patterns
 
 

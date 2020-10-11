@@ -8,11 +8,16 @@ class Action:
             parameters = {}
         self.parameters = parameters
         self.return_value = return_value
-        self.permissions = permissions
-        self.fn = TemplateFunction(exec_fn).set_pre_hook(permissions_pre_hook(self.permissions))
+        self.permissions = None
+        self.has_permission = None
+        self.fn = TemplateFunction(exec_fn)
         self.parent_class = None
         self.name = None
         self.kwargs = kwargs
+        self.retry_interval = kwargs.get("retry_interval")
+        self.hide_if_denied = kwargs.get("hide_if_denied")
+
+        self.set_permissions(permissions)
 
         for name, param in parameters.items():
             assert param.nullable or param.default is None, \
@@ -33,6 +38,11 @@ class Action:
 
     def get_return_value(self):
         return self.return_value
+
+    def set_permissions(self, permission_classes):
+        self.permissions = permission_classes
+        self.has_permission = permissions_pre_hook(permission_classes)
+        self.fn.set_pre_hook(self.has_permission)
 
     def convert(self, adapter, **kwargs):
         return adapter.convert_action(self, **kwargs)
