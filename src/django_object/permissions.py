@@ -2,8 +2,8 @@ from object.permissions import BasePermission
 
 
 class DjangoPermission(BasePermission):
-    def __init__(self, request=None, obj=None, qs=None):
-        super().__init__(request=request, obj=obj, qs=qs)
+    def __init__(self, request=None, obj=None, qs=None, **kwargs):
+        super().__init__(request=request, obj=obj, qs=qs, **kwargs)
         self.request = request
         self.obj = obj
         self.qs = qs

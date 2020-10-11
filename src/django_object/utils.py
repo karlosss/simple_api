@@ -30,7 +30,7 @@ def all_field_names(model):
     return tuple(extract_fields_from_model(model).keys())
 
 
-def determine_items(all, only, exclude, custom, in_place=False, all_on_none=True):
+def determine_items(all, only, exclude, custom, fail_on_nonexistent=True, in_place=False, all_on_none=True):
     assert only is None or exclude is None, "Cannot define both `only` and `exclude` on item filtering."
 
     if not in_place:
@@ -50,13 +50,33 @@ def determine_items(all, only, exclude, custom, in_place=False, all_on_none=True
     if exclude is not None and not isinstance(exclude, (list, tuple)):
         exclude = exclude,
 
+    if fail_on_nonexistent:
+        if only is not None:
+            for item in only:
+                if item not in all:
+                    raise KeyError(item)
+        if exclude is not None:
+            for item in exclude:
+                if item not in all:
+                    raise KeyError(item)
+
     if only is not None:
-        to_remove = set(all.keys()).difference(set(only))
+        if isinstance(all, set):
+            to_remove = all.difference(set(only))
+        else:
+            to_remove = set(all.keys()).difference(set(only))
+
         for f in to_remove:
-            del all[f]
+            if isinstance(all, set):
+                all.remove(f)
+            else:
+                del all[f]
     else:
         for f in exclude:
-            del all[f]
+            if isinstance(all, set):
+                all.remove(f)
+            else:
+                del all[f]
 
     all.update(custom)
     return all

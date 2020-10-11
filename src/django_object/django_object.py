@@ -39,15 +39,14 @@ class DjangoObjectMeta(ObjectMeta):
             cls.only_fields = cls.only_fields + ("id",)
 
         cls.custom_fields = deepcopy(cls.custom_fields)
-        cls.custom_input_fields = deepcopy(cls.custom_input_fields)
-        cls.custom_output_fields = deepcopy(cls.custom_output_fields)
+        cls.input_custom_fields = deepcopy(cls.input_custom_fields)
+        cls.output_custom_fields = deepcopy(cls.output_custom_fields)
         cls.custom_actions = deepcopy(cls.custom_actions)
 
         cls.fields, cls.input_fields, cls.output_fields = determine_simple_api_fields(
             cls.model,
-            cls.only_fields, cls.exclude_fields, cls.custom_fields,
-            cls.input_only_fields, cls.input_exclude_fields, cls.input_custom_fields,
-            cls.output_only_fields, cls.output_exclude_fields, cls.output_custom_fields,
+            cls.only_fields, cls.exclude_fields,
+            cls.custom_fields, cls.input_custom_fields, cls.output_custom_fields,
         )
 
         cls.filters = generate_filters(cls)
@@ -83,14 +82,9 @@ class DjangoObject(Object, metaclass=DjangoObjectMeta):
 
     only_fields = None
     exclude_fields = None
+
     custom_fields = {}
-
-    input_only_fields = None
-    input_exclude_fields = None
     input_custom_fields = {}
-
-    output_only_fields = None
-    output_exclude_fields = None
     output_custom_fields = {}
 
     detail_action = DetailAction()

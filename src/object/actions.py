@@ -15,7 +15,8 @@ class Action:
         self.name = None
         self.kwargs = kwargs
         self.retry_interval = kwargs.get("retry_interval")
-        self.hide_if_denied = kwargs.get("hide_if_denied")
+        self.hide_if_denied = kwargs.get("hide_if_denied", False)
+        self.list_in_object = kwargs.get("list_in_object", True)
 
         self.set_permissions(permissions)
 

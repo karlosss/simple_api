@@ -84,15 +84,19 @@ def get_all_simple_api_model_fields(fields):
     return both_fields, input_fields, output_fields
 
 
-def determine_simple_api_fields(model,
-                                only_fields=None, exclude_fields=None, custom_fields=None,
-                                input_only_fields=None, input_exclude_fields=None, input_custom_fields=None,
-                                output_only_fields=None, output_exclude_fields=None, output_custom_fields=None,
-                                ):
+def determine_simple_api_fields(model, only_fields=None, exclude_fields=None,
+                                custom_fields=None, input_custom_fields=None, output_custom_fields=None):
     all_model_fields = extract_fields_from_model(model)
-    all_fields, all_input_fields, all_output_fields = get_all_simple_api_model_fields(all_model_fields)
+    filtered_field_names = determine_items(set(all_model_fields.keys()), only_fields, exclude_fields, None)
 
-    fields = determine_items(all_fields, only_fields, exclude_fields, custom_fields)
-    input_fields = determine_items(all_input_fields, input_only_fields, input_exclude_fields, input_custom_fields)
-    output_fields = determine_items(all_output_fields, output_only_fields, output_exclude_fields, output_custom_fields)
+    filtered_model_fields = OrderedDict()
+    for k, v in all_model_fields.items():
+        if k in filtered_field_names:
+            filtered_model_fields[k] = v
+
+    fields, input_fields, output_fields = get_all_simple_api_model_fields(filtered_model_fields)
+
+    fields.update(custom_fields or {})
+    input_fields.update(input_custom_fields or {})
+    output_fields.update(output_custom_fields or {})
     return fields, input_fields, output_fields

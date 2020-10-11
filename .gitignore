@@ -6,3 +6,4 @@ test_project/simple_api/testcases/migrations/*
 test_project/simple_api/testcases/models.py
 test_project/simple_api/testcases/objects.py
 test_project/simple_api/testcases/tests.py
+test_project/simple_api/testcases/permissions.py

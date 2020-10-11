@@ -54,7 +54,7 @@ class ListAction(ModelAction):
         self.parameters.update(self.parent_class.filters)
 
     def __init__(self, exec_fn=None, permissions=None, **kwargs):
-        super().__init__(only_fields=(), exec_fn=exec_fn, permissions=permissions, **kwargs)
+        super().__init__(only_fields=(), exec_fn=exec_fn, permissions=permissions, list_in_object=False, **kwargs)
         self.return_value = PaginatedList("self")
 
 
@@ -84,7 +84,7 @@ class CreateAction(InputDataMixin, ModelAction):
                  **kwargs):
         # todo move mutation=True somewhere else so that the generic action is not graphql-biased
         super().__init__(only_fields=only_fields, exclude_fields=exclude_fields, custom_fields=custom_fields,
-                         exec_fn=exec_fn, permissions=permissions, mutation=True, **kwargs)
+                         exec_fn=exec_fn, permissions=permissions, list_in_object=False, mutation=True, **kwargs)
         self.return_value = ObjectType("self")
 
 

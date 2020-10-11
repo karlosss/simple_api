@@ -1,7 +1,9 @@
+from collections import OrderedDict
 from copy import deepcopy
 
 from django.utils.decorators import classproperty
 
+from adapters.graphql.utils import capitalize
 from object.permissions import AllowAll, permissions_pre_hook
 from object.registry import object_storage
 
@@ -9,6 +11,7 @@ from object.registry import object_storage
 class ObjectMeta(type):
     base_class = "object.object.Object"
     action_type = None
+    actions_not_in_object = OrderedDict()
 
     @staticmethod
     def get_action_type():
@@ -20,8 +23,6 @@ class ObjectMeta(type):
 
     @classmethod
     def inject_references(mcs, cls):
-        cls.output_fields["__actions"] = ObjectMeta.get_action_type()
-
         for field in {**cls.fields, **cls.input_fields, **cls.output_fields}.values():
             field.set_parent_class(cls)
             if not field.resolver.pre_hook_set:
@@ -33,8 +34,12 @@ class ObjectMeta(type):
             if not action.permissions:
                 action.set_permissions(cls.default_actions_permission)
 
-        from object.utils import build_action_type_resolver
-        cls.output_fields["__actions"].resolver.set_main_hook(build_action_type_resolver(cls.actions))
+        if "__actions" not in cls.out_fields:
+            cls.output_fields["__actions"] = deepcopy(ObjectMeta.get_action_type())
+            from object.utils import build_action_type_resolver
+            cls.output_fields["__actions"].resolver.set_main_hook(
+                build_action_type_resolver(cls.actions, in_object=True)
+            )
 
     def __new__(mcs, name, bases, attrs, **kwargs):
         cls = super().__new__(mcs, name, bases, attrs)
