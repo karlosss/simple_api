@@ -8,6 +8,9 @@ class DjangoPermission(BasePermission):
         self.obj = obj
         self.qs = qs
 
+    def has_permission(self, exclude_classes=()):
+        return super().has_permission(exclude_classes=(DjangoPermission,) + exclude_classes)
+
     def permission_statement(self):
         raise NotImplementedError
 

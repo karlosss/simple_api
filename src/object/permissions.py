@@ -20,9 +20,9 @@ class BasePermission:
     def permission_statement(self):
         raise NotImplementedError
 
-    def has_permission(self):
+    def has_permission(self, exclude_classes=()):
         for cls in reversed(self.__class__.__mro__):
-            if cls in (object, BasePermission, OrResolver, AndResolver, NotResolver):
+            if cls in (object, BasePermission, OrResolver, AndResolver, NotResolver) + exclude_classes:
                 continue
             if not cls.permission_statement(self):
                 return False

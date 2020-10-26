@@ -10,14 +10,22 @@ class TemplateFunction:
     def __init__(self, main_hook):
         self.default_hook = lambda *args, **kwargs: None
         self.pre_hook = lambda *args, **kwargs: None
+        self.validate_hook = lambda *args, **kwargs: None
         self.main_hook = main_hook
         self.pre_hook_set = False
         self.default_hook_set = False
+        self.validate_hook_set = False
 
     def set_pre_hook(self, hook):
         if hook is not None:
             self.pre_hook = hook
             self.pre_hook_set = True
+        return self
+
+    def set_validate_hook(self, hook):
+        if hook is not None:
+            self.validate_hook = hook
+            self.validate_hook_set = True
         return self
 
     def set_main_hook(self, hook):
@@ -33,6 +41,7 @@ class TemplateFunction:
     def convert(self, adapter, **kwargs):
         def callable(*args, **kwargs):
             self.pre_hook(*args, **kwargs)
+            self.validate_hook(*args, **kwargs)
             result = self.main_hook(*args, **kwargs)
             if result is None:
                 return self.default_hook(*args, **kwargs)

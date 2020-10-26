@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+from object.actions import Action
 from object.datatypes import PlainListType, ObjectType, DurationType, StringType, BooleanType
 from object.object import ObjectMeta, Object
 from object.registry import object_storage
@@ -67,18 +68,16 @@ def build_actions_field():
     return field
 
 
-class Type(Object):
+class ObjectInfo(Object):
     fields = {
         "name": StringType(),
-        "__actions": build_actions_field()
+        "pk_field": StringType(nullable=True),
+        # "object_actions": PlainListType(ObjectType(ActionInfo)),
+        # "actions": PlainListType(ObjectType(ActionInfo)),
     }
 
 
-def build_types_field():
-    return PlainListType(ObjectType(Type))
-
-
-def get_types_actions(**kwargs):
+def get_objects_actions(**kwargs):
     name = kwargs["params"].get("name")
     out = []
     for cls in object_storage.storage.values():
@@ -90,3 +89,18 @@ def get_types_actions(**kwargs):
                 "__actions": build_action_type_resolver(cls.actions, in_object=False)(params={})
             })
     return out
+
+
+def _object_info(**kwargs):
+    out = []
+    for cls in object_storage.storage.values():
+        out.append({
+            "name": cls.__name__,
+            "pk_field": getattr(cls, "pk_field", None),
+        })
+    return out
+
+
+def build_object_info():
+    return Action(return_value=PlainListType(ObjectType(ObjectInfo)),
+                  exec_fn=_object_info)

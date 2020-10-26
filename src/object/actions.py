@@ -3,12 +3,13 @@ from object.permissions import permissions_pre_hook
 
 
 class Action:
-    def __init__(self, parameters=None, return_value=None, exec_fn=None, permissions=None, **kwargs):
+    def __init__(self, parameters=None, return_value=None, exec_fn=None, permissions=None, validator=None, **kwargs):
         if parameters is None:
             parameters = {}
         self.parameters = parameters
         self.return_value = return_value
         self.permissions = None
+        self.validator = None
         self.has_permission = None
         self.fn = TemplateFunction(exec_fn)
         self.parent_class = None
@@ -19,6 +20,7 @@ class Action:
         self.list_in_object = kwargs.get("list_in_object", True)
 
         self.set_permissions(permissions)
+        self.set_validator(validator)
 
         for name, param in parameters.items():
             assert param.nullable or param.default is None, \
@@ -44,6 +46,10 @@ class Action:
         self.permissions = permission_classes
         self.has_permission = permissions_pre_hook(permission_classes)
         self.fn.set_pre_hook(self.has_permission)
+
+    def set_validator(self, validator):
+        self.fn.set_validate_hook(validator)
+        self.validator = validator
 
     def convert(self, adapter, **kwargs):
         return adapter.convert_action(self, **kwargs)

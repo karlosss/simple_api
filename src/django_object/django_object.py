@@ -43,7 +43,7 @@ class DjangoObjectMeta(ObjectMeta):
         cls.output_custom_fields = deepcopy(cls.output_custom_fields)
         cls.custom_actions = deepcopy(cls.custom_actions)
 
-        cls.fields, cls.input_fields, cls.output_fields = determine_simple_api_fields(
+        cls.fields, cls.input_fields, cls.output_fields, cls.pk_field = determine_simple_api_fields(
             cls.model,
             cls.only_fields, cls.exclude_fields,
             cls.custom_fields, cls.input_custom_fields, cls.output_custom_fields,

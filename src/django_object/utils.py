@@ -30,6 +30,17 @@ def all_field_names(model):
     return tuple(extract_fields_from_model(model).keys())
 
 
+def add_item(item, only, exclude, all_on_none=True):
+    if only is None and exclude is None:
+        if all_on_none:
+            return only, exclude
+        else:
+            return (item,), None
+    if only is None:
+        return None, tuple(f for f in exclude if f != item)
+    return only + (item,), None
+
+
 def determine_items(all, only, exclude, custom, fail_on_nonexistent=True, in_place=False, all_on_none=True):
     assert only is None or exclude is None, "Cannot define both `only` and `exclude` on item filtering."
 
