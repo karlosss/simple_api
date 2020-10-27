@@ -1,6 +1,6 @@
 from adapters.graphql.utils import capitalize
 from django_object.datatypes import PaginatedList, resolve_filtering
-from django_object.utils import determine_items, add_item
+from django_object.utils import determine_items, add_item, remove_item
 from object.actions import Action
 from object.datatypes import ObjectType, BooleanType
 from object.object import ObjectMeta, Object
@@ -40,14 +40,20 @@ class ObjectMixin:
 
 
 class InputDataMixin:
-    def __init__(self, force_nullable=False, **kwargs):
+    def __init__(self, data_only_fields=None, data_exclude_fields=None, data_custom_fields=None,
+                 force_nullable=False, **kwargs):
         self.force_nullable = force_nullable
+        self.data_only_fields = data_only_fields
+        self.data_exclude_fields = data_exclude_fields
+        self.data_custom_fields = data_custom_fields
         super().__init__(**kwargs)
 
     def determine_parameters(self, **kwargs):
-        fields = determine_items({k: v for k, v in self.parent_class.in_fields.items()
-                                  if k != self.parent_class.pk_field},
-                                 self.only_fields, self.exclude_fields, self.custom_fields)
+        self.data_only_fields, self.data_exclude_fields = remove_item(self.parent_class.pk_field,
+                                                                      self.data_only_fields,
+                                                                      self.data_exclude_fields)
+        fields = determine_items(self.parent_class.in_fields, self.data_only_fields,
+                                 self.data_exclude_fields, self.data_custom_fields)
         if self.force_nullable:
             for f in fields.values():
                 f._nullable = True
@@ -56,14 +62,12 @@ class InputDataMixin:
             attrs = {"fields": fields}
             input_cls = ObjectMeta(self.parent_class.__name__ + capitalize(self.name), (Object,), attrs)
             self.custom_fields["data"] = ObjectType(input_cls)
-            self.only_fields = ()
-            self.exclude_fields = None
         super().determine_parameters(**kwargs)
 
 
 class FilterMixin:
     def determine_parameters(self, **kwargs):
-        super().determine_parameters()
+        super().determine_parameters(**kwargs)
         self.parameters.update(self.parent_class.filters)
 
 
@@ -98,7 +102,8 @@ class CreateAction(InputDataMixin, ModelAction):
     def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None, exec_fn=None, permissions=None,
                  **kwargs):
         # todo move mutation=True somewhere else so that the generic action is not graphql-biased
-        super().__init__(only_fields=only_fields, exclude_fields=exclude_fields, custom_fields=custom_fields,
+        super().__init__(data_only_fields=only_fields, data_exclude_fields=exclude_fields,
+                         data_custom_fields=custom_fields, only_fields=(),
                          exec_fn=exec_fn, permissions=permissions, mutation=True, **kwargs)
         self.return_value = ObjectType("self")
 
@@ -116,7 +121,8 @@ class UpdateAction(InputDataMixin, ObjectMixin, ModelAction):
 
     def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None,
                  exec_fn=None, permissions=None, **kwargs):
-        super().__init__(only_fields=only_fields, exclude_fields=exclude_fields, custom_fields=custom_fields,
+        super().__init__(data_only_fields=only_fields, data_exclude_fields=exclude_fields,
+                         data_custom_fields=custom_fields, only_fields=(),
                          exec_fn=exec_fn, permissions=permissions, mutation=True, force_nullable=True, **kwargs)
         self.return_value = ObjectType("self")
 

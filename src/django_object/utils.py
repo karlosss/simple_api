@@ -30,15 +30,25 @@ def all_field_names(model):
     return tuple(extract_fields_from_model(model).keys())
 
 
-def add_item(item, only, exclude, all_on_none=True):
-    if only is None and exclude is None:
+def _handle_item(item, t1, t2, all_on_none):
+    if t1 is None and t2 is None:
         if all_on_none:
-            return only, exclude
+            return t1, t2
         else:
             return (item,), None
-    if only is None:
-        return None, tuple(f for f in exclude if f != item)
-    return only + (item,), None
+    if t1 is None:
+        return None, tuple(f for f in t2 if f != item)
+    if item not in t1:
+        t1 = t1 + (item,)
+    return t1, None
+
+
+def add_item(item, only, exclude, all_on_none=True):
+    return _handle_item(item, only, exclude, all_on_none)
+
+
+def remove_item(item, only, exclude, all_on_none=True):
+    return _handle_item(item, exclude, only, not all_on_none)[::-1]
 
 
 def determine_items(all, only, exclude, custom, fail_on_nonexistent=True, in_place=False, all_on_none=True):
