@@ -50,6 +50,7 @@ def create_associated_list_type(cls):
                 },
                 resolver=resolve_pagination
             )
-        }
+        },
+        "hidden": True,
     }
     ObjectMeta(cls.__name__ + "List", (Object,), attrs, module=cls.__module__)

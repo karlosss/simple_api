@@ -32,6 +32,8 @@ class ModelAction(Action):
 
 
 class ObjectMixin:
+    on_object = True
+
     def determine_parameters(self, **kwargs):
         self.only_fields, self.exclude_fields = add_item(self.parent_class.pk_field,
                                                          self.only_fields,
@@ -59,7 +61,7 @@ class InputDataMixin:
                 f._nullable = True
                 f._nullable_if_input = True
         if fields:
-            attrs = {"fields": fields}
+            attrs = {"fields": fields, "hidden": True}
             input_cls = ObjectMeta(self.parent_class.__name__ + capitalize(self.name), (Object,), attrs)
             self.custom_fields["data"] = ObjectType(input_cls)
         super().determine_parameters(**kwargs)

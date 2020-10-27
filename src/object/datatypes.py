@@ -2,7 +2,6 @@ from inspect import isclass
 
 from constants import OBJECT_SELF_REFERENCE
 from object.function import TemplateFunction
-from object.object import Object
 from object.permissions import permissions_pre_hook
 from object.registry import object_storage
 
@@ -118,6 +117,7 @@ class ObjectType(Type):
         return self.parent_class
 
     def set_ref(self):
+        from object.object import Object
         if ObjectType._set_ref_handler is not None:
             ObjectType._set_ref_handler(self)
 

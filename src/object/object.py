@@ -1,25 +1,14 @@
-from collections import OrderedDict
 from copy import deepcopy
 
 from django.utils.decorators import classproperty
 
-from adapters.graphql.utils import capitalize
+from object.datatypes import PlainListType, ObjectType
 from object.permissions import AllowAll, permissions_pre_hook
 from object.registry import object_storage
 
 
 class ObjectMeta(type):
     base_class = "object.object.Object"
-    action_type = None
-    actions_not_in_object = OrderedDict()
-
-    @staticmethod
-    def get_action_type():
-        if ObjectMeta.action_type is None:
-            from object.utils import build_action_type, build_action_type_fields
-            ObjectMeta.action_type = build_action_type(ObjectMeta("__Action", (Object,),
-                                                                  build_action_type_fields(), no_inject=True))
-        return ObjectMeta.action_type
 
     @classmethod
     def inject_references(mcs, cls):
@@ -34,12 +23,12 @@ class ObjectMeta(type):
             if not action.permissions:
                 action.set_permissions(cls.default_actions_permission)
 
-        if "__actions" not in cls.out_fields:
-            cls.output_fields["__actions"] = deepcopy(ObjectMeta.get_action_type())
-            from object.utils import build_action_type_resolver
-            cls.output_fields["__actions"].resolver.set_main_hook(
-                build_action_type_resolver(cls.actions, in_object=True)
-            )
+        if not getattr(cls, "hidden", False) and "__actions" not in cls.out_fields:
+            cls.output_fields["__actions"] = PlainListType(ObjectType("ActionInfo"))
+
+            def resolver(**kwargs):
+                raise
+            cls.output_fields["__actions"].resolver.set_main_hook(resolver)
 
     def __new__(mcs, name, bases, attrs, **kwargs):
         cls = super().__new__(mcs, name, bases, attrs)
