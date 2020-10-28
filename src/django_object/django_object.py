@@ -4,6 +4,7 @@ from django_object.actions import DetailAction, ListAction, ModelAction, CreateA
 from django_object.datatypes import create_associated_list_type
 from django_object.filters import generate_filters
 from django_object.converter import determine_simple_api_fields
+from django_object.utils import get_pk_field_name
 from object.object import Object, ObjectMeta
 from object.registry import object_storage
 from django_object.registry import model_django_object_storage
@@ -35,15 +36,16 @@ class DjangoObjectMeta(ObjectMeta):
 
         cls = super().__new__(mcs, name, bases, attrs, no_inject=True, **kwargs)
 
-        if cls.only_fields is not None and "id" not in cls.only_fields:
-            cls.only_fields = cls.only_fields + ("id",)
+        cls.pk_field = get_pk_field_name(cls.model)
+        if cls.only_fields is not None and cls.pk_field not in cls.only_fields:
+            cls.only_fields = cls.only_fields + (cls.pk_field,)
 
         cls.custom_fields = deepcopy(cls.custom_fields)
         cls.input_custom_fields = deepcopy(cls.input_custom_fields)
         cls.output_custom_fields = deepcopy(cls.output_custom_fields)
         cls.custom_actions = deepcopy(cls.custom_actions)
 
-        cls.fields, cls.input_fields, cls.output_fields, cls.pk_field = determine_simple_api_fields(
+        cls.fields, cls.input_fields, cls.output_fields, field_validators = determine_simple_api_fields(
             cls.model,
             cls.only_fields, cls.exclude_fields,
             cls.custom_fields, cls.input_custom_fields, cls.output_custom_fields,

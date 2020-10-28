@@ -18,57 +18,58 @@ def get_default(field):
 
 
 @singledispatch
-def convert_django_field(field, field_name, both_fields, input_fields, output_fields):
+def convert_django_field(field, field_name, both_fields, input_fields, output_fields, field_validators):
     raise NotImplementedError(field.__class__)
 
 
 @convert_django_field.register(AutoField)
 @convert_django_field.register(IntegerField)
-def convert_to_integer_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_integer_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     both_fields[field_name] = IntegerType(nullable=field.null, default=get_default(field), exclude_filters=())
 
 
 @convert_django_field.register(CharField)
 @convert_django_field.register(TextField)
-def convert_to_string_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_string_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     both_fields[field_name] = StringType(nullable=field.null, default=get_default(field), exclude_filters=())
 
 
 @convert_django_field.register(BooleanField)
-def convert_to_boolean_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_boolean_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     both_fields[field_name] = BooleanType(nullable=field.null, default=get_default(field), exclude_filters=())
 
 
 @convert_django_field.register(FloatField)
-def convert_to_float_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_float_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     both_fields[field_name] = FloatType(nullable=field.null, default=get_default(field), exclude_filters=())
 
 
 @convert_django_field.register(DateField)
-def convert_to_date_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_date_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     both_fields[field_name] = DateType(nullable=field.null, default=get_default(field), exclude_filters=())
 
 
 @convert_django_field.register(TimeField)
-def convert_to_time_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_time_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     both_fields[field_name] = TimeType(nullable=field.null, default=get_default(field), exclude_filters=())
 
 
 @convert_django_field.register(DateTimeField)
-def convert_to_date_time_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_date_time_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     both_fields[field_name] = DateTimeType(nullable=field.null, default=get_default(field), exclude_filters=())
 
 
 @convert_django_field.register(ForeignKey)
 @convert_django_field.register(OneToOneField)
-def convert_to_object_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_object_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     target_model = field.remote_field.model
     input_fields[field_name + "_id"] = IntegerType(nullable=field.null, exclude_filters=())
     output_fields[field_name] = ObjectType(target_model, nullable=field.null, exclude_filters=())
+    field_validators[field_name + "_id"] = lambda: target_model.objects.all()
 
 
 @convert_django_field.register(OneToOneRel)
-def convert_to_readonly_object_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_readonly_object_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     target_model = field.remote_field.model
     # for OneToOneRel, we don't want to generate filters, as one_to_one_rel_id does not exist in Django
     output_fields[field_name] = ObjectType(target_model, nullable=field.null)
@@ -77,7 +78,8 @@ def convert_to_readonly_object_type(field, field_name, both_fields, input_fields
 @convert_django_field.register(ManyToOneRel)
 @convert_django_field.register(ManyToManyField)
 @convert_django_field.register(ManyToManyRel)
-def convert_to_readonly_list_of_object_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_readonly_list_of_object_type(field, field_name, both_fields, input_fields, output_fields,
+                                            field_validators):
     target_model = field.remote_field.model
     output_fields[field_name] = PaginatedList(target_model)
 
@@ -86,13 +88,11 @@ def get_all_simple_api_model_fields(fields):
     both_fields = OrderedDict()
     input_fields = OrderedDict()
     output_fields = OrderedDict()
-    pk_field = None
+    field_validators = {}
 
     for field_name, field in fields.items():
-        convert_django_field(field, field_name, both_fields, input_fields, output_fields)
-        if field.primary_key:
-            pk_field = field_name
-    return both_fields, input_fields, output_fields, pk_field
+        convert_django_field(field, field_name, both_fields, input_fields, output_fields, field_validators)
+    return both_fields, input_fields, output_fields, field_validators
 
 
 def determine_simple_api_fields(model, only_fields=None, exclude_fields=None,
@@ -105,9 +105,9 @@ def determine_simple_api_fields(model, only_fields=None, exclude_fields=None,
         if k in filtered_field_names:
             filtered_model_fields[k] = v
 
-    fields, input_fields, output_fields, pk_field = get_all_simple_api_model_fields(filtered_model_fields)
+    fields, input_fields, output_fields, validators = get_all_simple_api_model_fields(filtered_model_fields)
 
     fields.update(custom_fields or {})
     input_fields.update(input_custom_fields or {})
     output_fields.update(output_custom_fields or {})
-    return fields, input_fields, output_fields, pk_field
+    return fields, input_fields, output_fields, validators

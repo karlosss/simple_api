@@ -3,13 +3,13 @@ from object.permissions import permissions_pre_hook
 
 
 class Action:
-    def __init__(self, parameters=None, return_value=None, exec_fn=None, permissions=None, validator=None, **kwargs):
-        if parameters is None:
-            parameters = {}
-        self.parameters = parameters
+    def __init__(self, parameters=None, return_value=None, exec_fn=None, permissions=None, validator=None,
+                 field_validators=None, **kwargs):
+        self.parameters = parameters or {}
         self.return_value = return_value
         self.permissions = None
         self.validator = None
+        self.field_validators = field_validators or {}
         self.has_permission = None
         self.fn = TemplateFunction(exec_fn)
         self.parent_class = None
@@ -21,7 +21,7 @@ class Action:
         self.set_permissions(permissions)
         self.set_validator(validator)
 
-        for name, param in parameters.items():
+        for name, param in self.parameters.items():
             assert param.nullable or param.default is None, \
                 "Cannot set a default value for a non-null parameter `{}`.".format(name)
 

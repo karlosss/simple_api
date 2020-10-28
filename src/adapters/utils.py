@@ -1,6 +1,6 @@
 from object.permissions import AllowAll
 from object.registry import object_storage
-from object.utils import build_object_info
+from object.meta_types import build_object_info
 
 
 class TemplateGenerator:
