@@ -15,12 +15,18 @@ class ModelAction(Action):
         self.parameters = determine_items(self.parent_class.in_fields, self.only_fields,
                                           self.exclude_fields, self.custom_fields)
 
-    def determine_validators(self, default_validators):
-        validators = {}
+    def create_auxiliary_actions(self, default_validators, **kwargs):
+        actions = kwargs.get("actions")
+        if actions is not None:
+            return actions
+        actions = {}
         for field_name, validator in {**default_validators, **self.field_validators}.items():
             if field_name in self.parameters:
-                validators[field_name] = validator
-        self.field_validators = validators
+                name = "{}__{}".format(self.name, field_name)
+                actions[name] = ListAction(exec_fn=validator.fn, permissions=self.permissions,
+                                           return_value=validator.type, hidden=True)
+                actions[name].set_name(name)
+        return actions
 
     def get_exec_fn(self):
         raise NotImplementedError
@@ -46,6 +52,13 @@ class ObjectMixin:
                                                          self.only_fields,
                                                          self.exclude_fields)
         super().determine_parameters(**kwargs)
+
+    def create_auxiliary_actions(self, default_validators, **kwargs):
+        actions = kwargs.get("actions") or super().create_auxiliary_actions(default_validators, **kwargs)
+        for action in actions.values():
+            action.parameters.update(
+                {self.parent_class.pk_field: self.parent_class.in_fields[self.parent_class.pk_field]})
+        return actions
 
 
 class InputDataMixin:
@@ -74,18 +87,27 @@ class InputDataMixin:
             self.custom_fields["data"] = ObjectType(input_cls)
         super().determine_parameters(**kwargs)
 
-    def determine_validators(self, default_validators):
-        validators = {}
+    def create_auxiliary_actions(self, default_validators, **kwargs):
+        actions = {}
         for field_name, validator in {**default_validators, **self.field_validators}.items():
             if field_name in self.custom_fields["data"].to.in_fields:
-                validators[field_name] = validator
-        self.field_validators = validators
+                name = "{}__{}".format(self.name, field_name)
+                actions[name] = ListAction(exec_fn=validator.fn, permissions=self.permissions,
+                                           return_value=validator.type, hidden=True)
+                actions[name].set_name(name)
+        return super().create_auxiliary_actions(default_validators, actions=actions)
 
 
 class FilterMixin:
     def determine_parameters(self, **kwargs):
         super().determine_parameters(**kwargs)
         self.parameters.update(self.parent_class.filters)
+
+    def get_exec_fn(self):
+        def exec_fn(request, params, **kwargs):
+            data = super().get_exec_fn()(request, params, **kwargs)
+            return resolve_filtering(request, data, params)
+        return exec_fn
 
 
 class DetailAction(ObjectMixin, ModelAction):
@@ -101,7 +123,7 @@ class DetailAction(ObjectMixin, ModelAction):
 class ListAction(FilterMixin, ModelAction):
     def get_exec_fn(self):
         def exec_fn(request, params, **kwargs):
-            return resolve_filtering(request, self.model.objects, params)
+            return self.model.objects.all()
         return exec_fn
 
     def __init__(self, exec_fn=None, permissions=None, return_value=PaginatedList("self"), **kwargs):

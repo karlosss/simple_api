@@ -102,6 +102,7 @@ def determine_simple_api_fields(model, only_fields=None, exclude_fields=None,
             filtered_model_fields[k] = v
 
     fields, input_fields, output_fields, validators = get_all_simple_api_model_fields(filtered_model_fields)
+    output_fields["__str__"] = StringType(resolver=lambda **kw: kw["obj"].__str__())
 
     fields.update(custom_fields or {})
     input_fields.update(input_custom_fields or {})

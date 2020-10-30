@@ -22,19 +22,14 @@ class DjangoObjectMeta(ObjectMeta):
                 action.set_parent_class(cls)
                 action.set_name(action_name)
                 action.determine_parameters()
-                action.determine_validators(cls.default_field_validators)
 
         super().inject_references(cls)
 
-        choice_actions = {}
+        auxiliary_actions = {}
         for action_name, action in cls.actions.items():
-            for field_name, validator in action.field_validators.items():
-                choice_action = ListAction(exec_fn=validator.fn, return_value=validator.type, hidden=True)
-                choice_action.set_permissions(action.permissions)
-                choice_action.set_name("{}__{}".format(action_name, field_name))
-                choice_actions[choice_action.name] = choice_action
+            auxiliary_actions.update(action.create_auxiliary_actions(cls.default_field_validators))
 
-        cls.actions.update(choice_actions)
+        cls.actions.update(auxiliary_actions)
 
     def __new__(mcs, name, bases, attrs, **kwargs):
         if kwargs.get("skip", False) or object_storage.key_for_class(attrs["__module__"], name) == mcs.base_class:

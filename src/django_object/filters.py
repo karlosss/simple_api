@@ -61,7 +61,7 @@ def determine_filters_for_string(type, field_name):
 @determine_filters_for_type.register(ObjectType)
 def determine_filters_for_object(type, field_name):
     inner_type = DJANGO_SIMPLE_API_MAP[get_pk_field(type.to)[1].__class__]
-    return determine_filters_for_type(inner_type, field_name + "_id")
+    return determine_filters_for_type(inner_type(), field_name + "_id")
 
 
 @determine_filters_for_type.register(PaginatedList)
