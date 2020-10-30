@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from object.function import TemplateFunction
 from object.permissions import permissions_pre_hook
 
@@ -6,7 +8,7 @@ class Action:
     def __init__(self, parameters=None, return_value=None, exec_fn=None, permissions=None, validator=None,
                  field_validators=None, **kwargs):
         self.parameters = parameters or {}
-        self.return_value = return_value
+        self.return_value = deepcopy(return_value)
         self.permissions = None
         self.validator = None
         self.field_validators = field_validators or {}
@@ -17,6 +19,7 @@ class Action:
         self.kwargs = kwargs
         self.retry_in = kwargs.get("retry_in")
         self.hide_if_denied = kwargs.get("hide_if_denied", False)
+        self.hidden = kwargs.get("hidden", False)
 
         self.set_permissions(permissions)
         self.set_validator(validator)

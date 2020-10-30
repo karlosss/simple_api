@@ -6,9 +6,22 @@ from django.db.models import AutoField, IntegerField, CharField, TextField, Bool
     NOT_PROVIDED
 
 from django_object.datatypes import PaginatedList
-from django_object.utils import extract_fields_from_model, determine_items
+from django_object.utils import extract_fields_from_model, determine_items, get_pk_field
+from django_object.validators import FieldValidator
 from object.datatypes import IntegerType, StringType, BooleanType, FloatType, DateType, TimeType, DateTimeType, \
     ObjectType
+
+DJANGO_SIMPLE_API_MAP = {
+    AutoField: IntegerType,
+    IntegerField: IntegerType,
+    CharField: StringType,
+    TextField: StringType,
+    BooleanField: BooleanType,
+    FloatField: FloatType,
+    DateField: DateType,
+    TimeField: TimeType,
+    DateTimeField: DateTimeType,
+}
 
 
 def get_default(field):
@@ -24,48 +37,31 @@ def convert_django_field(field, field_name, both_fields, input_fields, output_fi
 
 @convert_django_field.register(AutoField)
 @convert_django_field.register(IntegerField)
-def convert_to_integer_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
-    both_fields[field_name] = IntegerType(nullable=field.null, default=get_default(field), exclude_filters=())
-
-
 @convert_django_field.register(CharField)
 @convert_django_field.register(TextField)
-def convert_to_string_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
-    both_fields[field_name] = StringType(nullable=field.null, default=get_default(field), exclude_filters=())
-
-
 @convert_django_field.register(BooleanField)
-def convert_to_boolean_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
-    both_fields[field_name] = BooleanType(nullable=field.null, default=get_default(field), exclude_filters=())
-
-
 @convert_django_field.register(FloatField)
-def convert_to_float_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
-    both_fields[field_name] = FloatType(nullable=field.null, default=get_default(field), exclude_filters=())
-
-
 @convert_django_field.register(DateField)
-def convert_to_date_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
-    both_fields[field_name] = DateType(nullable=field.null, default=get_default(field), exclude_filters=())
-
-
 @convert_django_field.register(TimeField)
-def convert_to_time_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
-    both_fields[field_name] = TimeType(nullable=field.null, default=get_default(field), exclude_filters=())
-
-
 @convert_django_field.register(DateTimeField)
-def convert_to_date_time_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
-    both_fields[field_name] = DateTimeType(nullable=field.null, default=get_default(field), exclude_filters=())
+def convert_to_primitive_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
+    assert field.__class__ in DJANGO_SIMPLE_API_MAP, "Cannot convert `{}`".format(field.__class__)
+    both_fields[field_name] = DJANGO_SIMPLE_API_MAP[field.__class__](nullable=field.null,
+                                                                     default=get_default(field), exclude_filters=())
 
 
 @convert_django_field.register(ForeignKey)
 @convert_django_field.register(OneToOneField)
 def convert_to_object_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     target_model = field.remote_field.model
-    input_fields[field_name + "_id"] = IntegerType(nullable=field.null, exclude_filters=())
+    pk_field_name, pk_field = get_pk_field(target_model)
+    converted_pk_field = DJANGO_SIMPLE_API_MAP[pk_field.__class__]
+
+    input_fields[field_name + "_id"] = converted_pk_field(nullable=field.null, exclude_filters=())
     output_fields[field_name] = ObjectType(target_model, nullable=field.null, exclude_filters=())
-    field_validators[field_name + "_id"] = lambda: target_model.objects.all()
+    field_validators[field_name + "_id"] = FieldValidator(fn=lambda: target_model.objects.all(),
+                                                          type=PaginatedList(target_model),
+                                                          field=get_pk_field(target_model)[0])
 
 
 @convert_django_field.register(OneToOneRel)

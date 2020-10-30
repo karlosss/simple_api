@@ -60,6 +60,7 @@ class Object(metaclass=ObjectMeta):
 
     default_fields_permission = AllowAll
     default_actions_permission = AllowAll
+    default_field_validators = {}
 
     @classproperty
     def in_fields(cls):

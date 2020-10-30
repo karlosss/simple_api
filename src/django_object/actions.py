@@ -15,6 +15,13 @@ class ModelAction(Action):
         self.parameters = determine_items(self.parent_class.in_fields, self.only_fields,
                                           self.exclude_fields, self.custom_fields)
 
+    def determine_validators(self, default_validators):
+        validators = {}
+        for field_name, validator in {**default_validators, **self.field_validators}.items():
+            if field_name in self.parameters:
+                validators[field_name] = validator
+        self.field_validators = validators
+
     def get_exec_fn(self):
         raise NotImplementedError
 
@@ -51,9 +58,10 @@ class InputDataMixin:
         super().__init__(**kwargs)
 
     def determine_parameters(self, **kwargs):
-        self.data_only_fields, self.data_exclude_fields = remove_item(self.parent_class.pk_field,
-                                                                      self.data_only_fields,
-                                                                      self.data_exclude_fields)
+        if self.parent_class.auto_pk:
+            self.data_only_fields, self.data_exclude_fields = remove_item(self.parent_class.pk_field,
+                                                                          self.data_only_fields,
+                                                                          self.data_exclude_fields)
         fields = determine_items(self.parent_class.in_fields, self.data_only_fields,
                                  self.data_exclude_fields, self.data_custom_fields)
         if self.force_nullable:
@@ -65,6 +73,13 @@ class InputDataMixin:
             input_cls = ObjectMeta(self.parent_class.__name__ + capitalize(self.name), (Object,), attrs)
             self.custom_fields["data"] = ObjectType(input_cls)
         super().determine_parameters(**kwargs)
+
+    def determine_validators(self, default_validators):
+        validators = {}
+        for field_name, validator in {**default_validators, **self.field_validators}.items():
+            if field_name in self.custom_fields["data"].to.in_fields:
+                validators[field_name] = validator
+        self.field_validators = validators
 
 
 class FilterMixin:
@@ -79,9 +94,8 @@ class DetailAction(ObjectMixin, ModelAction):
             return self.model.objects.get(**params)
         return exec_fn
 
-    def __init__(self, exec_fn=None, permissions=None, **kwargs):
-        super().__init__(only_fields=(), exec_fn=exec_fn, permissions=permissions, **kwargs)
-        self.return_value = ObjectType("self")
+    def __init__(self, exec_fn=None, permissions=None, return_value=ObjectType("self"), **kwargs):
+        super().__init__(only_fields=(), exec_fn=exec_fn, permissions=permissions, return_value=return_value, **kwargs)
 
 
 class ListAction(FilterMixin, ModelAction):
@@ -90,9 +104,8 @@ class ListAction(FilterMixin, ModelAction):
             return resolve_filtering(request, self.model.objects, params)
         return exec_fn
 
-    def __init__(self, exec_fn=None, permissions=None, **kwargs):
-        super().__init__(only_fields=(), exec_fn=exec_fn, permissions=permissions, **kwargs)
-        self.return_value = PaginatedList("self")
+    def __init__(self, exec_fn=None, permissions=None, return_value=PaginatedList("self"), **kwargs):
+        super().__init__(only_fields=(), exec_fn=exec_fn, permissions=permissions, return_value=return_value, **kwargs)
 
 
 class CreateAction(InputDataMixin, ModelAction):
@@ -102,12 +115,11 @@ class CreateAction(InputDataMixin, ModelAction):
         return exec_fn
 
     def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None, exec_fn=None, permissions=None,
-                 **kwargs):
+                 return_value=ObjectType("self"), **kwargs):
         # todo move mutation=True somewhere else so that the generic action is not graphql-biased
         super().__init__(data_only_fields=only_fields, data_exclude_fields=exclude_fields,
                          data_custom_fields=custom_fields, only_fields=(),
-                         exec_fn=exec_fn, permissions=permissions, mutation=True, **kwargs)
-        self.return_value = ObjectType("self")
+                         exec_fn=exec_fn, permissions=permissions, mutation=True, return_value=return_value, **kwargs)
 
 
 class UpdateAction(InputDataMixin, ObjectMixin, ModelAction):
@@ -122,11 +134,11 @@ class UpdateAction(InputDataMixin, ObjectMixin, ModelAction):
         return exec_fn
 
     def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None,
-                 exec_fn=None, permissions=None, **kwargs):
+                 exec_fn=None, permissions=None, return_value=ObjectType("self"), **kwargs):
         super().__init__(data_only_fields=only_fields, data_exclude_fields=exclude_fields,
                          data_custom_fields=custom_fields, only_fields=(),
-                         exec_fn=exec_fn, permissions=permissions, mutation=True, force_nullable=True, **kwargs)
-        self.return_value = ObjectType("self")
+                         exec_fn=exec_fn, permissions=permissions, mutation=True, force_nullable=True,
+                         return_value=return_value, **kwargs)
 
 
 class DeleteAction(ObjectMixin, ModelAction):
@@ -136,6 +148,6 @@ class DeleteAction(ObjectMixin, ModelAction):
             return True
         return exec_fn
 
-    def __init__(self, exec_fn=None, permissions=None, **kwargs):
-        super().__init__(only_fields=(), exec_fn=exec_fn, permissions=permissions, mutation=True, **kwargs)
-        self.return_value = BooleanType()
+    def __init__(self, exec_fn=None, permissions=None, return_value=BooleanType(), **kwargs):
+        super().__init__(only_fields=(), exec_fn=exec_fn, permissions=permissions, mutation=True,
+                         return_value=return_value, **kwargs)

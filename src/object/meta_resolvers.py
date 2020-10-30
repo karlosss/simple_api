@@ -12,7 +12,7 @@ def object_info(**kwargs):
             "actions": []
         }
         for action in cls.actions.values():
-            if getattr(action, "on_object", False):
+            if getattr(action, "on_object", False) or action.hidden:
                 continue
 
             try:
