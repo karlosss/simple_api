@@ -16,5 +16,6 @@ def convert_function_as_field_resolver(function):
 def convert_function_as_exec_fn(function):
     def exec_fn(root, info, **kwargs):
         ret = function.callable(request=info.context, params=kwargs, obj=root, field_name=info.field_name)
+        print(ret)
         return ret
     return exec_fn

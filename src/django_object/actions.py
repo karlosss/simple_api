@@ -16,6 +16,8 @@ class ModelAction(Action):
                                           self.exclude_fields, self.custom_fields)
 
     def create_auxiliary_actions(self, default_validators, **kwargs):
+        if self.hidden:
+            return {}
         actions = kwargs.get("actions")
         if actions is not None:
             return actions
@@ -54,6 +56,8 @@ class ObjectMixin:
         super().determine_parameters(**kwargs)
 
     def create_auxiliary_actions(self, default_validators, **kwargs):
+        if self.hidden:
+            return {}
         actions = kwargs.get("actions") or super().create_auxiliary_actions(default_validators, **kwargs)
         for action in actions.values():
             action.parameters.update(
@@ -88,6 +92,8 @@ class InputDataMixin:
         super().determine_parameters(**kwargs)
 
     def create_auxiliary_actions(self, default_validators, **kwargs):
+        if self.hidden:
+            return {}
         actions = {}
         for field_name, validator in {**default_validators, **self.field_validators}.items():
             if field_name in self.custom_fields["data"].to.in_fields:
@@ -103,11 +109,13 @@ class FilterMixin:
         super().determine_parameters(**kwargs)
         self.parameters.update(self.parent_class.filters)
 
-    def get_exec_fn(self):
-        def exec_fn(request, params, **kwargs):
-            data = super().get_exec_fn()(request, params, **kwargs)
-            return resolve_filtering(request, data, params)
-        return exec_fn
+    def __init__(self, exec_fn, **kwargs):
+        if exec_fn is not None:
+            def filter_exec_fn(request, params, **kwargs):
+                res = exec_fn(request, params, **kwargs)
+                return resolve_filtering(request, res, params, **kwargs)
+            exec_fn = filter_exec_fn
+        super().__init__(exec_fn=exec_fn, **kwargs)
 
 
 class DetailAction(ObjectMixin, ModelAction):
@@ -123,7 +131,7 @@ class DetailAction(ObjectMixin, ModelAction):
 class ListAction(FilterMixin, ModelAction):
     def get_exec_fn(self):
         def exec_fn(request, params, **kwargs):
-            return self.model.objects.all()
+            return resolve_filtering(request, self.model.objects.all(), params, **kwargs)
         return exec_fn
 
     def __init__(self, exec_fn=None, permissions=None, return_value=PaginatedList("self"), **kwargs):
