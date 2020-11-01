@@ -14,21 +14,10 @@ class ObjectMeta(type):
     def inject_references(mcs, cls):
         for field in {**cls.fields, **cls.input_fields, **cls.output_fields}.values():
             field.set_parent_class(cls)
-            if not field.resolver.pre_hook_set:
-                field.resolver.set_pre_hook(permissions_pre_hook(cls.default_fields_permission))
 
         for action_name, action in cls.actions.items():
             action.set_parent_class(cls)
             action.set_name(action_name)
-            if not action.permissions:
-                action.set_permissions(cls.default_actions_permission)
-
-        if not getattr(cls, "hidden", False) and "__actions" not in cls.out_fields:
-            cls.output_fields["__actions"] = PlainListType(ObjectType("ActionInfo"))
-
-            def resolver(**kwargs):
-                raise
-            cls.output_fields["__actions"].resolver.set_main_hook(resolver)
 
     def __new__(mcs, name, bases, attrs, **kwargs):
         cls = super().__new__(mcs, name, bases, attrs)
@@ -57,10 +46,6 @@ class Object(metaclass=ObjectMeta):
     input_fields = {}
     output_fields = {}
     actions = {}
-
-    default_fields_permission = AllowAll
-    default_actions_permission = AllowAll
-    default_field_validators = {}
 
     @classproperty
     def in_fields(cls):

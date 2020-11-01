@@ -1,12 +1,14 @@
 import graphene
 
 from adapters.base import Adapter
+from adapters.graphql.constants import INPUT_CLASS_SUFFIX
 from adapters.graphql.converter.converter import convert_type, convert_function, ConversionType
 from adapters.graphql.registry import get_class, check_classes_for_fields
 from adapters.graphql.utils import is_mutation, capitalize
 from object.actions import Action
 from object.datatypes import BooleanType
 from object.function import Function
+from object.object import ObjectMeta, Object
 
 
 class GraphQLAdapter(Adapter):
@@ -18,14 +20,24 @@ class GraphQLAdapter(Adapter):
             return self.convert_mutation_action(action, kwargs["name"])
         return self.convert_query_action(action)
 
-    def convert_action_params(self, action):
+    def convert_action_params_and_data(self, action):
         params = {}
         for name, field in action.parameters.items():
             params[name] = field.convert(self, _as=ConversionType.PARAMETER)
+
+        # we need to convert data here manually to avoid creating new Objects, which would chance the set over
+        # which the generate() function currently iterates
+        if action.data:
+            data_params = {}
+            for name, field in action.data.items():
+                data_params[name] = field.convert(self, _as=ConversionType.INPUT)
+            cls = type("{}{}{}".format(action.parent_class.__name__, capitalize(action.name), INPUT_CLASS_SUFFIX),
+                       (graphene.InputObjectType,), data_params)
+            params["data"] = graphene.Argument(cls, required=True)
         return params
 
     def convert_query_action(self, action):
-        params = self.convert_action_params(action)
+        params = self.convert_action_params_and_data(action)
 
         def resolve_field(*args, **kwargs):
             return action.get_fn().convert(self, _as=ConversionType.EXEC_FN)(*args, **kwargs)
@@ -35,7 +47,7 @@ class GraphQLAdapter(Adapter):
         return field
 
     def convert_mutation_action(self, action, name):
-        arguments = type("Arguments", (), self.convert_action_params(action))
+        arguments = type("Arguments", (), self.convert_action_params_and_data(action))
         output = action.get_return_value().convert(self, _as=ConversionType.LIST_OUTPUT)
 
         def mutate(*args, **kwargs):

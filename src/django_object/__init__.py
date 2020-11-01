@@ -11,7 +11,9 @@ from object.datatypes import ObjectType
 
 def model_set_ref_handler(object_type):
     if isclass(object_type.to) and issubclass(object_type.to, Model):
-        object_type.to = model_django_object_storage.get(object_type.to)
+        object_type.to = model_django_object_storage.get(object_type.to).to_object()
+    elif isclass(object_type.to) and issubclass(object_type.to, DjangoObject):
+        object_type.to = object_type.to.to_object()
 
 
 needed_model_classes = set()

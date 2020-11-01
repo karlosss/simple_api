@@ -45,7 +45,7 @@ def create_associated_list_type(cls):
             "data": PlainListType(
                 ObjectType(cls),
                 parameters={
-                    "limit": IntegerType(nullable=True, default=20),
+                    "limit": IntegerType(nullable=True, default=DEFAULT_LIMIT),
                     "offset": IntegerType(nullable=True, default=0),
                 },
                 resolver=resolve_pagination
