@@ -13,11 +13,17 @@ class ModelAction:
         self.parent_class = cls
 
     def determine_parameters(self, **kwargs):
-        self.parameters = determine_items(self.parent_class.in_fields, self.only_fields,
-                                          self.exclude_fields, self.custom_fields)
+        self.parameters.update(determine_items(self.parent_class.in_fields, self.only_fields,
+                                               self.exclude_fields, self.custom_fields))
 
     def determine_data(self, **kwargs):
         pass
+
+    def determine_exec_fn(self, **kwargs):
+        self.exec_fn = self.exec_fn or self.default_exec_fn()
+
+    def default_exec_fn(self):
+        raise NotImplemented
 
     def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None, return_value=None,
                  exec_fn=None, **kwargs):
@@ -28,7 +34,7 @@ class ModelAction:
         self.custom_fields = custom_fields or {}
         self.kwargs = kwargs
 
-        self.parameters = None
+        self.parameters = {}
         self.data = None
         self.return_value = return_value
         self.exec_fn = exec_fn
@@ -37,6 +43,7 @@ class ModelAction:
         if self._action is None:
             self.determine_parameters()
             self.determine_data()
+            self.determine_exec_fn()
             self._action = Action(parameters=self.parameters, data=self.data,
                                   return_value=self.return_value, exec_fn=self.exec_fn,
                                   mutation=self.kwargs.get("mutation", False))
@@ -45,10 +52,10 @@ class ModelAction:
 
 class ObjectMixin:
     def determine_parameters(self, **kwargs):
+        super().determine_parameters(**kwargs)
         self.only_fields, self.exclude_fields = add_item(self.parent_class.pk_field_name,
                                                          self.only_fields,
                                                          self.exclude_fields)
-        super().determine_parameters(**kwargs)
 
 
 class InputDataMixin:
@@ -76,47 +83,48 @@ class InputDataMixin:
 
 class FilterMixin:
     def determine_parameters(self, **kwargs):
-        super().determine_parameters(**kwargs)
         self.parameters.update(self.parent_class.filters)
+        super().determine_parameters(**kwargs)
 
-    def __init__(self, exec_fn, **kwargs):
-        def filter_exec_fn(request, params, **kwargs):
-            res = exec_fn(request, params, **kwargs)
+    def determine_exec_fn(self):
+        def filtering_exec_fn(request, params, **kwargs):
+            res = self.exec_fn(request, params, **kwargs)
             return resolve_filtering(request, res, params, **kwargs)
-        exec_fn = filter_exec_fn
-        super().__init__(exec_fn=exec_fn, **kwargs)
+        self.exec_fn = filtering_exec_fn
+        super().determine_exec_fn()
 
 
 class DetailAction(ObjectMixin, ModelAction):
-    def get_exec_fn(self):
+    def default_exec_fn(self):
         def exec_fn(request, params, **kwargs):
             return self.model.objects.get(**params)
         return exec_fn
 
     def __init__(self, exec_fn=None, return_value=None, **kwargs):
-        if exec_fn is None:
-            exec_fn = self.get_exec_fn()
         if return_value is None:
             return_value = ObjectType("self")
         super().__init__(only_fields=(), exec_fn=exec_fn, return_value=return_value, **kwargs)
 
 
 class ListAction(FilterMixin, ModelAction):
-    def get_exec_fn(self):
+    def default_exec_fn(self):
         def exec_fn(request, params, **kwargs):
             return self.model.objects.all()
         return exec_fn
 
+    def determine_exec_fn(self):
+        # todo resolve code duplication with the base ModelAction class
+        self.exec_fn = self.exec_fn or self.default_exec_fn()
+        super().determine_exec_fn()
+
     def __init__(self, exec_fn=None, return_value=None, **kwargs):
-        if exec_fn is None:
-            exec_fn = self.get_exec_fn()
         if return_value is None:
             return_value = PaginatedList("self")
         super().__init__(only_fields=(), exec_fn=exec_fn, return_value=return_value, **kwargs)
 
 
 class CreateAction(InputDataMixin, ModelAction):
-    def get_exec_fn(self):
+    def default_exec_fn(self):
         def exec_fn(request, params, **kwargs):
             return self.model.objects.create(**params.get("data", {}))
         return exec_fn
@@ -125,8 +133,6 @@ class CreateAction(InputDataMixin, ModelAction):
                  return_value=None, **kwargs):
         # todo move mutation=True somewhere else so that the generic action is not graphql-biased
         #  (probably upon importing GraphQLAdapter)
-        if exec_fn is None:
-            exec_fn = self.get_exec_fn()
         if return_value is None:
             return_value = ObjectType("self")
         super().__init__(data_only_fields=only_fields, data_exclude_fields=exclude_fields,
@@ -135,7 +141,7 @@ class CreateAction(InputDataMixin, ModelAction):
 
 
 class UpdateAction(InputDataMixin, ObjectMixin, ModelAction):
-    def get_exec_fn(self):
+    def default_exec_fn(self):
         def exec_fn(request, params, **kwargs):
             data = params.pop("data")
             obj = self.model.objects.get(**params)
@@ -147,8 +153,6 @@ class UpdateAction(InputDataMixin, ObjectMixin, ModelAction):
 
     def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None,
                  exec_fn=None, permissions=None, return_value=None, **kwargs):
-        if exec_fn is None:
-            exec_fn = self.get_exec_fn()
         if return_value is None:
             return_value = ObjectType("self")
         super().__init__(data_only_fields=only_fields, data_exclude_fields=exclude_fields,
@@ -158,15 +162,13 @@ class UpdateAction(InputDataMixin, ObjectMixin, ModelAction):
 
 
 class DeleteAction(ObjectMixin, ModelAction):
-    def get_exec_fn(self):
+    def default_exec_fn(self):
         def exec_fn(request, params, **kwargs):
             self.model.objects.get(**params).delete()
             return True
         return exec_fn
 
     def __init__(self, exec_fn=None, return_value=None, **kwargs):
-        if exec_fn is None:
-            exec_fn = self.get_exec_fn()
         if return_value is None:
             return_value = BooleanType()
         super().__init__(only_fields=(), exec_fn=exec_fn, mutation=True,
