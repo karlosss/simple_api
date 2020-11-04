@@ -28,7 +28,7 @@ class Type(ConvertMixin):
         self.kwargs = kwargs
         self.resolver = TemplateFunction(resolver or default_resolver)\
             .set_default_hook(lambda *a, **kwa: self._default)\
-            .set_pre_hook(permissions_pre_hook(self.permissions))
+            .set_permissions_hook(permissions_pre_hook(self.permissions))
 
     def set_parent_class(self, cls):
         self.parent_class = cls

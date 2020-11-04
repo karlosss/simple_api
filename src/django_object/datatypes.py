@@ -7,8 +7,9 @@ DEFAULT_LIMIT = 20
 
 
 def resolve_filtering(request, parent_val, params, **kwargs):
-    ordering = params.pop("ordering", ())
-    qs = parent_val.filter(**params).order_by(*ordering)
+    filters = params.pop("filters", {})
+    ordering = filters.pop("ordering", ())
+    qs = parent_val.filter(**filters).order_by(*ordering)
     return AttrDict(count=qs.count(), data=qs)
 
 

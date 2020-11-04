@@ -2,14 +2,18 @@ from object.function import TemplateFunction
 
 
 class Action:
-    def __init__(self, parameters=None, data=None, return_value=None, exec_fn=None, **kwargs):
+    def __init__(self, parameters=None, data=None, return_value=None, exec_fn=None, validators=None, validate_fn=None,
+                 **kwargs):
         self.parameters = parameters or {}
         self.data = data or {}
         self.return_value = return_value
-        self.fn = TemplateFunction(exec_fn)
+        self.exec_fn = exec_fn
         self.parent_class = None
         self.name = None
+        self.validators = validators or {}
+        self.validate_fn = validate_fn
         self.kwargs = kwargs
+        self._fn = None
 
         for name, param in {**self.parameters, **self.data}.items():
             assert param.nullable or param.default is None, \
@@ -26,7 +30,24 @@ class Action:
             self.return_value.set_parent_class(cls)
 
     def get_fn(self):
-        return self.fn
+        if self._fn is None:
+            self._fn = TemplateFunction(self.exec_fn)
+            validators = self.validators
+
+            def validate(*args, **kwargs):
+                errors = []
+                for field_name, fn in validators.items():
+                    if kwargs["params"]["data"][field_name] not in fn(*args, **kwargs).values_list("pk", flat=True):  # todo move this to to_action so that we don't mix layers
+                        errors.append((field_name, kwargs["params"]["data"][field_name]))
+                if errors:
+                    s = ""
+                    for error in errors:
+                        s = s + "`{}` = {}, ".format(*error)
+                    s = s[:-2]
+                    raise ValueError("Validation failed for {}".format(s))
+                self.validate_fn(*args, **kwargs)
+            self._fn.set_validate_hook(validate)
+        return self._fn
 
     def get_return_value(self):
         return self.return_value

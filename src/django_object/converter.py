@@ -59,8 +59,7 @@ def convert_to_object_type(field, field_name, both_fields, input_fields, output_
 
     input_fields[field_name + "_id"] = converted_pk_field(nullable=field.null, exclude_filters=())
     output_fields[field_name] = ObjectType(target_model, nullable=field.null, exclude_filters=())
-    field_validators[field_name + "_id"] = FieldValidator(fn=lambda: target_model.objects.all(),
-                                                          field_name=target_pk_field_name,
+    field_validators[field_name + "_id"] = FieldValidator(fn=lambda *a, **kw: target_model.objects.all(),
                                                           field_type=PaginatedList(target_model),
                                                           )
 

@@ -30,14 +30,20 @@ class ModelAction:
     def set_name(self, name):
         self.name = name
 
+    def set_validators(self, validators):
+        for field_name, validator in validators.items():
+            if field_name not in self.validators:
+                self.validators[field_name] = validator.fn
+
     def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None, return_value=None,
-                 exec_fn=None, **kwargs):
+                 exec_fn=None, validators=None, **kwargs):
         self.parent_class = None
         self._action = None
         self.name = None
         self.only_fields = only_fields
         self.exclude_fields = exclude_fields
         self.custom_fields = custom_fields or {}
+        self.validators = validators or {}
         self.kwargs = kwargs
 
         self.parameters = {}
@@ -55,6 +61,7 @@ class ModelAction:
             self.determine_exec_fn()
             self._action = Action(parameters=self.parameters, data=self.data,
                                   return_value=self.return_value, exec_fn=self.exec_fn,
+                                  validators=self.validators,
                                   mutation=self.kwargs.get("mutation", False))
         return self._action
 
