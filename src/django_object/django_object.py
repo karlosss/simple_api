@@ -32,7 +32,12 @@ class DjangoObjectMeta(type):
 
         cls.pk_field_name, cls.pk_field = get_pk_field(cls.model)
 
-        fields, input_fields, output_fields = determine_simple_api_fields(
+        if cls.only_fields and cls.pk_field_name not in cls.only_fields:
+            cls.only_fields = cls.only_fields + (cls.pk_field_name,)
+        elif cls.exclude_fields and cls.pk_field_name in cls.exclude_fields:
+            cls.exclude_fields = (f for f in cls.exclude_fields if f != cls.pk_field_name)
+
+        fields, input_fields, output_fields, cls.field_validators = determine_simple_api_fields(
             cls.model,
             cls.only_fields, cls.exclude_fields,
             cls.custom_fields, cls.input_custom_fields, cls.output_custom_fields,
@@ -51,8 +56,8 @@ class DjangoObjectMeta(type):
         object_stub.add_attr("output_fields", output_fields)
 
         # create filters and List type for potential listing actions
-        cls.filters = generate_filters(cls)
-        object_stub.add_attr("filters", cls.filters)
+        cls.filter_type = ObjectMeta("{}Filters".format(cls.__name__), (Object,), {"fields": generate_filters(cls)})
+        object_stub.add_attr("filter_type", cls.filter_type)
         create_associated_list_type(cls)
 
         actions = {}
@@ -74,7 +79,10 @@ class DjangoObjectMeta(type):
         for action_name, action in actions.items():
             if isinstance(action, ModelAction):
                 action.set_parent_class(cls)
+                action.set_name(action_name)
                 converted_actions[action_name] = action.to_action()
+                for aux_action_name, aux_action in action.auxiliary_actions().items():
+                    converted_actions["{}__{}".format(action_name, aux_action_name)] = aux_action.to_action()
             else:
                 converted_actions[action_name] = action
 

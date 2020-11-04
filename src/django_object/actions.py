@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from django_object.datatypes import PaginatedList, resolve_filtering
 from django_object.utils import determine_items, add_item, remove_item
 from object.actions import Action
@@ -25,10 +27,14 @@ class ModelAction:
     def default_exec_fn(self):
         raise NotImplemented
 
+    def set_name(self, name):
+        self.name = name
+
     def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None, return_value=None,
                  exec_fn=None, **kwargs):
         self.parent_class = None
         self._action = None
+        self.name = None
         self.only_fields = only_fields
         self.exclude_fields = exclude_fields
         self.custom_fields = custom_fields or {}
@@ -38,6 +44,9 @@ class ModelAction:
         self.data = None
         self.return_value = return_value
         self.exec_fn = exec_fn
+
+    def auxiliary_actions(self):
+        return {}
 
     def to_action(self):
         if self._action is None:
@@ -52,10 +61,17 @@ class ModelAction:
 
 class ObjectMixin:
     def determine_parameters(self, **kwargs):
-        super().determine_parameters(**kwargs)
         self.only_fields, self.exclude_fields = add_item(self.parent_class.pk_field_name,
                                                          self.only_fields,
                                                          self.exclude_fields)
+        super().determine_parameters(**kwargs)
+
+    def auxiliary_actions(self):
+        actions = super().auxiliary_actions()
+        for action in actions.values():
+            pk_field_name = self.parent_class.pk_field_name
+            action.custom_fields.update({pk_field_name: deepcopy(self.parent_class.in_fields[pk_field_name])})
+        return actions
 
 
 class InputDataMixin:
@@ -68,10 +84,11 @@ class InputDataMixin:
         super().__init__(**kwargs)
 
     def determine_data(self, **kwargs):
-        if self.parent_class.auto_pk:
+        if self.parent_class.auto_pk and self.parent_class.pk_field_name in self.parent_class.in_fields:
             self.data_only_fields, self.data_exclude_fields = remove_item(self.parent_class.pk_field_name,
                                                                           self.data_only_fields,
                                                                           self.data_exclude_fields)
+
         data = determine_items(self.parent_class.in_fields, self.data_only_fields,
                                self.data_exclude_fields, self.data_custom_fields)
         if self.force_nullable:
@@ -80,15 +97,25 @@ class InputDataMixin:
                 f._nullable_if_input = True
         self.data = data
 
+    def auxiliary_actions(self):
+        actions = {}
+        for field_name, validator in self.parent_class.field_validators.items():
+            action = ListAction(exec_fn=validator.fn, return_value=validator.field_type)
+            action.set_parent_class(self.parent_class)
+            action.set_name("{}__{}".format(self.name, field_name))
+            actions[field_name] = action
+        return actions
+
 
 class FilterMixin:
     def determine_parameters(self, **kwargs):
-        self.parameters.update(self.parent_class.filters)
+        self.parameters.update({"filters": ObjectType(self.parent_class.filter_type, nullable=True)})
         super().determine_parameters(**kwargs)
 
     def determine_exec_fn(self):
+        fn = self.exec_fn
         def filtering_exec_fn(request, params, **kwargs):
-            res = self.exec_fn(request, params, **kwargs)
+            res = fn(request, params, **kwargs)
             return resolve_filtering(request, res, params, **kwargs)
         self.exec_fn = filtering_exec_fn
         super().determine_exec_fn()
@@ -117,10 +144,11 @@ class ListAction(FilterMixin, ModelAction):
         self.exec_fn = self.exec_fn or self.default_exec_fn()
         super().determine_exec_fn()
 
-    def __init__(self, exec_fn=None, return_value=None, **kwargs):
+    def __init__(self, exec_fn=None, return_value=None, custom_fields=None, **kwargs):
         if return_value is None:
             return_value = PaginatedList("self")
-        super().__init__(only_fields=(), exec_fn=exec_fn, return_value=return_value, **kwargs)
+        super().__init__(only_fields=(), exec_fn=exec_fn, return_value=return_value, custom_fields=custom_fields,
+                         **kwargs)
 
 
 class CreateAction(InputDataMixin, ModelAction):
@@ -140,7 +168,7 @@ class CreateAction(InputDataMixin, ModelAction):
                          exec_fn=exec_fn, permissions=permissions, mutation=True, return_value=return_value, **kwargs)
 
 
-class UpdateAction(InputDataMixin, ObjectMixin, ModelAction):
+class UpdateAction(ObjectMixin, InputDataMixin, ModelAction):
     def default_exec_fn(self):
         def exec_fn(request, params, **kwargs):
             data = params.pop("data")

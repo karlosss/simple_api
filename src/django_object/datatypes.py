@@ -24,7 +24,7 @@ class PaginatedList(ObjectType):
         object_module = self.to.__module__
 
         cls = object_storage.get(object_module, object_name)
-        self.parameters = cls.filters
+        self.parameters = {"filters": ObjectType(cls.filter_type, nullable=True)}
 
         list_cls = object_storage.get(object_module, object_name + "List")
         obj = ObjectType(list_cls, parameters=self.parameters)

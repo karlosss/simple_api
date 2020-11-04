@@ -31,7 +31,7 @@ def get_default(field):
 
 
 @singledispatch
-def convert_django_field(field, field_name, both_fields, input_fields, output_fields):
+def convert_django_field(field, field_name, both_fields, input_fields, output_fields, field_validators):
     raise NotImplementedError(field.__class__)
 
 
@@ -44,7 +44,7 @@ def convert_django_field(field, field_name, both_fields, input_fields, output_fi
 @convert_django_field.register(DateField)
 @convert_django_field.register(TimeField)
 @convert_django_field.register(DateTimeField)
-def convert_to_primitive_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_primitive_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     assert field.__class__ in DJANGO_SIMPLE_API_MAP, "Cannot convert `{}`".format(field.__class__)
     both_fields[field_name] = DJANGO_SIMPLE_API_MAP[field.__class__](nullable=field.null,
                                                                      default=get_default(field), exclude_filters=())
@@ -52,17 +52,21 @@ def convert_to_primitive_type(field, field_name, both_fields, input_fields, outp
 
 @convert_django_field.register(ForeignKey)
 @convert_django_field.register(OneToOneField)
-def convert_to_object_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_object_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     target_model = field.remote_field.model
-    pk_field_name, pk_field = get_pk_field(target_model)
-    converted_pk_field = DJANGO_SIMPLE_API_MAP[pk_field.__class__]
+    target_pk_field_name, target_pk_field = get_pk_field(target_model)
+    converted_pk_field = DJANGO_SIMPLE_API_MAP[target_pk_field.__class__]
 
     input_fields[field_name + "_id"] = converted_pk_field(nullable=field.null, exclude_filters=())
     output_fields[field_name] = ObjectType(target_model, nullable=field.null, exclude_filters=())
+    field_validators[field_name + "_id"] = FieldValidator(fn=lambda: target_model.objects.all(),
+                                                          field_name=target_pk_field_name,
+                                                          field_type=PaginatedList(target_model),
+                                                          )
 
 
 @convert_django_field.register(OneToOneRel)
-def convert_to_readonly_object_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_readonly_object_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     target_model = field.remote_field.model
     # for OneToOneRel, we don't want to generate filters, as one_to_one_rel_id does not exist in Django
     output_fields[field_name] = ObjectType(target_model, nullable=field.null)
@@ -71,7 +75,8 @@ def convert_to_readonly_object_type(field, field_name, both_fields, input_fields
 @convert_django_field.register(ManyToOneRel)
 @convert_django_field.register(ManyToManyField)
 @convert_django_field.register(ManyToManyRel)
-def convert_to_readonly_list_of_object_type(field, field_name, both_fields, input_fields, output_fields):
+def convert_to_readonly_list_of_object_type(field, field_name, both_fields, input_fields, output_fields,
+                                            field_validators):
     target_model = field.remote_field.model
     output_fields[field_name] = PaginatedList(target_model)
 
@@ -80,10 +85,11 @@ def get_all_simple_api_model_fields(fields):
     both_fields = OrderedDict()
     input_fields = OrderedDict()
     output_fields = OrderedDict()
+    field_validators = OrderedDict()
 
     for field_name, field in fields.items():
-        convert_django_field(field, field_name, both_fields, input_fields, output_fields)
-    return both_fields, input_fields, output_fields
+        convert_django_field(field, field_name, both_fields, input_fields, output_fields, field_validators)
+    return both_fields, input_fields, output_fields, field_validators
 
 
 def determine_simple_api_fields(model, only_fields=None, exclude_fields=None,
@@ -96,9 +102,9 @@ def determine_simple_api_fields(model, only_fields=None, exclude_fields=None,
         if k in filtered_field_names:
             filtered_model_fields[k] = v
 
-    fields, input_fields, output_fields = get_all_simple_api_model_fields(filtered_model_fields)
+    fields, input_fields, output_fields, field_validators = get_all_simple_api_model_fields(filtered_model_fields)
 
     fields.update(custom_fields or {})
     input_fields.update(input_custom_fields or {})
     output_fields.update(output_custom_fields or {})
-    return fields, input_fields, output_fields
+    return fields, input_fields, output_fields, field_validators
