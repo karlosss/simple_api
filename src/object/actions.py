@@ -1,9 +1,10 @@
 from object.function import TemplateFunction
+from object.permissions import permissions_pre_hook
 
 
 class Action:
     def __init__(self, parameters=None, data=None, return_value=None, exec_fn=None, validators=None, validate_fn=None,
-                 **kwargs):
+                 permissions=None, **kwargs):
         self.parameters = parameters or {}
         self.data = data or {}
         self.return_value = return_value
@@ -11,7 +12,8 @@ class Action:
         self.parent_class = None
         self.name = None
         self.validators = validators or {}
-        self.validate_fn = validate_fn
+        self.validate_fn = validate_fn or (lambda *a, **kwa: None)
+        self.permissions = permissions or ()
         self.kwargs = kwargs
         self._fn = None
 
@@ -37,7 +39,8 @@ class Action:
             def validate(*args, **kwargs):
                 errors = []
                 for field_name, fn in validators.items():
-                    if kwargs["params"]["data"][field_name] not in fn(*args, **kwargs).values_list("pk", flat=True):  # todo move this to to_action so that we don't mix layers
+                    # todo move this to to_action so that we don't mix layers
+                    if kwargs["params"]["data"][field_name] not in fn(*args, **kwargs).values_list("pk", flat=True):
                         errors.append((field_name, kwargs["params"]["data"][field_name]))
                 if errors:
                     s = ""
@@ -46,7 +49,9 @@ class Action:
                     s = s[:-2]
                     raise ValueError("Validation failed for {}".format(s))
                 self.validate_fn(*args, **kwargs)
+
             self._fn.set_validate_hook(validate)
+            self._fn.set_permissions_hook(permissions_pre_hook(self.permissions))
         return self._fn
 
     def get_return_value(self):

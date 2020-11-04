@@ -36,7 +36,7 @@ class ModelAction:
                 self.validators[field_name] = validator.fn
 
     def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None, return_value=None,
-                 exec_fn=None, validators=None, **kwargs):
+                 exec_fn=None, validators=None, validate_fn=None, permissions=None, **kwargs):
         self.parent_class = None
         self._action = None
         self.name = None
@@ -44,6 +44,8 @@ class ModelAction:
         self.exclude_fields = exclude_fields
         self.custom_fields = custom_fields or {}
         self.validators = validators or {}
+        self.validate_fn = validate_fn
+        self.permissions = permissions
         self.kwargs = kwargs
 
         self.parameters = {}
@@ -61,8 +63,8 @@ class ModelAction:
             self.determine_exec_fn()
             self._action = Action(parameters=self.parameters, data=self.data,
                                   return_value=self.return_value, exec_fn=self.exec_fn,
-                                  validators=self.validators,
-                                  mutation=self.kwargs.get("mutation", False))
+                                  validators=self.validators, validate_fn=self.validate_fn,
+                                  permissions=self.permissions, mutation=self.kwargs.get("mutation", False))
         return self._action
 
 
@@ -107,7 +109,7 @@ class InputDataMixin:
     def auxiliary_actions(self):
         actions = {}
         for field_name, validator in self.parent_class.field_validators.items():
-            action = ListAction(exec_fn=validator.fn, return_value=validator.field_type)
+            action = ListAction(exec_fn=validator.fn, return_value=validator.field_type, permissions=self.permissions)
             action.set_parent_class(self.parent_class)
             action.set_name("{}__{}".format(self.name, field_name))
             actions[field_name] = action
