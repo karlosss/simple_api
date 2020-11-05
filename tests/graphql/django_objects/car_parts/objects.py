@@ -1,7 +1,8 @@
 from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
-from django_object.actions import CreateAction
+from django_object.actions import CreateAction, UpdateAction
 from django_object.django_object import DjangoObject
+from django_object.permissions import IsAuthenticated
 from object.permissions import AllowNone
 from tests.graphql.graphql_test_utils import build_patterns
 
@@ -23,7 +24,8 @@ class Car(DjangoObject):
 
 class Wheel(DjangoObject):
     model = WheelModel
-    create_action = CreateAction(permissions=AllowNone)
+    # create_action = CreateAction(permissions=AllowNone)
+    update_action = UpdateAction(permissions=IsAuthenticated)
     # field_validators = {
     #     "manufacturer_id": lambda *a, **kw: ManufacturerModel.objects.none()
     # }

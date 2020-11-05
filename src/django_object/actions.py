@@ -31,6 +31,9 @@ class ModelAction:
     def set_name(self, name):
         self.name = name
 
+    def instantiate_permissions(self):
+        pass
+
     def set_validators(self, validators):
         for field_name, validator in validators.items():
             if field_name not in self.validators:
@@ -70,6 +73,7 @@ class ModelAction:
             self.determine_parameters()
             self.determine_data()
             self.determine_exec_fn()
+            self.instantiate_permissions()
             self._action = Action(parameters=self.parameters, data=self.data,
                                   return_value=self.return_value, exec_fn=self.exec_fn,
                                   validators=self.validators, validate_fn=self.validate_fn,
@@ -94,6 +98,50 @@ class ObjectMixin:
             pk_field_name = self.parent_class.pk_field_name
             action.custom_fields.update({pk_field_name: deepcopy(self.parent_class.in_fields[pk_field_name])})
         return actions
+
+    def __init__(self, get_fn=None, perform_fn=None, **kwargs):
+        self.get_fn = get_fn
+        self.perform_fn = perform_fn
+        super().__init__(**kwargs)
+
+    def default_perform_fn(self):
+        raise NotImplementedError
+
+    def default_get_fn(self):
+        def get_fn(request, params, **kwargs):
+            pk = params.get(self.parent_class.pk_field_name)
+            return self.model.objects.get(pk=pk)
+        return get_fn
+
+    def determine_get_fn(self):
+        self.get_fn = self.get_fn or self.default_get_fn()
+
+    def determine_perform_fn(self):
+        self.perform_fn = self.perform_fn or self.default_perform_fn()
+
+    def determine_exec_fn(self):
+        self.determine_get_fn()
+        self.determine_perform_fn()
+        get_fn = self.get_fn
+        perform_fn = self.perform_fn
+
+        def exec_fn(request, params, **kwargs):
+            obj = get_fn(request, params, **kwargs)
+            return perform_fn(request, params, obj=obj, **kwargs)
+        self.exec_fn = exec_fn
+
+        super().determine_exec_fn()
+
+    def instantiate_permissions(self):
+        if self.permissions is None:
+            return
+        if not isinstance(self.permissions, (list, tuple)):
+            self.permissions = self.permissions,
+
+        instantiated_permissions = []
+        for pc in self.permissions:
+            instantiated_permissions.append(pc(get_fn=self.get_fn))
+        self.permissions = instantiated_permissions
 
 
 class InputDataMixin:
@@ -150,9 +198,9 @@ class FilterMixin:
 
 
 class DetailAction(ObjectMixin, ModelAction):
-    def default_exec_fn(self):
-        def exec_fn(request, params, **kwargs):
-            return self.model.objects.get(**params)
+    def default_perform_fn(self):
+        def exec_fn(request, params, obj, **kwargs):
+            return obj
         return exec_fn
 
     def __init__(self, exec_fn=None, return_value=None, **kwargs):
@@ -197,10 +245,9 @@ class CreateAction(InputDataMixin, ModelAction):
 
 
 class UpdateAction(ObjectMixin, InputDataMixin, ModelAction):
-    def default_exec_fn(self):
-        def exec_fn(request, params, **kwargs):
+    def default_perform_fn(self):
+        def exec_fn(request, params, obj, **kwargs):
             data = params.pop("data")
-            obj = self.model.objects.get(**params)
             for k, v in data.items():
                 setattr(obj, k, v)
             obj.save()
@@ -218,9 +265,9 @@ class UpdateAction(ObjectMixin, InputDataMixin, ModelAction):
 
 
 class DeleteAction(ObjectMixin, ModelAction):
-    def default_exec_fn(self):
-        def exec_fn(request, params, **kwargs):
-            self.model.objects.get(**params).delete()
+    def default_perform_fn(self):
+        def exec_fn(request, params, obj, **kwargs):
+            obj.delete()
             return True
         return exec_fn
 

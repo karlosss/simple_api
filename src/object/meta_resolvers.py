@@ -17,7 +17,7 @@ def object_info(**kwargs):
                 continue
 
             try:
-                action.has_permission(request=kwargs["request"])
+                action.has_permission()
                 permitted = True
                 deny_reason = None
             except PermissionError as e:

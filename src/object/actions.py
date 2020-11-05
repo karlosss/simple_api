@@ -41,20 +41,25 @@ class Action:
         if self._fn is None:
             self._fn = TemplateFunction(self.exec_fn)
             validators = self.validators
+            validate_fn = self.validate_fn
 
-            def validate(*args, **kwargs):
+            def validate(request, params, **kwargs):
                 errors = []
                 for field_name, fn in validators.items():
                     # todo move this to to_action so that we don't mix layers
-                    if kwargs["params"]["data"][field_name] not in fn(*args, **kwargs).values_list("pk", flat=True):
-                        errors.append((field_name, kwargs["params"]["data"][field_name]))
+                    if "data" in params and field_name in params["data"]:
+                        val = params["data"][field_name]
+                    else:
+                        continue
+                    if val not in fn(*request, params, **kwargs).values_list("pk", flat=True):
+                        errors.append((field_name, val))
                 if errors:
                     s = ""
                     for error in errors:
                         s = s + "`{}` = {}, ".format(*error)
                     s = s[:-2]
                     raise ValueError("Validation failed for {}".format(s))
-                self.validate_fn(*args, **kwargs)
+                validate_fn(request, params, **kwargs)
 
             self._fn.set_validate_hook(validate)
             self._fn.set_permissions_hook(permissions_pre_hook(self.permissions))
