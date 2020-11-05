@@ -1,3 +1,4 @@
+from adapters.graphql.utils import capitalize
 from object.registry import object_storage
 
 
@@ -12,7 +13,7 @@ def object_info(**kwargs):
             "actions": []
         }
         for action in cls.actions.values():
-            if getattr(action, "on_object", False) or action.hidden:
+            if action.with_object or action.hidden:
                 continue
 
             try:
@@ -26,11 +27,11 @@ def object_info(**kwargs):
                 deny_reason = str(e)
 
             action_item = {
-                "name": action.name,
+                "name": "{}{}".format(cls.__name__, capitalize(action.name)),
                 "permitted": permitted,
                 "deny_reason": deny_reason,
                 "retry_in": action.retry_in,
-                "choices": []
+                "choices": action.choice_map
             }
             item["actions"].append(action_item)
         out.append(item)

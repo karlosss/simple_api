@@ -5,6 +5,7 @@ from django_object.datatypes import create_associated_list_type
 from django_object.filters import generate_filters
 from django_object.converter import determine_simple_api_fields
 from django_object.utils import get_pk_field
+from object.datatypes import StringType
 from object.object import Object, ObjectMeta
 from object.registry import object_storage
 from django_object.registry import model_django_object_storage
@@ -31,6 +32,7 @@ class DjangoObjectMeta(type):
             model_django_object_storage.store(cls.model, cls)
 
         cls.pk_field_name, cls.pk_field = get_pk_field(cls.model)
+        object_stub.add_attr("pk_field", cls.pk_field_name)
 
         if cls.only_fields and cls.pk_field_name not in cls.only_fields:
             cls.only_fields = cls.only_fields + (cls.pk_field_name,)
@@ -42,6 +44,8 @@ class DjangoObjectMeta(type):
             cls.only_fields, cls.exclude_fields,
             cls.custom_fields, cls.input_custom_fields, cls.output_custom_fields,
         )
+
+        output_fields["__str__"] = StringType(resolver=lambda *a, **kw: kw["parent_val"]())
 
         for field_name, validator_fn in cls.field_validators.items():
             field_validators[field_name].fn = validator_fn
@@ -60,7 +64,8 @@ class DjangoObjectMeta(type):
         object_stub.add_attr("output_fields", output_fields)
 
         # create filters and List type for potential listing actions
-        cls.filter_type = ObjectMeta("{}Filters".format(cls.__name__), (Object,), {"fields": generate_filters(cls)})
+        cls.filter_type = ObjectMeta("{}Filters".format(cls.__name__), (Object,), {"fields": generate_filters(cls),
+                                                                                   "hidden": True})
         object_stub.add_attr("filter_type", cls.filter_type)
         create_associated_list_type(cls)
 
@@ -85,9 +90,9 @@ class DjangoObjectMeta(type):
                 action.set_parent_class(cls)
                 action.set_name(action_name)
                 action.set_validators(cls.field_validators)
-                converted_actions[action_name] = action.to_action()
                 for aux_action_name, aux_action in action.auxiliary_actions().items():
                     converted_actions["{}__{}".format(action_name, aux_action_name)] = aux_action.to_action()
+                converted_actions[action_name] = action.to_action()
             else:
                 converted_actions[action_name] = action
 

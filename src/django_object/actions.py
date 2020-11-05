@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+from adapters.graphql.utils import capitalize
 from django_object.datatypes import PaginatedList, resolve_filtering
 from django_object.utils import determine_items, add_item, remove_item
 from object.actions import Action
@@ -39,6 +40,7 @@ class ModelAction:
                  exec_fn=None, validators=None, validate_fn=None, permissions=None, **kwargs):
         self.parent_class = None
         self._action = None
+        self._aux_actions = {}
         self.name = None
         self.only_fields = only_fields
         self.exclude_fields = exclude_fields
@@ -48,13 +50,20 @@ class ModelAction:
         self.permissions = permissions
         self.kwargs = kwargs
 
+        self.hidden = kwargs.get("hidden", False)
+        self.hide_if_denied = kwargs.get("hide_if_denied", False)
+        self.retry_in = kwargs.get("retry_in")
+        self.choice_map = []
+
         self.parameters = {}
         self.data = None
         self.return_value = return_value
         self.exec_fn = exec_fn
 
     def auxiliary_actions(self):
-        return {}
+        if not self._aux_actions:
+            self._aux_actions = {}
+        return self._aux_actions
 
     def to_action(self):
         if self._action is None:
@@ -64,11 +73,15 @@ class ModelAction:
             self._action = Action(parameters=self.parameters, data=self.data,
                                   return_value=self.return_value, exec_fn=self.exec_fn,
                                   validators=self.validators, validate_fn=self.validate_fn,
-                                  permissions=self.permissions, mutation=self.kwargs.get("mutation", False))
+                                  permissions=self.permissions, with_object=getattr(self, "with_object", False),
+                                  hidden=self.hidden, hide_if_denied=self.hide_if_denied, retry_in=self.retry_in,
+                                  choice_map=self.choice_map, mutation=self.kwargs.get("mutation", False))
         return self._action
 
 
 class ObjectMixin:
+    with_object = True
+
     def determine_parameters(self, **kwargs):
         self.only_fields, self.exclude_fields = add_item(self.parent_class.pk_field_name,
                                                          self.only_fields,
@@ -107,12 +120,18 @@ class InputDataMixin:
         self.data = data
 
     def auxiliary_actions(self):
-        actions = {}
+        actions = super().auxiliary_actions()
         for field_name, validator in self.parent_class.field_validators.items():
-            action = ListAction(exec_fn=validator.fn, return_value=validator.field_type, permissions=self.permissions)
+            action = ListAction(exec_fn=validator.fn, return_value=validator.field_type, permissions=self.permissions,
+                                hidden=True)
             action.set_parent_class(self.parent_class)
             action.set_name("{}__{}".format(self.name, field_name))
             actions[field_name] = action
+            self.choice_map.append({
+                "parameter_name": field_name,
+                "action_name": "{}{}".format(self.parent_class.__name__, capitalize(action.name)),
+                "field_name": validator.field_name,
+            })
         return actions
 
 

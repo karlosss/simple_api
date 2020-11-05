@@ -17,6 +17,12 @@ class Action:
         self.kwargs = kwargs
         self._fn = None
 
+        self.hidden = kwargs.get("hidden", False)
+        self.with_object = kwargs.get("with_object", False)
+        self.hide_if_denied = kwargs.get("hide_if_denied", False)
+        self.retry_in = kwargs.get("retry_in")
+        self.choice_map = kwargs.get("choice_map", [])
+
         for name, param in {**self.parameters, **self.data}.items():
             assert param.nullable or param.default is None, \
                 "Cannot set a default value for a non-null parameter `{}`.".format(name)
@@ -56,6 +62,9 @@ class Action:
 
     def get_return_value(self):
         return self.return_value
+
+    def has_permission(self, *args, **kwargs):
+        return permissions_pre_hook(self.permissions)(*args, **kwargs)
 
     def convert(self, adapter, **kwargs):
         return adapter.convert_action(self, **kwargs)

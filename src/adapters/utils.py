@@ -13,8 +13,9 @@ def generate(adapter, extra_actions=None):
     if TemplateGenerator.generate_pre_hook is not None:
         TemplateGenerator.generate_pre_hook()
 
-    if extra_actions:
-        for action_name, action in extra_actions.items():
-            action.set_name(action_name)
+    for action_name, action in extra_actions.items():
+        action.set_name(action_name)
+
+    extra_actions["__objects"] = build_object_info()
 
     return adapter(tuple(object_storage.storage.values()), extra_actions).generate_api()
