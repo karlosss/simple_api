@@ -3,6 +3,7 @@ from copy import deepcopy
 from django.utils.decorators import classproperty
 
 from object.datatypes import PlainListType, ObjectType
+from object.meta_resolvers import build_actions_resolver
 from object.permissions import AllowAll, permissions_pre_hook
 from object.registry import object_storage
 
@@ -18,6 +19,10 @@ class ObjectMeta(type):
         for action_name, action in cls.actions.items():
             action.set_parent_class(cls)
             action.set_name(action_name)
+
+        if not getattr(cls, "hidden", False):
+            cls.output_fields["__actions"] = PlainListType(ObjectType("object.meta_types.ActionInfo"),
+                                                           resolver=build_actions_resolver(cls))
 
     def __new__(mcs, name, bases, attrs, **kwargs):
         cls = super().__new__(mcs, name, bases, attrs)

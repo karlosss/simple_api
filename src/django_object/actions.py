@@ -125,8 +125,8 @@ class ObjectMixin:
         get_fn = self.get_fn
         perform_fn = self.perform_fn
 
-        def exec_fn(request, params, **kwargs):
-            obj = get_fn(request, params, **kwargs)
+        def exec_fn(request, params, obj, **kwargs):
+            obj = obj or get_fn(request, params, **kwargs)
             return perform_fn(request, params, obj=obj, **kwargs)
         self.exec_fn = exec_fn
 
@@ -173,7 +173,7 @@ class InputDataMixin:
             action = ListAction(exec_fn=validator.fn, return_value=validator.field_type, permissions=self.permissions,
                                 hidden=True)
             action.set_parent_class(self.parent_class)
-            action.set_name("{}__{}".format(self.name, field_name))
+            action.set_name("{}__data__{}".format(self.name, field_name))
             actions[field_name] = action
             self.choice_map.append({
                 "parameter_name": field_name,

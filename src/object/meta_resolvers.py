@@ -10,14 +10,21 @@ def object_info(**kwargs):
         item = {
             "name": cls.__name__,
             "pk_field": getattr(cls, "pk_field", None),
-            "actions": []
+            "actions": build_actions_resolver(cls, with_object=False)(**kwargs)
         }
+        out.append(item)
+    return out
+
+
+def build_actions_resolver(cls, with_object=True):
+    def actions_resolver(**kwargs):
+        out = []
         for action in cls.actions.values():
-            if action.with_object or action.hidden:
+            if action.with_object != with_object or action.hidden:
                 continue
 
             try:
-                action.has_permission()
+                action.has_permission(**kwargs)
                 permitted = True
                 deny_reason = None
             except PermissionError as e:
@@ -33,6 +40,6 @@ def object_info(**kwargs):
                 "retry_in": action.retry_in,
                 "choices": action.choice_map
             }
-            item["actions"].append(action_item)
-        out.append(item)
-    return out
+            out.append(action_item)
+        return out
+    return actions_resolver
