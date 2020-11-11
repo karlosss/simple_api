@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from adapters.graphql.utils import capitalize
 from django_object.datatypes import PaginatedList, resolve_filtering
 from django_object.utils import determine_items, add_item, remove_item
@@ -56,17 +54,11 @@ class ModelAction:
         self.hidden = kwargs.get("hidden", False)
         self.hide_if_denied = kwargs.get("hide_if_denied", False)
         self.retry_in = kwargs.get("retry_in")
-        self.choice_map = []
 
         self.parameters = {}
         self.data = None
         self.return_value = return_value
         self.exec_fn = exec_fn
-
-    def auxiliary_actions(self):
-        if not self._aux_actions:
-            self._aux_actions = {}
-        return self._aux_actions
 
     def to_action(self):
         if self._action is None:
@@ -79,7 +71,7 @@ class ModelAction:
                                   validators=self.validators, validate_fn=self.validate_fn,
                                   permissions=self.permissions, with_object=getattr(self, "with_object", False),
                                   hidden=self.hidden, hide_if_denied=self.hide_if_denied, retry_in=self.retry_in,
-                                  choice_map=self.choice_map, mutation=self.kwargs.get("mutation", False))
+                                  mutation=self.kwargs.get("mutation", False))
         return self._action
 
 
@@ -91,13 +83,6 @@ class ObjectMixin:
                                                          self.only_fields,
                                                          self.exclude_fields)
         super().determine_parameters(**kwargs)
-
-    def auxiliary_actions(self):
-        actions = super().auxiliary_actions()
-        for action in actions.values():
-            pk_field_name = self.parent_class.pk_field_name
-            action.custom_fields.update({pk_field_name: deepcopy(self.parent_class.in_fields[pk_field_name])})
-        return actions
 
     def __init__(self, get_fn=None, perform_fn=None, **kwargs):
         self.get_fn = get_fn
@@ -166,21 +151,6 @@ class InputDataMixin:
                 f.data = True
                 f._nullable_if_input = True
         self.data = data
-
-    def auxiliary_actions(self):
-        actions = super().auxiliary_actions()
-        for field_name, validator in self.parent_class.field_validators.items():
-            action = ListAction(exec_fn=validator.fn, return_value=validator.field_type, permissions=self.permissions,
-                                hidden=True)
-            action.set_parent_class(self.parent_class)
-            action.set_name("{}__data__{}".format(self.name, field_name))
-            actions[field_name] = action
-            self.choice_map.append({
-                "parameter_name": field_name,
-                "action_name": "{}{}".format(self.parent_class.__name__, capitalize(action.name)),
-                "field_name": validator.field_name,
-            })
-        return actions
 
 
 class FilterMixin:

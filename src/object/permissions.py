@@ -10,7 +10,7 @@ def permissions_pre_hook(permissions):
 
     instantiated_permissions = []
     for cls_or_inst in permissions:
-        if isclass(cls_or_inst):
+        if isclass(cls_or_inst) or isinstance(cls_or_inst, LogicalConnector):
             instantiated_permissions.append(cls_or_inst())
         else:
             instantiated_permissions.append(cls_or_inst)
@@ -31,7 +31,7 @@ class BasePermission:
 
     def has_permission(self, exclude_classes=(), **kwargs):
         for cls in reversed(self.__class__.__mro__):
-            if cls in (object, BasePermission, OrResolver, AndResolver, NotResolver) + exclude_classes:
+            if cls in (object, BasePermission, LogicalResolver) + exclude_classes:
                 continue
             if not cls.permission_statement(self, **kwargs):
                 return False
@@ -41,61 +41,54 @@ class BasePermission:
         return "You do not have permission to access this."
 
 
-class Or:
+class LogicalConnector:
     def __init__(self, *permissions):
         self.permissions = permissions
 
     def __call__(self, **kwargs):
-        return OrResolver(self.permissions, **kwargs)
+        instantiated_perms = []
+        for perm in self.permissions:
+            assert isclass(perm) or isinstance(perm, LogicalConnector), \
+                "Permissions in logical connectors must be classes."
+            instantiated_perms.append(perm(**kwargs))
+        return LogicalResolver(instantiated_perms, self.resolve_fn)
+
+    def resolve_fn(self, permissions, **kwargs):
+        raise NotImplementedError
 
 
-class And:
-    def __init__(self, *permissions):
+class LogicalResolver:
+    def __init__(self, permissions, resolve_fn):
         self.permissions = permissions
-
-    def __call__(self, **kwargs):
-        return AndResolver(self.permissions, **kwargs)
-
-
-class Not:
-    def __init__(self, permission_class):
-        self.permission_class = permission_class
-
-    def __call__(self, **kwargs):
-        return NotResolver(self.permission_class, **kwargs)
-
-
-class OrResolver(BasePermission):
-    def __init__(self, permissions, **kwargs):
-        super().__init__(**kwargs)
-        self.permissions = permissions
+        self.resolve_fn = resolve_fn
 
     def has_permission(self, **kwargs):
-        for perm in self.permissions:
+        return self.resolve_fn(self.permissions, **kwargs)
+
+    def error_message(self, **kwargs):
+        return "You do not have permission to access this."
+
+
+class Or(LogicalConnector):
+    def resolve_fn(self, permissions, **kwargs):
+        for perm in permissions:
             if perm.has_permission(**kwargs):
                 return True
         return False
 
 
-class AndResolver(BasePermission):
-    def __init__(self, permissions, **kwargs):
-        super().__init__(**kwargs)
-        self.permissions = permissions
-
-    def has_permission(self, **kwargs):
-        for perm in self.permissions:
+class And(LogicalConnector):
+    def resolve_fn(self, permissions, **kwargs):
+        for perm in permissions:
             if not perm.has_permission(**kwargs):
                 return False
         return True
 
 
-class NotResolver(BasePermission):
-    def __init__(self, permission, **kwargs):
-        super().__init__(**kwargs)
-        self.permission = permission
-
-    def has_permission(self, **kwargs):
-        return not self.permission.has_permission(**kwargs)
+class Not(LogicalConnector):
+    def resolve_fn(self, permissions, **kwargs):
+        assert len(permissions) == 1, "`Not` accepts only one permission class as parameter."
+        return not permissions[0].has_permission(**kwargs)
 
 
 class AllowAll(BasePermission):

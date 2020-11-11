@@ -21,7 +21,6 @@ class Action:
         self.with_object = kwargs.get("with_object", False)
         self.hide_if_denied = kwargs.get("hide_if_denied", False)
         self.retry_in = kwargs.get("retry_in")
-        self.choice_map = kwargs.get("choice_map", [])
 
         for name, param in {**self.parameters, **self.data}.items():
             assert param.nullable or param.default is None, \
@@ -73,3 +72,6 @@ class Action:
 
     def convert(self, adapter, **kwargs):
         return adapter.convert_action(self, **kwargs)
+
+    def to_action(self):
+        return self

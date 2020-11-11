@@ -1,16 +1,7 @@
 from object.actions import Action
-from object.meta_resolvers import object_info
+from object.meta_resolvers import object_info, build_action_info_fn
 from object.object import Object
 from object.datatypes import PlainListType, ObjectType, DurationType, StringType, BooleanType
-
-
-class ChoiceInfo(Object):
-    fields = {
-        "parameter_name": StringType(),
-        "action_name": StringType(),
-        "field_name": StringType()
-    }
-    hidden = True
 
 
 class ActionInfo(Object):
@@ -19,7 +10,6 @@ class ActionInfo(Object):
         "permitted": BooleanType(),
         "deny_reason": StringType(nullable=True),
         "retry_in": DurationType(nullable=True),
-        "choices": PlainListType(ObjectType(ChoiceInfo))
     }
     hidden = True
 
@@ -36,3 +26,8 @@ class ObjectInfo(Object):
 def build_object_info():
     return Action(return_value=PlainListType(ObjectType(ObjectInfo)),
                   exec_fn=object_info)
+
+
+def build_action_info(actions):
+    return Action(return_value=PlainListType(ObjectType(ActionInfo)),
+                  exec_fn=build_action_info_fn(actions))

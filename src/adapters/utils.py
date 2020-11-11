@@ -1,6 +1,5 @@
-from object.permissions import AllowAll
 from object.registry import object_storage
-from object.meta_types import build_object_info
+from object.meta_types import build_object_info, build_action_info
 
 
 class TemplateGenerator:
@@ -16,6 +15,9 @@ def generate(adapter, extra_actions=None):
     for action_name, action in extra_actions.items():
         action.set_name(action_name)
 
-    extra_actions["__objects"] = build_object_info()
+    object_info = build_object_info()
+    action_info = build_action_info(extra_actions)
+    extra_actions["__objects"] = object_info
+    extra_actions["__actions"] = action_info
 
     return adapter(tuple(object_storage.storage.values()), extra_actions).generate_api()

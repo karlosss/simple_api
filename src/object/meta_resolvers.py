@@ -1,5 +1,8 @@
+from copy import deepcopy
+
 from adapters.graphql.utils import capitalize
 from object.registry import object_storage
+from utils import AttrDict
 
 
 def object_info(**kwargs):
@@ -14,6 +17,11 @@ def object_info(**kwargs):
         }
         out.append(item)
     return out
+
+
+def build_action_info_fn(actions):
+    dummy_cls = AttrDict(__name__="", actions=deepcopy(actions))
+    return build_actions_resolver(dummy_cls, with_object=False)
 
 
 def build_actions_resolver(cls, with_object=True):
@@ -32,13 +40,13 @@ def build_actions_resolver(cls, with_object=True):
                     continue
                 permitted = False
                 deny_reason = str(e)
-
+            print(action, action.name)
             action_item = {
+                # todo change this to be graphql independent
                 "name": "{}{}".format(cls.__name__, capitalize(action.name)),
                 "permitted": permitted,
                 "deny_reason": deny_reason,
                 "retry_in": action.retry_in,
-                "choices": action.choice_map
             }
             out.append(action_item)
         return out

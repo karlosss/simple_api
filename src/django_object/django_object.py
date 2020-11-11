@@ -90,11 +90,7 @@ class DjangoObjectMeta(type):
                 action.set_parent_class(cls)
                 action.set_name(action_name)
                 action.set_validators(cls.field_validators)
-                for aux_action_name, aux_action in action.auxiliary_actions().items():
-                    converted_actions["{}__{}".format(action_name, aux_action_name)] = aux_action.to_action()
-                converted_actions[action_name] = action.to_action()
-            else:
-                converted_actions[action_name] = action
+            converted_actions[action_name] = action.to_action()
 
         object_stub.add_attr("actions", converted_actions)
 
