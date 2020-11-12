@@ -4,133 +4,347 @@ from tests.graphql.graphql_test_utils import remove_ws, GraphQLTestCase
 
 class Test(GraphQLTestCase):
     GRAPHQL_SCHEMA = schema
+    REF_GRAPHQL_SCHEMA = """
+        schema {
+          query: Query
+          mutation: Mutation
+        }
+        
+        type ActionInfo {
+          name: String!
+          permitted: Boolean!
+          deny_reason: String
+          retry_in: Duration
+        }
+        
+        scalar Duration
+        
+        type FKSource {
+          id: Int!
+          string_field: String!
+          fk_field: FKTarget!
+          one_to_one_field: FKTarget!
+          __str__: String!
+          __actions: [ActionInfo!]!
+        }
+        
+        type FKSource2 {
+          id: Int!
+          string_field: String!
+          fk_field: FKTarget!
+          one_to_one_field: FKTarget!
+          __str__: String!
+          __actions: [ActionInfo!]!
+        }
+        
+        input FKSource2CreateInput {
+          string_field: String!
+          fk_field_id: Int!
+          one_to_one_field_id: Int!
+        }
+        
+        input FKSource2FiltersInput {
+          id: Int
+          id__exact: Int
+          id__gt: Int
+          id__gte: Int
+          id__in: [Int!]
+          id__isnull: Boolean
+          id__lt: Int
+          id__lte: Int
+          string_field: String
+          string_field__contains: String
+          string_field__endswith: String
+          string_field__exact: String
+          string_field__icontains: String
+          string_field__in: [String!]
+          string_field__iregex: String
+          string_field__isnull: Boolean
+          string_field__regex: String
+          string_field__startswith: String
+          fk_field_id: Int
+          fk_field_id__exact: Int
+          fk_field_id__gt: Int
+          fk_field_id__gte: Int
+          fk_field_id__in: [Int!]
+          fk_field_id__isnull: Boolean
+          fk_field_id__lt: Int
+          fk_field_id__lte: Int
+          one_to_one_field_id: Int
+          one_to_one_field_id__exact: Int
+          one_to_one_field_id__gt: Int
+          one_to_one_field_id__gte: Int
+          one_to_one_field_id__in: [Int!]
+          one_to_one_field_id__isnull: Boolean
+          one_to_one_field_id__lt: Int
+          one_to_one_field_id__lte: Int
+          ordering: [String!]
+        }
+        
+        type FKSource2List {
+          count: Int!
+          data(limit: Int = 20, offset: Int = 0): [FKSource2!]!
+        }
+        
+        input FKSource2UpdateInput {
+          string_field: String
+          fk_field_id: Int
+          one_to_one_field_id: Int
+        }
+        
+        input FKSourceCreateInput {
+          string_field: String!
+          fk_field_id: Int!
+          one_to_one_field_id: Int!
+        }
+        
+        input FKSourceFiltersInput {
+          id: Int
+          id__exact: Int
+          id__gt: Int
+          id__gte: Int
+          id__in: [Int!]
+          id__isnull: Boolean
+          id__lt: Int
+          id__lte: Int
+          string_field: String
+          string_field__contains: String
+          string_field__endswith: String
+          string_field__exact: String
+          string_field__icontains: String
+          string_field__in: [String!]
+          string_field__iregex: String
+          string_field__isnull: Boolean
+          string_field__regex: String
+          string_field__startswith: String
+          fk_field_id: Int
+          fk_field_id__exact: Int
+          fk_field_id__gt: Int
+          fk_field_id__gte: Int
+          fk_field_id__in: [Int!]
+          fk_field_id__isnull: Boolean
+          fk_field_id__lt: Int
+          fk_field_id__lte: Int
+          one_to_one_field_id: Int
+          one_to_one_field_id__exact: Int
+          one_to_one_field_id__gt: Int
+          one_to_one_field_id__gte: Int
+          one_to_one_field_id__in: [Int!]
+          one_to_one_field_id__isnull: Boolean
+          one_to_one_field_id__lt: Int
+          one_to_one_field_id__lte: Int
+          ordering: [String!]
+        }
+        
+        type FKSourceList {
+          count: Int!
+          data(limit: Int = 20, offset: Int = 0): [FKSource!]!
+        }
+        
+        input FKSourceUpdateInput {
+          string_field: String
+          fk_field_id: Int
+          one_to_one_field_id: Int
+        }
+        
+        type FKTarget {
+          id: Int!
+          int_field: Int!
+          fk_sources(filters: FKSourceFiltersInput): FKSourceList!
+          one_to_one_rel: FKSource
+          __str__: String!
+          __actions: [ActionInfo!]!
+        }
+        
+        type FKTarget2 {
+          id: Int!
+          int_field: Int!
+          fk_sources(filters: FKSourceFiltersInput): FKSourceList!
+          one_to_one_rel: FKSource
+          __str__: String!
+          __actions: [ActionInfo!]!
+        }
+        
+        input FKTarget2CreateInput {
+          int_field: Int!
+        }
+        
+        input FKTarget2FiltersInput {
+          id: Int
+          id__exact: Int
+          id__gt: Int
+          id__gte: Int
+          id__in: [Int!]
+          id__isnull: Boolean
+          id__lt: Int
+          id__lte: Int
+          int_field: Int
+          int_field__exact: Int
+          int_field__gt: Int
+          int_field__gte: Int
+          int_field__in: [Int!]
+          int_field__isnull: Boolean
+          int_field__lt: Int
+          int_field__lte: Int
+          ordering: [String!]
+        }
+        
+        type FKTarget2List {
+          count: Int!
+          data(limit: Int = 20, offset: Int = 0): [FKTarget2!]!
+        }
+        
+        input FKTarget2UpdateInput {
+          int_field: Int
+        }
+        
+        input FKTargetCreateInput {
+          int_field: Int!
+        }
+        
+        input FKTargetFiltersInput {
+          id: Int
+          id__exact: Int
+          id__gt: Int
+          id__gte: Int
+          id__in: [Int!]
+          id__isnull: Boolean
+          id__lt: Int
+          id__lte: Int
+          int_field: Int
+          int_field__exact: Int
+          int_field__gt: Int
+          int_field__gte: Int
+          int_field__in: [Int!]
+          int_field__isnull: Boolean
+          int_field__lt: Int
+          int_field__lte: Int
+          ordering: [String!]
+        }
+        
+        type FKTargetList {
+          count: Int!
+          data(limit: Int = 20, offset: Int = 0): [FKTarget!]!
+        }
+        
+        input FKTargetUpdateInput {
+          int_field: Int
+        }
+        
+        type Mutation {
+          FKSourceCreate(data: FKSourceCreateInput!): FKSource!
+          FKSourceUpdate(data: FKSourceUpdateInput!, id: Int!): FKSource!
+          FKSourceDelete(id: Int!): Boolean!
+          FKSource2Create(data: FKSource2CreateInput!): FKSource2!
+          FKSource2Update(data: FKSource2UpdateInput!, id: Int!): FKSource2!
+          FKSource2Delete(id: Int!): Boolean!
+          FKTargetCreate(data: FKTargetCreateInput!): FKTarget!
+          FKTargetUpdate(data: FKTargetUpdateInput!, id: Int!): FKTarget!
+          FKTargetDelete(id: Int!): Boolean!
+          FKTarget2Create(data: FKTarget2CreateInput!): FKTarget2!
+          FKTarget2Update(data: FKTarget2UpdateInput!, id: Int!): FKTarget2!
+          FKTarget2Delete(id: Int!): Boolean!
+        }
+        
+        type ObjectInfo {
+          name: String!
+          pk_field: String
+          actions: [ActionInfo!]!
+        }
+        
+        type Query {
+          FKTarget2Detail(id: Int!): FKTarget2!
+          FKTarget2List(filters: FKTarget2FiltersInput): FKTarget2List!
+          FKTargetDetail(id: Int!): FKTarget!
+          FKTargetList(filters: FKTargetFiltersInput): FKTargetList!
+          FKSource2Detail(id: Int!): FKSource2!
+          FKSource2List(filters: FKSource2FiltersInput): FKSource2List!
+          FKSourceDetail(id: Int!): FKSource!
+          FKSourceList(filters: FKSourceFiltersInput): FKSourceList!
+          __objects: [ObjectInfo!]!
+          __actions: [ActionInfo!]!
+        }
+    """
 
-    def test_schema(self):
-        self.assertEqual(
-            remove_ws(str(self.GRAPHQL_SCHEMA)),
-            remove_ws(
-                """
-                schema {
-                  query: Query
-                  mutation: Mutation
-                }
-                
-                type FKSource {
-                  id: Int!
-                  string_field: String!
-                  fk_field: FKTarget!
-                  one_to_one_field: FKTarget!
-                }
-                
-                type FKSource2 {
-                  id: Int!
-                  string_field: String!
-                  fk_field: FKTarget!
-                  one_to_one_field: FKTarget!
-                }
-                
-                input FKSource2CreateInput {
-                  string_field: String!
-                  fk_field_id: Int!
-                  one_to_one_field_id: Int!
-                }
-                
-                type FKSource2List {
-                  count: Int!
-                  data(limit: Int = 20, offset: Int = 0): [FKSource2!]!
-                }
-                
-                input FKSource2UpdateInput {
-                  string_field: String
-                  fk_field_id: Int
-                  one_to_one_field_id: Int
-                }
-                
-                input FKSourceCreateInput {
-                  string_field: String!
-                  fk_field_id: Int!
-                  one_to_one_field_id: Int!
-                }
-                
-                type FKSourceList {
-                  count: Int!
-                  data(limit: Int = 20, offset: Int = 0): [FKSource!]!
-                }
-                
-                input FKSourceUpdateInput {
-                  string_field: String
-                  fk_field_id: Int
-                  one_to_one_field_id: Int
-                }
-                
-                type FKTarget {
-                  id: Int!
-                  int_field: Int!
-                  fk_sources(id: Int, id__exact: Int, id__gt: Int, id__gte: Int, id__in: [Int!], id__isnull: Boolean, id__lt: Int, id__lte: Int, string_field: String, string_field__contains: String, string_field__endswith: String, string_field__exact: String, string_field__icontains: String, string_field__in: [String!], string_field__iregex: String, string_field__isnull: Boolean, string_field__regex: String, string_field__startswith: String, fk_field_id: Int, fk_field_id__exact: Int, fk_field_id__gt: Int, fk_field_id__gte: Int, fk_field_id__in: [Int!], fk_field_id__isnull: Boolean, fk_field_id__lt: Int, fk_field_id__lte: Int, one_to_one_field_id: Int, one_to_one_field_id__exact: Int, one_to_one_field_id__gt: Int, one_to_one_field_id__gte: Int, one_to_one_field_id__in: [Int!], one_to_one_field_id__isnull: Boolean, one_to_one_field_id__lt: Int, one_to_one_field_id__lte: Int, ordering: [String!]): FKSourceList!
-                  one_to_one_rel: FKSource
-                }
-                
-                type FKTarget2 {
-                  id: Int!
-                  int_field: Int!
-                  fk_sources(id: Int, id__exact: Int, id__gt: Int, id__gte: Int, id__in: [Int!], id__isnull: Boolean, id__lt: Int, id__lte: Int, string_field: String, string_field__contains: String, string_field__endswith: String, string_field__exact: String, string_field__icontains: String, string_field__in: [String!], string_field__iregex: String, string_field__isnull: Boolean, string_field__regex: String, string_field__startswith: String, fk_field_id: Int, fk_field_id__exact: Int, fk_field_id__gt: Int, fk_field_id__gte: Int, fk_field_id__in: [Int!], fk_field_id__isnull: Boolean, fk_field_id__lt: Int, fk_field_id__lte: Int, one_to_one_field_id: Int, one_to_one_field_id__exact: Int, one_to_one_field_id__gt: Int, one_to_one_field_id__gte: Int, one_to_one_field_id__in: [Int!], one_to_one_field_id__isnull: Boolean, one_to_one_field_id__lt: Int, one_to_one_field_id__lte: Int, ordering: [String!]): FKSourceList!
-                  one_to_one_rel: FKSource
-                }
-                
-                input FKTarget2CreateInput {
-                  int_field: Int!
-                }
-                
-                type FKTarget2List {
-                  count: Int!
-                  data(limit: Int = 20, offset: Int = 0): [FKTarget2!]!
-                }
-                
-                input FKTarget2UpdateInput {
-                  int_field: Int
-                }
-                
-                input FKTargetCreateInput {
-                  int_field: Int!
-                }
-                
-                type FKTargetList {
-                  count: Int!
-                  data(limit: Int = 20, offset: Int = 0): [FKTarget!]!
-                }
-                
-                input FKTargetUpdateInput {
-                  int_field: Int
-                }
-                
-                type Mutation {
-                  FKSourceCreate(data: FKSourceCreateInput!): FKSource!
-                  FKSourceUpdate(data: FKSourceUpdateInput!, id: Int!): FKSource!
-                  FKSourceDelete(id: Int!): Boolean!
-                  FKSource2Create(data: FKSource2CreateInput!): FKSource2!
-                  FKSource2Update(data: FKSource2UpdateInput!, id: Int!): FKSource2!
-                  FKSource2Delete(id: Int!): Boolean!
-                  FKTargetCreate(data: FKTargetCreateInput!): FKTarget!
-                  FKTargetUpdate(data: FKTargetUpdateInput!, id: Int!): FKTarget!
-                  FKTargetDelete(id: Int!): Boolean!
-                  FKTarget2Create(data: FKTarget2CreateInput!): FKTarget2!
-                  FKTarget2Update(data: FKTarget2UpdateInput!, id: Int!): FKTarget2!
-                  FKTarget2Delete(id: Int!): Boolean!
-                }
-                
-                type Query {
-                  FKTarget2Detail(id: Int!): FKTarget2!
-                  FKTarget2List(id: Int, id__exact: Int, id__gt: Int, id__gte: Int, id__in: [Int!], id__isnull: Boolean, id__lt: Int, id__lte: Int, int_field: Int, int_field__exact: Int, int_field__gt: Int, int_field__gte: Int, int_field__in: [Int!], int_field__isnull: Boolean, int_field__lt: Int, int_field__lte: Int, ordering: [String!]): FKTarget2List!
-                  FKTargetDetail(id: Int!): FKTarget!
-                  FKTargetList(id: Int, id__exact: Int, id__gt: Int, id__gte: Int, id__in: [Int!], id__isnull: Boolean, id__lt: Int, id__lte: Int, int_field: Int, int_field__exact: Int, int_field__gt: Int, int_field__gte: Int, int_field__in: [Int!], int_field__isnull: Boolean, int_field__lt: Int, int_field__lte: Int, ordering: [String!]): FKTargetList!
-                  FKSource2Detail(id: Int!): FKSource2!
-                  FKSource2List(id: Int, id__exact: Int, id__gt: Int, id__gte: Int, id__in: [Int!], id__isnull: Boolean, id__lt: Int, id__lte: Int, string_field: String, string_field__contains: String, string_field__endswith: String, string_field__exact: String, string_field__icontains: String, string_field__in: [String!], string_field__iregex: String, string_field__isnull: Boolean, string_field__regex: String, string_field__startswith: String, fk_field_id: Int, fk_field_id__exact: Int, fk_field_id__gt: Int, fk_field_id__gte: Int, fk_field_id__in: [Int!], fk_field_id__isnull: Boolean, fk_field_id__lt: Int, fk_field_id__lte: Int, one_to_one_field_id: Int, one_to_one_field_id__exact: Int, one_to_one_field_id__gt: Int, one_to_one_field_id__gte: Int, one_to_one_field_id__in: [Int!], one_to_one_field_id__isnull: Boolean, one_to_one_field_id__lt: Int, one_to_one_field_id__lte: Int, ordering: [String!]): FKSource2List!
-                  FKSourceDetail(id: Int!): FKSource!
-                  FKSourceList(id: Int, id__exact: Int, id__gt: Int, id__gte: Int, id__in: [Int!], id__isnull: Boolean, id__lt: Int, id__lte: Int, string_field: String, string_field__contains: String, string_field__endswith: String, string_field__exact: String, string_field__icontains: String, string_field__in: [String!], string_field__iregex: String, string_field__isnull: Boolean, string_field__regex: String, string_field__startswith: String, fk_field_id: Int, fk_field_id__exact: Int, fk_field_id__gt: Int, fk_field_id__gte: Int, fk_field_id__in: [Int!], fk_field_id__isnull: Boolean, fk_field_id__lt: Int, fk_field_id__lte: Int, one_to_one_field_id: Int, one_to_one_field_id__exact: Int, one_to_one_field_id__gt: Int, one_to_one_field_id__gte: Int, one_to_one_field_id__in: [Int!], one_to_one_field_id__isnull: Boolean, one_to_one_field_id__lt: Int, one_to_one_field_id__lte: Int, ordering: [String!]): FKSourceList!
-                }
-                """
-            )
-        )
+    REF_META_SCHEMA = {
+      "data": {
+        "__objects": [
+          {
+            "name": "FKSource",
+            "pk_field": "id",
+            "actions": [
+              {
+                "name": "FKSourceList",
+                "permitted": True,
+                "deny_reason": None,
+                "retry_in": None
+              },
+              {
+                "name": "FKSourceCreate",
+                "permitted": True,
+                "deny_reason": None,
+                "retry_in": None
+              }
+            ]
+          },
+          {
+            "name": "FKSource2",
+            "pk_field": "id",
+            "actions": [
+              {
+                "name": "FKSource2List",
+                "permitted": True,
+                "deny_reason": None,
+                "retry_in": None
+              },
+              {
+                "name": "FKSource2Create",
+                "permitted": True,
+                "deny_reason": None,
+                "retry_in": None
+              }
+            ]
+          },
+          {
+            "name": "FKTarget",
+            "pk_field": "id",
+            "actions": [
+              {
+                "name": "FKTargetList",
+                "permitted": True,
+                "deny_reason": None,
+                "retry_in": None
+              },
+              {
+                "name": "FKTargetCreate",
+                "permitted": True,
+                "deny_reason": None,
+                "retry_in": None
+              }
+            ]
+          },
+          {
+            "name": "FKTarget2",
+            "pk_field": "id",
+            "actions": [
+              {
+                "name": "FKTarget2List",
+                "permitted": True,
+                "deny_reason": None,
+                "retry_in": None
+              },
+              {
+                "name": "FKTarget2Create",
+                "permitted": True,
+                "deny_reason": None,
+                "retry_in": None
+              }
+            ]
+          }
+        ],
+        "__actions": []
+      }
+    }
 
     def test_requests(self):
         # create
