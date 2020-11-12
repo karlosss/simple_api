@@ -91,7 +91,7 @@ With close to zero effort, we just got a way to do list, show detail, create, up
 
 Create a user:
 
-```json
+```graphql
 mutation create_user{
   CustomUserCreate(data: {
     email: "user1@example.com", 
@@ -131,7 +131,7 @@ mutation create_user{
 
 Do a detail of the first user:
 
-```json
+```graphql
 query detail_of_user{
   CustomUserDetail(id: 1){
     id
@@ -194,7 +194,7 @@ data(limit: Int = 20, offset: Int = 0): [CustomUser!]!
 
 Now we can create another user and then list both:
 
-```json
+```graphql
 mutation create_another_user{
   CustomUserCreate(data: {
     email: "user2@example.com", 
@@ -250,7 +250,7 @@ query list_users{
 
 We can also apply some filters to the listing:
 
-```json
+```graphql
 query list_filtered_users{
   CustomUserList(filters: {first_name__startswith: "A"}){
     count
@@ -281,7 +281,7 @@ query list_filtered_users{
 
 Or we can reorder the results: the primary key is the password, which is the same for both, so the secondary key is applied, which is `id` in the descending order:
 
-```json
+```graphql
 query list_ordering_users{
   CustomUserList(filters: {ordering: ["password","-id"]}){
     count
@@ -317,7 +317,7 @@ query list_ordering_users{
 
 Of course, we can also paginate the results:
 
-```json
+```graphql
 query list_paginate_users{
   CustomUserList{
     count
@@ -348,7 +348,7 @@ query list_paginate_users{
 
 Next, we can update a user's password like this:
 
-```json
+```graphql
 mutation update_password{
   CustomUserUpdate(id: 1, data: {password: "moresecret"}){
     id
@@ -369,7 +369,7 @@ mutation update_password{
 
 And we might delete the second user:
 
-```json
+```graphql
 mutation delete_user{
   CustomUserDelete(id: 2)
 }
@@ -384,7 +384,7 @@ mutation delete_user{
 
 Now, when we list the users again, we can see that there is only one user and the password is changed:
 
-```json
+```graphql
 query list_users_with_password{
   CustomUserList{
     count
@@ -419,7 +419,99 @@ And that concludes the showcase of the basic API. Of course, it is very far from
 
 ### Controlling the fields
 
+You for sure noticed that the `CustomUser` model has a property that is not accessible in the API. This is expected - Simple API only automatically converts fields, relations, and reverse relations (you maybe noticed that a `CustomUser` in the first example has `post_set` field in the API). At the end of this section, we show how to add the property.
+
+But let's start from the beginning. Assume the same model, but the following `Object`s:
+
+```python
+from adapters.graphql.graphql import GraphQLAdapter
+from adapters.utils import generate
+from django_object.django_object import DjangoObject
+from object.datatypes import StringType
+from .models import CustomUser as CustomUserModel, Post as PostModel
+from tests.graphql.graphql_test_utils import build_patterns
+
+
+class ShortCustomUser(DjangoObject):
+    model = CustomUserModel
+    only_fields = ("first_name", "last_name")
+    custom_fields = {"full_name": StringType()}
+
+
+class ShortPost(DjangoObject):
+    model = PostModel
+    exclude_fields = ("content",)
+
+
+schema = generate(GraphQLAdapter)
+patterns = build_patterns(schema)
+```
+
+By default, Simple API extracts all fields, models, and reverse relations. If this is not what we want, we have two ways to specify: either list the fields we want using `only_fields`, or list the fields we don't want using `exclude_fields` (but not both at the same time, of course).
+
+After the set of extracted fields is determined, we can add `custom_fields`: each custom field must also have its type specified, as there is no way Simple API can find that out. The types in GraphQL now look like this:
+```
+// Short post
+id: Int!
+title: String!
+author: ShortCustomUser!
+__str__: String!
+__actions: [ActionInfo!]!
+
+// Short custom user
+id: Int!
+first_name: String!
+last_name: String!
+full_name: String!
+__str__: String!
+__actions: [ActionInfo!]!
+```
+
+As we can see, the primary key field (in this case `id`) is always included and cannot be got rid of. That comes with a reason - without primary key, the CRUD operations would just not work.
+
+If a custom field happens to have the same name as an extracted field, the original field is overridden. This might be useful for example if a model field is nullable, but we don't want it to be nullable in the API.
+
 ### Multiple Objects for one model
+
+Sometimes, we want multiple `Object`s for the same model - for example, the email of a user should be visible only by the user himself and maybe by admins. A way to do this is creating two objects: one for admins, and one for the rest.
+```python
+from adapters.graphql.graphql import GraphQLAdapter
+from adapters.utils import generate
+from django_object.django_object import DjangoObject
+from .models import CustomUser as CustomUserModel, Post as PostModel
+from tests.graphql.graphql_test_utils import build_patterns
+
+
+class CustomUser(DjangoObject):
+    model = CustomUserModel
+    class_for_related = False
+
+
+class CustomUserPublic(DjangoObject):
+    model = CustomUserModel
+    exclude_fields = ("email", "password")
+
+
+class Post(DjangoObject):
+    model = PostModel
+
+
+schema = generate(GraphQLAdapter)
+patterns = build_patterns(schema)
+```
+
+Everything should be self-explanatory except for `class_for_related`. When building relations automatically, Simple API needs to determine a type to return. As long as we have only one `Object` per model, it is obvious as there is no choice. But now Simple API does not know: should it make the field `author` of the `Post` model of type `CustomUser`, or `CustomUserPublic`? And this is exactly what `class_for_related` means: it uses the one which has it set to `True`. That can be seen in the schema - the type of `author` is indeed `CustomUserPublic`, because it is set to be the class to resolve relations:
+```
+// Post
+id: Int!
+title: String!
+content: String!
+author: CustomUserPublic!
+__str__: String!
+__actions: [ActionInfo!]!
+```
+
+If the one-fits-them-all method is not fine-grained enough, the field for relations can be overridden the same way as any other field in `custom_fields`.
 
 ### Custom filtering
 
