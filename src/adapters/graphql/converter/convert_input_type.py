@@ -68,7 +68,8 @@ def convert_input_list_type(type, adapter, **kwargs):
 
 
 def convert_input_class_type(type, cls, adapter, **kwargs):
+    default_value = type.default(input=True)
     return graphene.InputField(cls,
-                               required=not type.nullable(input=True),
-                               default_value=type.default(input=True),
+                               required=not type.nullable(input=True) and default_value is None,
+                               default_value=default_value,
                                **kwargs)
