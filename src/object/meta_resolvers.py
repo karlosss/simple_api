@@ -40,10 +40,10 @@ def build_actions_resolver(cls, with_object=True):
                     continue
                 permitted = False
                 deny_reason = str(e)
-            print(action, action.name)
+
             action_item = {
                 # todo change this to be graphql independent
-                "name": "{}{}".format(cls.__name__, capitalize(action.name)),
+                "name": "{}{}".format(cls.__name__, capitalize(action.name) if cls.__name__ != "" else action.name),
                 "permitted": permitted,
                 "deny_reason": deny_reason,
                 "retry_in": action.retry_in,

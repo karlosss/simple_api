@@ -74,7 +74,10 @@ def convert_output_class_type(type, cls, adapter, **kwargs):
     kwargs["args"] = kwargs.get("args", {name: param.convert(adapter, _as=ConversionType.PARAMETER)
                                          for name, param in type.parameters.items()})
     kwargs["resolver"] = kwargs.get("resolver", type.resolver.convert(adapter, _as=ConversionType.RESOLVER))
+    default = type.default()
+    if callable(default):
+        default = None
     return graphene.Field(cls,
                           required=not type.nullable(),
-                          default_value=type.default(),
+                          default_value=default,
                           **kwargs)

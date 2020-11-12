@@ -11,5 +11,50 @@ def build_patterns(schema):
     return [path("api/", GraphQLView.as_view(graphiql=True, schema=schema))]
 
 
+class Empty:
+    pass
+
+
 class GraphQLTestCase(OriginalGraphQLTestCase):
     GRAPHQL_URL = "/api/"
+    REF_META_SCHEMA = None
+    GRAPHQL_SCHEMA = Empty
+    REF_GRAPHQL_SCHEMA = None
+
+    def test_schema(self):
+        if self.REF_GRAPHQL_SCHEMA is None:
+            return
+        self.assertEqual(
+            remove_ws(str(self.GRAPHQL_SCHEMA)),
+            remove_ws(str(self.REF_GRAPHQL_SCHEMA))
+        )
+
+    def test_meta_schema(self):
+        if self.REF_META_SCHEMA is None:
+            return
+
+        resp = self.query(
+            """
+            query{
+              __objects{
+                name
+                pk_field
+                actions{
+                  name
+                  permitted
+                  deny_reason
+                  retry_in
+                }
+              }
+              __actions{
+                name
+                permitted
+                deny_reason
+                retry_in
+              }
+            }
+            """
+        )
+
+        self.assertResponseNoErrors(resp)
+        self.assertJSONEqual(resp.content, self.REF_META_SCHEMA)

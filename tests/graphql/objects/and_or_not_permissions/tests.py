@@ -4,14 +4,24 @@ from tests.graphql.graphql_test_utils import GraphQLTestCase, remove_ws
 
 class Test(GraphQLTestCase):
     GRAPHQL_SCHEMA = schema
-
-    def test_schema(self):
-        self.assertEqual(
-            remove_ws(str(self.GRAPHQL_SCHEMA)),
-            remove_ws(
-                """
+    REF_GRAPHQL_SCHEMA = """
                 schema {
                   query: Query
+                }
+                
+                type ActionInfo {
+                  name: String!
+                  permitted: Boolean!
+                  deny_reason: String
+                  retry_in: Duration
+                }
+                
+                scalar Duration
+                
+                type ObjectInfo {
+                  name: String!
+                  pk_field: String
+                  actions: [ActionInfo!]!
                 }
                 
                 type Query {
@@ -25,10 +35,78 @@ class Test(GraphQLTestCase):
                   deny3: Boolean!
                   deny4: Boolean!
                   deny5: Boolean!
+                  __objects: [ObjectInfo!]!
+                  __actions: [ActionInfo!]!
                 }
                 """
-            )
-        )
+
+    REF_META_SCHEMA = {
+            "data": {
+                "__objects": [],
+                "__actions": [
+                  {
+                    "name": "allow1",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                  },
+                  {
+                    "name": "allow2",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                  },
+                  {
+                    "name": "allow3",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                  },
+                  {
+                    "name": "allow4",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                  },
+                  {
+                    "name": "allow5",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                  },
+                  {
+                    "name": "deny1",
+                    "permitted": False,
+                    "deny_reason": "You do not have permission to access this.",
+                    "retry_in": None
+                  },
+                  {
+                    "name": "deny2",
+                    "permitted": False,
+                    "deny_reason": "You do not have permission to access this.",
+                    "retry_in": None
+                  },
+                  {
+                    "name": "deny3",
+                    "permitted": False,
+                    "deny_reason": "You do not have permission to access this.",
+                    "retry_in": None
+                  },
+                  {
+                    "name": "deny4",
+                    "permitted": False,
+                    "deny_reason": "You do not have permission to access this.",
+                    "retry_in": None
+                  },
+                  {
+                    "name": "deny5",
+                    "permitted": False,
+                    "deny_reason": "You do not have permission to access this.",
+                    "retry_in": None
+                  }
+                ]
+              }
+        }
 
     def test_allow1(self):
         resp = self.query(

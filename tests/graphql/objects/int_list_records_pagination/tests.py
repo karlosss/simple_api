@@ -4,33 +4,64 @@ from tests.graphql.graphql_test_utils import GraphQLTestCase, remove_ws
 
 class Test(GraphQLTestCase):
     GRAPHQL_SCHEMA = schema
+    REF_GRAPHQL_SCHEMA = """
+        schema {
+          query: Query
+        }
+        
+        type ActionInfo {
+          name: String!
+          permitted: Boolean!
+          deny_reason: String
+          retry_in: Duration
+        }
+        
+        scalar Duration
+        
+        type IntList {
+          count: Int!
+          records(limit: Int = 20, offset: Int = 0): [Int!]!
+          __actions: [ActionInfo!]!
+        }
+        
+        type ObjectInfo {
+          name: String!
+          pk_field: String
+          actions: [ActionInfo!]!
+        }
+        
+        type Query {
+          get(input: [Int!]!): IntList!
+          __objects: [ObjectInfo!]!
+          __actions: [ActionInfo!]!
+        }
+    """
 
-    def test_schema(self):
-        self.assertEqual(
-            remove_ws(str(self.GRAPHQL_SCHEMA)),
-            remove_ws(
-                """
-                schema {
-                  query: Query
-                }
-
-                type IntList {
-                  count: Int!
-                  records(limit: Int = 20, offset: Int = 0): [Int!]!
-                }
-
-                type Query {
-                  get(data: [Int!]!): IntList!
-                }
-                """
-            )
-        )
+    REF_META_SCHEMA = {
+      "data": {
+        "__objects": [
+          {
+            "name": "IntList",
+            "pk_field": None,
+            "actions": []
+          }
+        ],
+        "__actions": [
+          {
+            "name": "get",
+            "permitted": True,
+            "deny_reason": None,
+            "retry_in": None
+          }
+        ]
+      }
+    }
 
     def test_request_no_pag(self):
         resp = self.query(
             """
             query{
-              get(data: [1,2,3,4,5,6,7,8,9]){
+              get(input: [1,2,3,4,5,6,7,8,9]){
                 count
                 records
               }
@@ -64,7 +95,7 @@ class Test(GraphQLTestCase):
         resp = self.query(
             """
             query{
-              get(data: [1,2,3,4,5,6,7,8,9]){
+              get(input: [1,2,3,4,5,6,7,8,9]){
                 count
                 records(limit: 3, offset: 2)
               }

@@ -27,7 +27,7 @@ def get(request, params, **kwargs):
 
 
 actions = {
-    "get": Action({"in": ObjectType(TestObject)}, ObjectType(TestObject), get)
+    "get": Action(parameters={"in": ObjectType(TestObject)}, return_value=ObjectType(TestObject), exec_fn=get)
 }
 
 

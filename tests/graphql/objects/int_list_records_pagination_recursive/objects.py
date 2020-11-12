@@ -28,11 +28,11 @@ class IntList(Object):
 
 
 def get(request, params, **kwargs):
-    return AttrDict(count=len(params["data"]), all_records=params["data"], records=params["data"])
+    return AttrDict(count=len(params["input"]), all_records=params["input"], records=params["input"])
 
 
 actions = {
-    "get": Action({"data": PlainListType(IntegerType())}, ObjectType(IntList), get)
+    "get": Action(parameters={"input": PlainListType(IntegerType())}, return_value=ObjectType(IntList), exec_fn=get)
 }
 
 schema = generate(GraphQLAdapter, actions)

@@ -33,11 +33,12 @@ class PersonList(Object):
 
 
 def get(request, params, **kwargs):
-    return AttrDict(count=len(params["data"]), records=params["data"])
+    return AttrDict(count=len(params["input"]), records=params["input"])
 
 
 actions = {
-    "get": Action({"data": PlainListType(ObjectType(Person))}, ObjectType(PersonList), get)
+    "get": Action(parameters={"input": PlainListType(ObjectType(Person))}, return_value=ObjectType(PersonList),
+                  exec_fn=get)
 }
 
 schema = generate(GraphQLAdapter, actions)

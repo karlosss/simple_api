@@ -4,32 +4,69 @@ from tests.graphql.graphql_test_utils import GraphQLTestCase, remove_ws
 
 class Test(GraphQLTestCase):
     GRAPHQL_SCHEMA = schema
+    REF_GRAPHQL_SCHEMA = """
+        schema {
+          query: Query
+        }
+        
+        type ActionInfo {
+          name: String!
+          permitted: Boolean!
+          deny_reason: String
+          retry_in: Duration
+        }
+        
+        type Car {
+          model: String!
+          color: String!
+          __actions: [ActionInfo!]!
+        }
+        
+        scalar Duration
+        
+        type ObjectInfo {
+          name: String!
+          pk_field: String
+          actions: [ActionInfo!]!
+        }
+        
+        type Owner {
+          id: Int!
+          car: Car!
+          __actions: [ActionInfo!]!
+        }
+        
+        type Query {
+          OwnerGetById(id: Int!): Owner!
+          __objects: [ObjectInfo!]!
+          __actions: [ActionInfo!]!
+        }
+    """
 
-    def test_schema(self):
-        self.assertEqual(
-            remove_ws(str(self.GRAPHQL_SCHEMA)),
-            remove_ws(
-                """
-                schema {
-                  query: Query
-                }
-                
-                type Car {
-                  model: String!
-                  color: String!
-                }
-                
-                type Owner {
-                  id: Int!
-                  car: Car!
-                }
-                
-                type Query {
-                  OwnerGetById(id: Int!): Owner!
-                }
-                """
-            )
-        )
+    REF_META_SCHEMA = {
+      "data": {
+        "__objects": [
+          {
+            "name": "Car",
+            "pk_field": None,
+            "actions": []
+          },
+          {
+            "name": "Owner",
+            "pk_field": None,
+            "actions": [
+              {
+                "name": "OwnerGetById",
+                "permitted": True,
+                "deny_reason": None,
+                "retry_in": None
+              }
+            ]
+          }
+        ],
+        "__actions": []
+      }
+    }
 
     def test_request(self):
         resp = self.query(

@@ -4,29 +4,71 @@ from tests.graphql.graphql_test_utils import GraphQLTestCase, remove_ws
 
 class Test(GraphQLTestCase):
     GRAPHQL_SCHEMA = schema
+    REF_GRAPHQL_SCHEMA = """
+        schema {
+          query: Query
+        }
+        
+        type ActionInfo {
+          name: String!
+          permitted: Boolean!
+          deny_reason: String
+          retry_in: Duration
+        }
+        
+        scalar Duration
+        
+        type ObjectInfo {
+          name: String!
+          pk_field: String
+          actions: [ActionInfo!]!
+        }
+        
+        type Query {
+          get(id: TestObjectInput!): String!
+          getNull(id: TestObjectInput): String!
+          getNullDefault(id: TestObjectInput = {int1: 10, int2: 20}): String!
+          __objects: [ObjectInfo!]!
+          __actions: [ActionInfo!]!
+        }
+        
+        input TestObjectInput {
+          int1: Int!
+          int2: Int!
+        }
+    """
 
-    def test_schema(self):
-        self.assertEqual(
-            remove_ws(str(self.GRAPHQL_SCHEMA)),
-            remove_ws(
-                """
-                schema {
-                  query: Query
-                }
-
-                type Query {
-                  get(id: TestObjectInput!): String!
-                  getNull(id: TestObjectInput): String!
-                  getNullDefault(id: TestObjectInput = {int1: 10, int2: 20}): String!
-                }
-
-                input TestObjectInput {
-                  int1: Int!
-                  int2: Int!
-                }
-                """
-            )
-        )
+    REF_META_SCHEMA = {
+      "data": {
+        "__objects": [
+          {
+            "name": "TestObject",
+            "pk_field": None,
+            "actions": []
+          }
+        ],
+        "__actions": [
+          {
+            "name": "get",
+            "permitted": True,
+            "deny_reason": None,
+            "retry_in": None
+          },
+          {
+            "name": "getNull",
+            "permitted": True,
+            "deny_reason": None,
+            "retry_in": None
+          },
+          {
+            "name": "getNullDefault",
+            "permitted": True,
+            "deny_reason": None,
+            "retry_in": None
+          }
+        ]
+      }
+    }
 
     def test_request_non_null(self):
         resp = self.query(

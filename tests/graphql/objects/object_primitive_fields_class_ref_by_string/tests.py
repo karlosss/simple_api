@@ -4,30 +4,74 @@ from tests.graphql.graphql_test_utils import GraphQLTestCase, remove_ws
 
 class Test(GraphQLTestCase):
     GRAPHQL_SCHEMA = schema
+    REF_GRAPHQL_SCHEMA = """
+        schema {
+          query: Query
+        }
+        
+        type ActionInfo {
+          name: String!
+          permitted: Boolean!
+          deny_reason: String
+          retry_in: Duration
+        }
+        
+        scalar Duration
+        
+        type ObjectInfo {
+          name: String!
+          pk_field: String
+          actions: [ActionInfo!]!
+        }
+        
+        type Query {
+          TestObjectNonNullOnly: TestObject!
+          TestObjectNonNullAndNull: TestObject!
+          TestObjectAll: TestObject!
+          __objects: [ObjectInfo!]!
+          __actions: [ActionInfo!]!
+        }
+        
+        type TestObject {
+          string_non_null: String!
+          string_null: String
+          string_default: String!
+          __actions: [ActionInfo!]!
+        }
 
-    def test_schema(self):
-        self.assertEqual(
-            remove_ws(str(self.GRAPHQL_SCHEMA)),
-            remove_ws(
-                """
-                schema {
-                  query: Query
-                }
+    """
 
-                type Query {
-                  TestObjectNonNullOnly: TestObject!
-                  TestObjectNonNullAndNull: TestObject!
-                  TestObjectAll: TestObject!
-                }
-
-                type TestObject {
-                  string_non_null: String!
-                  string_null: String
-                  string_default: String!
-                }
-                """
-            )
-        )
+    REF_META_SCHEMA = {
+      "data": {
+        "__objects": [
+          {
+            "name": "TestObject",
+            "pk_field": None,
+            "actions": [
+              {
+                "name": "TestObjectNonNullOnly",
+                "permitted": True,
+                "deny_reason": None,
+                "retry_in": None
+              },
+              {
+                "name": "TestObjectNonNullAndNull",
+                "permitted": True,
+                "deny_reason": None,
+                "retry_in": None
+              },
+              {
+                "name": "TestObjectAll",
+                "permitted": True,
+                "deny_reason": None,
+                "retry_in": None
+              }
+            ]
+          }
+        ],
+        "__actions": []
+      }
+    }
 
     def test_request_non_null_only(self):
         resp = self.query(

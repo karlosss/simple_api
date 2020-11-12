@@ -3,7 +3,7 @@ from functools import singledispatch
 
 from django.db.models import AutoField, IntegerField, CharField, TextField, BooleanField, FloatField, DateField, \
     TimeField, DateTimeField, ForeignKey, ManyToOneRel, ManyToManyField, ManyToManyRel, OneToOneField, OneToOneRel, \
-    NOT_PROVIDED
+    NOT_PROVIDED, EmailField, PositiveSmallIntegerField
 
 from django_object.datatypes import PaginatedList
 from django_object.utils import extract_fields_from_model, determine_items, get_pk_field
@@ -14,13 +14,22 @@ from object.datatypes import IntegerType, StringType, BooleanType, FloatType, Da
 DJANGO_SIMPLE_API_MAP = {
     AutoField: IntegerType,
     IntegerField: IntegerType,
+    PositiveSmallIntegerField: IntegerType,
+
     CharField: StringType,
     TextField: StringType,
+    EmailField: StringType,
+
     BooleanField: BooleanType,
+
     FloatField: FloatType,
+
     DateField: DateType,
+
     TimeField: TimeType,
+
     DateTimeField: DateTimeType,
+
 }
 
 
@@ -44,6 +53,8 @@ def convert_django_field(field, field_name, both_fields, input_fields, output_fi
 @convert_django_field.register(DateField)
 @convert_django_field.register(TimeField)
 @convert_django_field.register(DateTimeField)
+@convert_django_field.register(EmailField)
+@convert_django_field.register(PositiveSmallIntegerField)
 def convert_to_primitive_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
     assert field.__class__ in DJANGO_SIMPLE_API_MAP, "Cannot convert `{}`".format(field.__class__)
     both_fields[field_name] = DJANGO_SIMPLE_API_MAP[field.__class__](nullable=field.null,

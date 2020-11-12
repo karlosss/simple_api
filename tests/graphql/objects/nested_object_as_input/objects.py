@@ -25,7 +25,7 @@ def echo(request, params, **kwargs):
 
 
 actions = {
-    "echo": Action({"loc": ObjectType(Location)}, ObjectType(Location), echo)
+    "echo": Action(parameters={"loc": ObjectType(Location)}, return_value=ObjectType(Location), exec_fn=echo)
 }
 
 schema = generate(GraphQLAdapter, actions)

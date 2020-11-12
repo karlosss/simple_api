@@ -4,25 +4,67 @@ from tests.graphql.graphql_test_utils import GraphQLTestCase, remove_ws
 
 class Test(GraphQLTestCase):
     GRAPHQL_SCHEMA = schema
+    REF_GRAPHQL_SCHEMA = """
+        schema {
+          query: Query
+        }
+        
+        type ActionInfo {
+          name: String!
+          permitted: Boolean!
+          deny_reason: String
+          retry_in: Duration
+        }
+        
+        scalar Duration
+        
+        type ObjectInfo {
+          name: String!
+          pk_field: String
+          actions: [ActionInfo!]!
+        }
+        
+        type Query {
+          getNonNull: [Int!]!
+          getNull: [Int]
+          getListNullElemNonNull: [Int!]
+          getListNonNullElemNull: [Int]!
+          __objects: [ObjectInfo!]!
+          __actions: [ActionInfo!]!
+        }
+    """
 
-    def test_schema(self):
-        self.assertEqual(
-            remove_ws(str(self.GRAPHQL_SCHEMA)),
-            remove_ws(
-                """
-                schema {
-                  query: Query
-                }
-
-                type Query {
-                  getNonNull: [Int!]!
-                  getNull: [Int]
-                  getListNullElemNonNull: [Int!]
-                  getListNonNullElemNull: [Int]!
-                }
-                """
-            )
-        )
+    REF_META_SCHEMA = {
+      "data": {
+        "__objects": [],
+        "__actions": [
+          {
+            "name": "getNonNull",
+            "permitted": True,
+            "deny_reason": None,
+            "retry_in": None
+          },
+          {
+            "name": "getNull",
+            "permitted": True,
+            "deny_reason": None,
+            "retry_in": None
+          },
+          {
+            "name": "getListNullElemNonNull",
+            "permitted": True,
+            "deny_reason": None,
+            "retry_in": None
+          },
+          {
+            "name": "getListNonNullElemNull",
+            "permitted": True,
+            "deny_reason": None,
+            "retry_in": None
+          }
+        ]
+      }
+    }
 
     def test_request_non_null(self):
         resp = self.query(

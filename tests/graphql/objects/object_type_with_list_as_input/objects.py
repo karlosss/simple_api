@@ -35,11 +35,11 @@ class PersonList(Object):
 
 
 def get(request, params, **kwargs):
-    return AttrDict(count=len(params["data"]), records=params["data"])
+    return AttrDict(count=len(params["input"]), records=params["input"])
 
 
 actions = {
-    "get": Action({"data": ObjectType(PersonList)}, ObjectType(PersonList), get)
+    "get": Action(parameters={"input": ObjectType(PersonList)}, return_value=ObjectType(PersonList), exec_fn=get)
 }
 
 
