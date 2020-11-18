@@ -435,7 +435,7 @@ from tests.graphql.graphql_test_utils import build_patterns
 class ShortCustomUser(DjangoObject):
     model = CustomUserModel
     only_fields = ("first_name", "last_name")
-    custom_fields = {"full_name": StringType()}
+    custom_output_fields = {"full_name": StringType()}
 
 
 class ShortPost(DjangoObject):
@@ -449,7 +449,11 @@ patterns = build_patterns(schema)
 
 By default, Simple API extracts all fields, models, and reverse relations. If this is not what we want, we have two ways to specify: either list the fields we want using `only_fields`, or list the fields we don't want using `exclude_fields` (but not both at the same time, of course).
 
-After the set of extracted fields is determined, we can add `custom_fields`: each custom field must also have its type specified, as there is no way Simple API can find that out. The types in GraphQL now look like this:
+After the set of extracted fields is determined, we can add `custom_fields`: each custom field must also have its type specified, as there is no way Simple API can find that out.
+
+Note that model properties are only output fields. Simple API objects can be also used as inputs and in such case, we do not want read-only fields there. Custom fields that should be both for input and output are specified in `custom_fields`, fields only for input in `input_custom_fields`, and those only for output in `output_custom_fields`.
+
+The schema then looks like this:
 ```
 // Short post
 id: Int!
@@ -515,7 +519,147 @@ If the one-fits-them-all method is not fine-grained enough, the field for relati
 
 ### Custom filtering
 
+As shown in the beginning, a `ListAction` has a builtin way to filter the results: it does so by filters automatically generated from fields of the target model.
+
+It is, of course, possible to alter the set of filters generated for a field by overriding the field and specify the filters as follows:
+
+```python
+from adapters.graphql.graphql import GraphQLAdapter
+from adapters.utils import generate
+from django_object.django_object import DjangoObject
+from object.datatypes import StringType, ObjectType
+from .models import CustomUser as CustomUserModel, Post as PostModel
+from tests.graphql.graphql_test_utils import build_patterns
+
+
+class CustomUser(DjangoObject):
+    model = CustomUserModel
+    custom_fields = {
+        "email": StringType(only_filters=("email__exact", "email__icontains")),
+        "first_name": StringType(exclude_filters=("first_name__regex", "first_name__iregex")),
+    }
+
+
+class Post(DjangoObject):
+    model = PostModel
+    output_custom_fields = {
+        "author": ObjectType(CustomUser, exclude_filters=(),
+                             custom_filters={"author__email": StringType(nullable=True)})
+    }
+
+
+schema = generate(GraphQLAdapter)
+patterns = build_patterns(schema)
+
+```
+
+The `only_filters`, `exclude_filters` and `custom_filters` work the same way as filtering fields, with the exception that without modifiers, no filters are created. This is for obvious reasons: if we create a custom field, we probably don't want any filters for it, as it is probably not a field in the database and Django would just crash on those non-existent filters.
+
+Note that when overriding a foreign key field, both the original filters (if intended to keep) and the custom ones need to be specified.
+
 ### Custom actions
+
+So far, we only were using the automatically generated actions - `list`, `detail`, `create`, `update` and `delete`. Now we show how to add more: say a user should be able to change their password and list their own posts. But let's start from the beginning.
+
+First, we can modify the way the basic actions are generated:
+
+```python
+from adapters.graphql.graphql import GraphQLAdapter
+from adapters.utils import generate
+from django_object.actions import CreateAction
+from django_object.django_object import DjangoObject
+from .models import CustomUser as CustomUserModel, Post as PostModel
+from tests.graphql.graphql_test_utils import build_patterns
+
+
+def custom_create_user(request, params, **kwargs):
+    return CustomUserModel.objects.create(
+        email="default@example.com",
+        username=params["data"]["username"],
+        first_name="Name",
+        last_name="Surname",
+        password="default"
+    )
+
+
+class CustomUser(DjangoObject):
+    model = CustomUserModel
+
+    create_action = CreateAction(only_fields=("username",), exec_fn=custom_create_user)
+    update_action = None
+    delete_action = None
+
+
+class Post(DjangoObject):
+    model = PostModel
+
+
+schema = generate(GraphQLAdapter)
+patterns = build_patterns(schema)
+```
+
+```graphql
+mutation create_user_username_only{
+  CustomUserCreate(data: {username: "cindy"}){
+    id
+  }
+}
+
+// output
+{
+  "data": {
+    "CustomUserCreate": {
+      "id": 1,
+      "email": "default@example.com",
+      "username": "cindy",
+      "first_name": "Name",
+      "last_name": "Surname",
+      "password": "default",
+      "bio": "",
+      "is_admin": false
+    }
+  }
+}
+```
+
+Our customized `CreateAction` has only one data parameter, the username, and the rest is filled with some default values, as specified in `custom_create_user`. If an action should not be generated at all, just set it to `None`.
+
+Now we show how to add a custom action:
+
+```python
+from adapters.graphql.graphql import GraphQLAdapter
+from adapters.utils import generate
+from django_object.actions import UpdateAction
+from django_object.django_object import DjangoObject
+from .models import CustomUser as CustomUserModel, Post as PostModel
+from tests.graphql.graphql_test_utils import build_patterns
+
+
+def custom_create_user(request, params, **kwargs):
+    return CustomUserModel.objects.create(
+        email="default@example.com",
+        username=params["data"]["username"],
+        first_name="Name",
+        last_name="Surname",
+        password="default"
+    )
+
+
+class CustomUser(DjangoObject):
+    model = CustomUserModel
+
+    custom_actions = {
+        "changePassword": UpdateAction(only_fields=("password",))
+    }
+
+
+class Post(DjangoObject):
+    model = PostModel
+
+
+schema = generate(GraphQLAdapter)
+patterns = build_patterns(schema)
+```
 
 ### Permissions
 
