@@ -1,6 +1,6 @@
 from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
-from django_object.actions import CreateAction
+from django_object.actions import CreateAction, UpdateAction
 from django_object.django_object import DjangoObject
 from .models import CustomUser as CustomUserModel, Post as PostModel
 from tests.graphql.graphql_test_utils import build_patterns
@@ -22,6 +22,10 @@ class CustomUser(DjangoObject):
     create_action = CreateAction(only_fields=("username",), exec_fn=custom_create_user)
     update_action = None
     delete_action = None
+
+    custom_actions = {
+        "changePassword": UpdateAction(only_fields=("password",), required_fields=("password",))
+    }
 
 
 class Post(DjangoObject):

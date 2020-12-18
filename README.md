@@ -624,7 +624,7 @@ mutation create_user_username_only{
 
 Our customized `CreateAction` has only one data parameter, the username, and the rest is filled with some default values, as specified in `custom_create_user`. If an action should not be generated at all, just set it to `None`.
 
-Now we show how to add a custom action:
+Let's say we want the users to be able to change their own password. For this, we need to add a custom actions as follows:
 
 ```python
 from adapters.graphql.graphql import GraphQLAdapter
@@ -634,22 +634,12 @@ from django_object.django_object import DjangoObject
 from .models import CustomUser as CustomUserModel, Post as PostModel
 from tests.graphql.graphql_test_utils import build_patterns
 
-
-def custom_create_user(request, params, **kwargs):
-    return CustomUserModel.objects.create(
-        email="default@example.com",
-        username=params["data"]["username"],
-        first_name="Name",
-        last_name="Surname",
-        password="default"
-    )
-
-
 class CustomUser(DjangoObject):
     model = CustomUserModel
 
     custom_actions = {
-        "changePassword": UpdateAction(only_fields=("password",))
+        "changePassword": UpdateAction(only_fields=("password",), 
+                                       required_fields=("password",))
     }
 
 
@@ -660,8 +650,104 @@ class Post(DjangoObject):
 schema = generate(GraphQLAdapter)
 patterns = build_patterns(schema)
 ```
+TODO explain `required_fields`
+TODO `WithObjectActions`
 
 ### Permissions
+
+The forum now has one obvious problem mentioned above - everyone can do everything. Now it is time to change it. 
+Each action in Simple API might include a set of permissions required to pass - if it does not, an error occurs
+and the action is not performed.
+
+The permissions should only determine if a user is allowed to execute an action or not based on the user and the
+current application state. The input data for the action should not be considered. 
+For rejections based on input data, check `Validator`s below.
+
+Permissions are shipped as classes. The key part is overriding the `permission_statement` method:
+
+```python
+from django_object.permissions import DjangoPermission
+class IsAuthenticated(DjangoPermission):
+    def permission_statement(self, request, **kwargs):
+        return request and request.user and request.user.is_authenticated
+```
+
+Let's say we now want to create an `IsAdmin` permission class, which would allow through only those users
+which have either `is_admin` or `is_superuser` set. This is what we would do:
+
+```python
+from django_object.permissions import IsAuthenticated
+class IsAdmin(IsAuthenticated):
+    def permission_statement(self, request, **kwargs):
+        return request.user.is_staff or request.user.is_superuser
+```
+
+You might be wondering why don't we call the `permission_statement` method of the superclass. One would do
+this all the time, therefore Simple API just calls the method of the superclass automatically, based on
+the inheritance chain. This saves some boilerplate code and makes the result a bit more readable.
+
+Let's see how to use the permissions in practice. Our forum API enhanced with the permissions could look
+as follows:
+
+```python
+from adapters.graphql.graphql import GraphQLAdapter
+from adapters.utils import generate
+from django_object.actions import CreateAction, UpdateAction, DeleteAction, DetailAction, ListAction
+from django_object.django_object import DjangoObject
+from .models import CustomUser as CustomUserModel, Post as PostModel
+from tests.graphql.graphql_test_utils import build_patterns
+from django_object.permissions import IsAuthenticated
+from object.permissions import Or
+
+
+class IsAdmin(IsAuthenticated):
+    def permission_statement(self, request, **kwargs):
+        return request.user.is_staff or request.user.is_superuser
+
+
+class IsSelf(IsAuthenticated):
+    def permission_statement(self, request, **kwargs):
+        return request.user.pk == kwargs["obj"].pk
+
+
+class CustomUser(DjangoObject):
+    model = CustomUserModel
+
+    create_action = CreateAction(permissions=IsAdmin)
+    update_action = UpdateAction(permissions=IsAdmin)
+    delete_action = DeleteAction(permissions=IsAdmin)
+    list_action = ListAction(permissions=IsAdmin)
+    detail_action = DetailAction(permissions=Or(IsAdmin, IsSelf))
+
+    custom_actions = {
+        "changePassword": UpdateAction(only_fields=("password",), permissions=IsSelf)
+    }
+
+
+class IsTheirs(IsAuthenticated):
+    def permission_statement(self, request, **kwargs):
+        return request.user.pk == kwargs["obj"].author.pk
+
+
+class Post(DjangoObject):
+    model = PostModel
+
+    create_action = CreateAction(permissions=IsAuthenticated)
+    update_action = UpdateAction(permissions=Or(IsAdmin, IsTheirs))
+    delete_action = DeleteAction(permissions=Or(IsAdmin, IsTheirs))
+    list_action = ListAction(permissions=IsAuthenticated)
+    detail_action = DetailAction(permissions=IsAuthenticated)
+
+
+schema = generate(GraphQLAdapter)
+patterns = build_patterns(schema)
+```
+
+As we can see, for a logical expression consisting of multiple permissions, we can use
+`And`, `Or` and `Not` connectors, which form a universal set of connectors, and therefore
+can express any logical expression. For example, a post can be deleted only by its author,
+or by admin. For sure, we could write a permission class with permission statement covering
+exactly those options, but this way the code is more readable and therefore less error-prone.
 
 ### Meta schemas
 
