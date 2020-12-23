@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from django_object.actions import ModelAction, DetailAction, ListAction, CreateAction, UpdateAction, DeleteAction
+from django_object.actions import DetailAction, ListAction, CreateAction, UpdateAction, DeleteAction
 from django_object.datatypes import create_associated_list_type
 from django_object.filters import generate_filters
 from django_object.converter import determine_simple_api_fields
@@ -34,6 +34,7 @@ class DjangoObjectMeta(type):
         cls.pk_field_name, cls.pk_field = get_pk_field(cls.model)
         object_stub.add_attr("pk_field", cls.pk_field_name)
 
+        # make sure the primary key is included, otherwise `ModelObjectAction`s would just not work
         if cls.only_fields and cls.pk_field_name not in cls.only_fields:
             cls.only_fields = cls.only_fields + (cls.pk_field_name,)
         elif cls.exclude_fields and cls.pk_field_name in cls.exclude_fields:
@@ -46,10 +47,6 @@ class DjangoObjectMeta(type):
         )
 
         output_fields["__str__"] = StringType(resolver=lambda *a, **kw: kw["parent_val"]())
-
-        for field_name, validator_fn in cls.field_validators.items():
-            field_validators[field_name].fn = validator_fn
-        cls.field_validators = field_validators
 
         for f in input_fields:
             assert f not in fields, "Redefinition of `{}` field.".format(f)
@@ -86,10 +83,8 @@ class DjangoObjectMeta(type):
 
         converted_actions = {}
         for action_name, action in actions.items():
-            if isinstance(action, ModelAction):
-                action.set_parent_class(cls)
-                action.set_name(action_name)
-                action.set_validators(cls.field_validators)
+            action.set_parent_class(cls)
+            action.set_name(action_name)
             converted_actions[action_name] = action.to_action()
 
         object_stub.add_attr("actions", converted_actions)
@@ -110,8 +105,6 @@ class DjangoObject(metaclass=DjangoObjectMeta):
     custom_fields = {}
     input_custom_fields = {}
     output_custom_fields = {}
-
-    field_validators = {}
 
     detail_action = DetailAction()
     list_action = ListAction()

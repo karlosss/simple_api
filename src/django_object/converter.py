@@ -7,7 +7,6 @@ from django.db.models import AutoField, IntegerField, CharField, TextField, Bool
 
 from django_object.datatypes import PaginatedList
 from django_object.utils import extract_fields_from_model, determine_items, get_pk_field
-from django_object.validators import FieldValidator
 from object.datatypes import IntegerType, StringType, BooleanType, FloatType, DateType, TimeType, DateTimeType, \
     ObjectType
 
@@ -70,10 +69,6 @@ def convert_to_object_type(field, field_name, both_fields, input_fields, output_
 
     input_fields[field_name + "_id"] = converted_pk_field(nullable=field.null, exclude_filters=())
     output_fields[field_name] = ObjectType(target_model, nullable=field.null, exclude_filters=())
-    field_validators[field_name + "_id"] = FieldValidator(fn=lambda *a, **kw: target_model.objects.all(),
-                                                          field_type=PaginatedList(target_model),
-                                                          field_name=target_pk_field_name
-                                                          )
 
 
 @convert_django_field.register(OneToOneRel)
@@ -119,3 +114,8 @@ def determine_simple_api_fields(model, only_fields=None, exclude_fields=None,
     input_fields.update(input_custom_fields or {})
     output_fields.update(output_custom_fields or {})
     return fields, input_fields, output_fields, field_validators
+
+
+def get_simple_api_pk_field(model):
+    pk_name, _ = get_pk_field(model)
+    return determine_simple_api_fields(model, pk_name)[0]

@@ -1,210 +1,185 @@
+from django_object.converter import get_simple_api_pk_field
 from django_object.datatypes import PaginatedList, resolve_filtering
-from django_object.utils import determine_items, add_item, remove_item
-from object.actions import Action
+from django_object.utils import determine_items, remove_item
+from object.actions import Action, ToActionMixin, SetReferencesMixin
 from object.datatypes import ObjectType, BooleanType
 
 
 class WithObjectMixin:
-    with_object = True
+    def __init__(self, **kwargs):
+        super().__init__(with_object=True, **kwargs)
 
-    def determine_parameters(self):
-        self.only_fields, self.exclude_fields = add_item(self.parent_class.pk_field_name,
-                                                         self.only_fields,
-                                                         self.exclude_fields)
-        super().determine_parameters()
+
+# basically a copy of object.actions.Action, except it implements composition and thus translates itself into
+# object.actions.Action using the ToActionMixin; this is important so that this one can be overridden/extended
+# to support more specific model actions, but from the user point of view, these two should be equivalent
+class ModelAction(SetReferencesMixin, ToActionMixin):
+    @property
+    def model(self):
+        return self.parent_class.model
+
+    def __init__(self, parameters=None, data=None, return_value=None, exec_fn=None, permissions=None, **kwargs):
+        self.parameters = parameters or {}
+        self.data = data or {}
+        self.return_value = return_value or ObjectType("self")
+        self.exec_fn = exec_fn
+        self.permissions = permissions
+        self.kwargs = kwargs
+
+        # these attributes exist to ensure that 1) the input from the user is stored unmodified in the attributes above
+        # and 2) everything is determined just once (better performance, less error-prone)
+        self._determined_exec_fn = None
+        self._determined_parameters = None
+        self._determined_permissions = None
+        self._determined_data = None
+
+        self._action = None
+        super().__init__()
+
+    # a hook for getting user-defined exec_fn, meant to override later with a default
+    def get_exec_fn(self):
+        return self.exec_fn
 
     def determine_exec_fn(self):
-        self.determine_get_fn()
-        super().determine_exec_fn()
-        get_fn = self.get_fn
-        exec_fn = self.exec_fn
+        if self._determined_exec_fn is None:
+            self._determined_exec_fn = self.get_exec_fn()
 
-        def fn(request, params, obj, **kwargs):
-            obj = obj or get_fn(request, params, **kwargs)
-            return exec_fn(request, params, obj=obj, **kwargs)
+    def determine_data(self):
+        if self._determined_data is None:
+            self._determined_data = self.data
 
-        self.exec_fn = fn
+    def determine_permissions(self):
+        if self._determined_permissions is None:
+            self._determined_permissions = self.permissions
+
+    def determine_parameters(self):
+        if self._determined_parameters is None:
+            self._determined_parameters = self.parameters
+
+    def to_action(self):
+        if self._action is None:
+            self.determine_exec_fn()
+            self.determine_permissions()
+            self.determine_parameters()
+            self.determine_data()
+            self._action = Action(parameters=self._determined_parameters, data=self._determined_data,
+                                  return_value=self.return_value, exec_fn=self._determined_exec_fn,
+                                  permissions=self._determined_permissions, **self.kwargs)
+        return self._action
+
+
+# implemented as composition because the parameters are not known at compile time - first, the model reference
+# must be injected to determine the name and type of the pk field
+#
+# after all references are injected, the action determines the final set of parameters, permissions, get_fn and exec_fn
+# and builds an action, which is then passed to lower layers for further processing
+class ModelObjectAction(WithObjectMixin, ModelAction):
+    def __init__(self, parameters=None, data=None, return_value=None, get_fn=None, exec_fn=None,
+                 permissions=None, **kwargs):
+        super().__init__(parameters=parameters, data=data, return_value=return_value, exec_fn=exec_fn,
+                         permissions=permissions, **kwargs)
+        self.get_fn = get_fn
+        self._determined_get_fn = None
 
     def default_get_fn(self):
         def get_fn(request, params, **kwargs):
             pk = params.get(self.parent_class.pk_field_name)
             return self.model.objects.get(pk=pk)
-
         return get_fn
 
+    # a hook for getting user-defined get_fn, or the default if not provided
+    def get_get_fn(self):
+        return self.get_fn or self.default_get_fn()
+
     def determine_get_fn(self):
-        self.get_fn = self.get_fn or self.default_get_fn()
-
-    def instantiate_permissions(self):
-        if self.permissions is None:
-            return
-        if not isinstance(self.permissions, (list, tuple)):
-            self.permissions = self.permissions,
-
-        instantiated_permissions = []
-        for pc in self.permissions:
-            instantiated_permissions.append(pc(get_fn=self.determine_get_fn()))
-        self.permissions = instantiated_permissions
-
-    def __init__(self, get_fn=None, **kwargs):
-        self.get_fn = get_fn
-        super().__init__(**kwargs)
-
-
-class ModelAction:
-    with_object = False
-
-    @property
-    def model(self):
-        return self.parent_class.model
-
-    def set_parent_class(self, cls):
-        self.parent_class = cls
-
-    def determine_parameters(self):
-        self.parameters.update(determine_items(self.parent_class.in_fields, self.only_fields,
-                                               self.exclude_fields, self.custom_fields))
-
-    def determine_data(self, **kwargs):
-        pass
+        if self._determined_get_fn is None:
+            self._determined_get_fn = self.get_get_fn()
 
     def determine_exec_fn(self):
-        self.exec_fn = self.exec_fn or self.default_exec_fn()
+        if self._determined_exec_fn is None:
+            self.determine_get_fn()
+            get_fn = self._determined_get_fn
+            exec_fn = self.get_exec_fn()
 
+            def fn(request, params, obj, **kwargs):
+                obj = obj or get_fn(request, params, **kwargs)
+                return exec_fn(request, params, obj=obj, **kwargs)
+
+            self._determined_exec_fn = fn
+
+    # injects get_fn into the permission classes so that this information can be used to determine permissions
+    def determine_permissions(self):
+        if self._determined_permissions is None:
+            self._determined_permissions = self.permissions
+            if self._determined_permissions is None:
+                return
+            if not isinstance(self._determined_permissions, (list, tuple)):
+                self._determined_permissions = self._determined_permissions,
+
+            self.determine_get_fn()
+            instantiated_permissions = []
+            for pc in self._determined_permissions:
+                instantiated_permissions.append(pc(get_fn=self._determined_get_fn))
+            self._determined_permissions = instantiated_permissions
+
+    def determine_parameters(self):
+        if self._determined_parameters is None:
+            self._determined_parameters = get_simple_api_pk_field(self.model)
+            self._determined_parameters.update(self.parameters)
+
+
+class DefaultExecFnMixin:
     def default_exec_fn(self):
         raise NotImplementedError
 
-    def set_name(self, name):
-        self.name = name
-
-    def instantiate_permissions(self):
-        pass
-
-    def set_validators(self, validators):
-        for field_name, validator in validators.items():
-            if field_name not in self.validators:
-                self.validators[field_name] = validator.fn
-
-    def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None, return_value=None,
-                 exec_fn=None, validators=None, validate_fn=None, permissions=None, hidden=False, hide_if_denied=False,
-                 retry_in=None, **kwargs):
-        self.parent_class = None
-        self._action = None
-        self._aux_actions = {}
-        self.name = None
-        self.only_fields = only_fields
-        self.exclude_fields = exclude_fields
-        self.custom_fields = custom_fields or {}
-        self.validators = validators or {}
-        self.validate_fn = validate_fn
-        self.permissions = permissions
-        self.kwargs = kwargs
-
-        self.hidden = hidden
-        self.hide_if_denied = hide_if_denied
-        self.retry_in = retry_in
-
-        self.parameters = {}
-        self.data = None
-        self.return_value = return_value
-        self.exec_fn = exec_fn
-
-    def to_action(self):
-        if self._action is None:
-            self.determine_parameters()
-            self.determine_data()
-            self.determine_exec_fn()
-            self.instantiate_permissions()
-            self._action = Action(parameters=self.parameters, data=self.data,
-                                  return_value=self.return_value, exec_fn=self.exec_fn,
-                                  validators=self.validators, validate_fn=self.validate_fn,
-                                  permissions=self.permissions, with_object=self.with_object,
-                                  hidden=self.hidden, hide_if_denied=self.hide_if_denied, retry_in=self.retry_in,
-                                  mutation=self.kwargs.get("mutation", False))
-        return self._action
+    def get_exec_fn(self):
+        return self.exec_fn or self.default_exec_fn()
 
 
-class InputDataMixin:
-    def __init__(self, data_only_fields=None, data_exclude_fields=None, data_custom_fields=None,
-                 force_nullable=False, required_fields=(), **kwargs):
-        self.force_nullable = force_nullable
-        self.data_only_fields = data_only_fields
-        self.data_exclude_fields = data_exclude_fields
-        self.data_custom_fields = data_custom_fields
-        self.required_fields = required_fields
-        super().__init__(**kwargs)
-
-    def determine_data(self, **kwargs):
-        if self.parent_class.auto_pk and self.parent_class.pk_field_name in self.parent_class.in_fields:
-            self.data_only_fields, self.data_exclude_fields = remove_item(self.parent_class.pk_field_name,
-                                                                          self.data_only_fields,
-                                                                          self.data_exclude_fields)
-
-        data = determine_items(self.parent_class.in_fields, self.data_only_fields,
-                               self.data_exclude_fields, self.data_custom_fields)
-        if self.force_nullable:
-            for name, field in data.items():
-                if name not in self.required_fields:
-                    field._nullable_if_input = True
-        self.data = data
-
-
-class DetailAction(WithObjectMixin, ModelAction):
+class DetailAction(DefaultExecFnMixin, ModelObjectAction):
     def default_exec_fn(self):
         def fn(request, params, obj, **kwargs):
             return obj
         return fn
 
-    def __init__(self, get_fn=None, exec_fn=None, return_value=None, **kwargs):
-        if return_value is None:
-            return_value = ObjectType("self")
-        super().__init__(only_fields=(), get_fn=get_fn, exec_fn=exec_fn, return_value=return_value, **kwargs)
+
+class InputDataMixin:
+    def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None,
+                 force_nullable=False, required_fields=(), **kwargs):
+        self.force_nullable = force_nullable
+        self.only_fields = only_fields
+        self.exclude_fields = exclude_fields
+        self.custom_fields = custom_fields
+        self.required_fields = required_fields  # fields that are not nullable even when force_nullable=True
+        super().__init__(**kwargs)
+
+    def determine_data(self, **kwargs):
+        if self._determined_data is None:
+            only_fields = self.only_fields
+            exclude_fields = self.exclude_fields
+
+            # if the primary key is automatic, ensure it is not present in the data fields
+            if self.parent_class.auto_pk and self.parent_class.pk_field_name in self.parent_class.in_fields:
+                only_fields, exclude_fields = remove_item(self.parent_class.pk_field_name, only_fields, exclude_fields)
+
+            data = determine_items(self.parent_class.in_fields, only_fields, exclude_fields, self.custom_fields)
+
+            # if the fields should be nullable by default, ensure they are
+            if self.force_nullable:
+                for name, field in data.items():
+                    if name not in self.required_fields:
+                        field._nullable_if_input = True
+
+            self._determined_data = data
 
 
-class ListAction(ModelAction):
-    def determine_parameters(self):
-        self.parameters.update({"filters": ObjectType(self.parent_class.filter_type, nullable=True)})
-        super().determine_parameters()
-
-    def determine_exec_fn(self):
-        super().determine_exec_fn()
-        fn = self.exec_fn
-        def filtering_exec_fn(request, params, **kwargs):
-            res = fn(request, params, **kwargs)
-            return resolve_filtering(request, res, params, **kwargs)
-        self.exec_fn = filtering_exec_fn
-        super().determine_exec_fn()
-
-    def default_exec_fn(self):
-        def exec_fn(request, params, **kwargs):
-            return self.model.objects.all()
-        return exec_fn
-
-    def __init__(self, exec_fn=None, return_value=None, custom_fields=None, **kwargs):
-        if return_value is None:
-            return_value = PaginatedList("self")
-        super().__init__(only_fields=(), exec_fn=exec_fn, return_value=return_value, custom_fields=custom_fields,
-                         **kwargs)
+# TODO make this non graphql-biased (probably do some magic upon importing graphql adapter)
+class MutationMixin:
+    def __init__(self, **kwargs):
+        super().__init__(mutation=True, **kwargs)
 
 
-class CreateAction(InputDataMixin, ModelAction):
-    def default_exec_fn(self):
-        def exec_fn(request, params, **kwargs):
-            return self.model.objects.create(**params.get("data", {}))
-        return exec_fn
-
-    def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None, exec_fn=None, permissions=None,
-                 return_value=None, **kwargs):
-        # todo move mutation=True somewhere else so that the generic action is not graphql-biased
-        #  (probably upon importing GraphQLAdapter)
-        if return_value is None:
-            return_value = ObjectType("self")
-        super().__init__(data_only_fields=only_fields, data_exclude_fields=exclude_fields,
-                         data_custom_fields=custom_fields, only_fields=(),
-                         exec_fn=exec_fn, permissions=permissions, mutation=True, return_value=return_value, **kwargs)
-
-
-class UpdateAction(WithObjectMixin, InputDataMixin, ModelAction):
+class UpdateAction(DefaultExecFnMixin, InputDataMixin, MutationMixin, ModelObjectAction):
     def default_exec_fn(self):
         def fn(request, params, obj, **kwargs):
             data = params.pop("data")
@@ -214,34 +189,62 @@ class UpdateAction(WithObjectMixin, InputDataMixin, ModelAction):
             return obj
         return fn
 
-    def __init__(self, only_fields=None, exclude_fields=None, custom_fields=None,
-                 get_fn=None, exec_fn=None, permissions=None, return_value=None, required_fields=(), **kwargs):
-        if return_value is None:
-            return_value = ObjectType("self")
-        super().__init__(data_only_fields=only_fields, data_exclude_fields=exclude_fields,
-                         data_custom_fields=custom_fields, only_fields=(),
-                         get_fn=get_fn, exec_fn=exec_fn, permissions=permissions,
-                         mutation=True, force_nullable=True, required_fields=required_fields,
-                         return_value=return_value, **kwargs)
+    def __init__(self, custom_parameters=None, only_fields=None, exclude_fields=None, custom_fields=None,
+                 return_value=None, get_fn=None, exec_fn=None, permissions=None, **kwargs):
+        super().__init__(only_fields=only_fields, exclude_fields=exclude_fields, custom_fields=custom_fields,
+                         return_value=return_value, custom_parameters=custom_parameters, get_fn=get_fn, exec_fn=exec_fn,
+                         permissions=permissions, force_nullable=True, **kwargs)
 
 
-class DeleteAction(WithObjectMixin, ModelAction):
+class DeleteAction(DefaultExecFnMixin, MutationMixin, ModelObjectAction):
     def default_exec_fn(self):
         def fn(request, params, obj, **kwargs):
             obj.delete()
             return True
         return fn
 
-    def __init__(self, get_fn=None, exec_fn=None, return_value=None, **kwargs):
-        if return_value is None:
-            return_value = BooleanType()
-        super().__init__(only_fields=(), get_fn=get_fn, exec_fn=exec_fn, mutation=True,
-                         return_value=return_value, **kwargs)
+    def __init__(self, custom_parameters=None, data=None, return_value=None, get_fn=None, exec_fn=None,
+                 permissions=None, **kwargs):
+        return_value = return_value or BooleanType()
+        super().__init__(custom_parameters=custom_parameters, data=data, return_value=return_value, get_fn=get_fn,
+                         exec_fn=exec_fn, permissions=permissions, **kwargs)
 
 
-class ListObjectAction(WithObjectMixin, ListAction):
-    pass
+class CreateAction(DefaultExecFnMixin, InputDataMixin, MutationMixin, ModelAction):
+    def default_exec_fn(self):
+        def fn(request, params, **kwargs):
+            return self.model.objects.create(**params.get("data", {}))
+        return fn
+
+    def __init__(self, parameters=None, only_fields=None, exclude_fields=None, custom_fields=None,
+                 exec_fn=None, permissions=None, return_value=None, **kwargs):
+        super().__init__(only_fields=only_fields, exclude_fields=exclude_fields, custom_fields=custom_fields,
+                         exec_fn=exec_fn, permissions=permissions, return_value=return_value,
+                         parameters=parameters, **kwargs)
 
 
-class CreateObjectAction(WithObjectMixin, CreateAction):
-    pass
+class ListAction(DefaultExecFnMixin, ModelAction):
+    def default_exec_fn(self):
+        def exec_fn(request, params, **kwargs):
+            return self.model.objects.all()
+        return exec_fn
+
+    def determine_parameters(self):
+        if self._determined_parameters is None:
+            self._determined_parameters = ({"filters": ObjectType(self.parent_class.filter_type, nullable=True)})
+            self._determined_parameters.update(self.parameters)
+
+    def determine_exec_fn(self):
+        if self._determined_exec_fn is None:
+            exec_fn = self.get_exec_fn()
+
+            def fn(request, params, **kwargs):
+                res = exec_fn(request, params, **kwargs)
+                return resolve_filtering(request, res, params, **kwargs)
+
+            self._determined_exec_fn = fn
+
+    def __init__(self, parameters=None, exec_fn=None, permissions=None, return_value=None, **kwargs):
+        return_value = return_value or PaginatedList("self")
+        super().__init__(parameters=parameters, exec_fn=exec_fn, permissions=permissions, return_value=return_value,
+                         **kwargs)

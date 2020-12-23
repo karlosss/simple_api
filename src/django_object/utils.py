@@ -143,6 +143,4 @@ def filter_fields_from_model(model, only_fields, exclude_fields):
 
 
 def get_pk_field(model):
-    for field_name, field in extract_fields_from_model(model).items():
-        if field.primary_key:
-            return field_name, field
+    return model._meta.pk.name, model._meta.pk

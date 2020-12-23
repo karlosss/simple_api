@@ -4,7 +4,7 @@ from django.utils.decorators import classproperty
 
 from object.datatypes import PlainListType, ObjectType
 from object.meta_resolvers import build_actions_resolver
-from object.permissions import AllowAll, permissions_pre_hook
+from object.permissions import AllowAll, build_permissions_fn
 from object.registry import object_storage
 
 

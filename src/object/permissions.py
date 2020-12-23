@@ -1,7 +1,9 @@
 from inspect import isclass
 
 
-def permissions_pre_hook(permissions):
+# instantiates permission classes (if they are not already, maybe due to get_fn injection) and builds a
+# function that raises if the permissions are not passed
+def build_permissions_fn(permissions):
     if permissions is None:
         return None
 
@@ -15,11 +17,11 @@ def permissions_pre_hook(permissions):
         else:
             instantiated_permissions.append(cls_or_inst)
 
-    def callable(*args, **kwargs):
+    def fn(**kwargs):
         for perm in instantiated_permissions:
             if not perm.has_permission(**kwargs):
                 raise PermissionError(perm.error_message(**kwargs))
-    return callable
+    return fn
 
 
 class BasePermission:

@@ -435,7 +435,7 @@ from tests.graphql.graphql_test_utils import build_patterns
 class ShortCustomUser(DjangoObject):
     model = CustomUserModel
     only_fields = ("first_name", "last_name")
-    custom_output_fields = {"full_name": StringType()}
+    output_custom_fields = {"full_name": StringType()}
 
 
 class ShortPost(DjangoObject):

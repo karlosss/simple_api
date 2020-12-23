@@ -3,10 +3,10 @@
 shopt -s nullglob
 
 TEST_DIRS=(
-#    tests/graphql/actions
-#    tests/graphql/django_objects
-#    tests/graphql/objects
-#    tests/graphql/stack_overflow
+    tests/graphql/actions
+    tests/graphql/django_objects
+    tests/graphql/objects
+    tests/graphql/stack_overflow
     tests/graphql/readme_forum
 )
 

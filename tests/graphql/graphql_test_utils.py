@@ -1,3 +1,5 @@
+import json
+
 from django.urls import path
 from graphene_django.utils import GraphQLTestCase as OriginalGraphQLTestCase
 from graphene_django.views import GraphQLView
@@ -57,4 +59,7 @@ class GraphQLTestCase(OriginalGraphQLTestCase):
         )
 
         self.assertResponseNoErrors(resp)
-        self.assertJSONEqual(resp.content, self.REF_META_SCHEMA)
+
+        # ignore the order of the elements
+        data = json.loads(resp.content)
+        self.assertCountEqual(data, self.REF_META_SCHEMA)

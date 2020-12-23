@@ -2,7 +2,7 @@ from inspect import isclass
 
 from constants import OBJECT_SELF_REFERENCE
 from object.function import TemplateFunction
-from object.permissions import permissions_pre_hook
+from object.permissions import build_permissions_fn
 from object.registry import object_storage
 
 
@@ -28,7 +28,7 @@ class Type(ConvertMixin):
         self.kwargs = kwargs
         self.resolver = TemplateFunction(resolver or default_resolver)\
             .set_default_hook(lambda *a, **kwa: self._default)\
-            .set_permissions_hook(permissions_pre_hook(self.permissions))
+            .set_permissions_hook(build_permissions_fn(self.permissions))
 
     def set_parent_class(self, cls):
         self.parent_class = cls
