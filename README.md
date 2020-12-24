@@ -650,8 +650,17 @@ class Post(DjangoObject):
 schema = generate(GraphQLAdapter)
 patterns = build_patterns(schema)
 ```
-TODO explain `required_fields`
-TODO `WithObjectActions`
+
+By default, the fields of an `UpdateAction` are not mandatory - it would be very annoying to
+specify the whole large object when modifying just a single value! This, however, is not
+always what we want: when the action is supposed to change only the password, the new password
+should be mandatory to provide. This is exactly what `required_fields` stands for: specify
+the fields which should be required, even in an `UpdateAction`.
+
+Sometimes, an action is not a CRUD operation. For these cases, the custom `exec_fn` must be
+written by the user. Refer to `ModelAction` or `ModelObjectAction`, depending if the action
+should operate on the object class (like `create` for example), or on specific instances
+of the object (like `update` or `delete` for example) respectively.
 
 ### Permissions
 
@@ -661,7 +670,7 @@ and the action is not performed.
 
 The permissions should only determine if a user is allowed to execute an action or not based on the user and the
 current application state. The input data for the action should not be considered. 
-For rejections based on input data, check `Validator`s below.
+**TODO: Rejection based on input data is not implemented yet.**
 
 Permissions are shipped as classes. The key part is overriding the `permission_statement` method:
 
@@ -751,4 +760,120 @@ exactly those options, but this way the code is more readable and therefore less
 
 ### Meta schemas
 
+**Note: this part will likely significantly change in the future.**
+
+GraphiQL already contains some information about types, parameters, etc. Meta schemas
+of Simple API extend this schema by the information about actions and permissions. These
+are supposed to be used in order to maintain loose coupling between the backend and any
+possible frontend clients.
+
+On the top level, there are two meta endpoints `__objects` and `__actions`. They can be
+queried as follows:
+
+```graphql
+query{
+  __objects{
+    name
+    pk_field
+    actions{
+      name
+      permitted
+      deny_reason
+      retry_in
+    }
+  }
+  __actions{
+    name
+    permitted
+    deny_reason
+    retry_in
+  }
+}
+```
+
+`__objects` contains information about objects. Each object created in Simple API by the user
+is automatically registered. Besides the `name`, Simple API also tells the frontend which
+is the primary key field, which is necessary for all actions operating on a specific instance
+of an object. Follows a list of actions not bound to any specific instance (such as `create`
+or `list`). For each of those actions, Simple API also tells if, based on the user and current
+system state, the action is allowed or not, why it is disallowed, and in what time 
+this information should be refreshed. This way, frontend can display (or not display)
+buttons, disabled buttons, error messages etc.
+
+The `__actions` endpoint covers the actions not connected to a particular object.
+
+Each instance of an object also has `__actions` field:
+
+```graphql
+query list_users{
+  CustomUserList{
+    data{
+      id
+      username
+      password
+      __actions{
+        name
+        permitted
+        deny_reason
+        retry_in
+      }
+    }
+  }
+}
+```
+
+This field contains information about actions for that particular instance, for example `update`
+or `delete`.
+
 ### Creating Objects without Django model
+
+It is also possible to create an object without Django model. In fact, Simple API only
+extracts information from Django models, and then completely forgets that Django exists!
+These two layers allow for simple modification of the objects - for example, required fields
+in Django do not need to be required in Simple API: once the information is extracted from
+Django, it can be easily rewritten without looking back to Django, not causing any conflicts.
+
+An example can be seen here:
+
+```python
+from adapters.graphql.graphql import GraphQLAdapter
+from adapters.utils import generate
+from object.actions import Action
+from object.datatypes import StringType, IntegerType, ObjectType
+from object.object import Object
+from tests.graphql.graphql_test_utils import build_patterns
+from utils import AttrDict
+
+
+def get_by_id(request, params, **kwargs):
+    return AttrDict(id=params["id"], car=AttrDict(model="BMW", color="blue"))
+
+
+class Car(Object):
+    fields = {
+        "model": StringType(),
+        "color": StringType()
+    }
+
+
+class Owner(Object):
+    fields = {
+        "id": IntegerType(),
+        "car": ObjectType(Car)
+    }
+
+    actions = {
+        "getById": Action(parameters={"id": IntegerType()}, return_value=ObjectType("self"), exec_fn=get_by_id)
+    }
+
+schema = generate(GraphQLAdapter)
+patterns = build_patterns(schema)
+```
+
+The `getById` action returns a blue BMW with the `id` specified in its parameter.
+
+### Future Works
+
+Currently (as of January 2021), there is a thesis going on at Czech Technical University 
+in Prague. Its main goal is to generate a frontend off of the API that can make use of all 
+of its features and should allow for easy testing of the backend functionalities.
