@@ -699,49 +699,65 @@ Let's see how to use the permissions in practice. Our forum API enhanced with th
 as follows:
 
 ```python
+from django.contrib.auth.models import User as UserModel
+
 from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
-from django_object.actions import CreateAction, UpdateAction, DeleteAction, DetailAction, ListAction
+from django_object.actions import CreateAction, UpdateAction, DeleteAction, DetailAction, ListAction, ModelAction
 from django_object.django_object import DjangoObject
-from .models import CustomUser as CustomUserModel, Post as PostModel
-from tests.graphql.graphql_test_utils import build_patterns
 from django_object.permissions import IsAuthenticated
+from object.datatypes import StringType
 from object.permissions import Or
+from .models import Post as PostModel
+from tests.graphql.graphql_test_utils import build_patterns
 
 
 class IsAdmin(IsAuthenticated):
-    def permission_statement(self, request, **kwargs):
+    def permission_statement(self, request, obj, **kwargs):
         return request.user.is_staff or request.user.is_superuser
 
 
 class IsSelf(IsAuthenticated):
-    def permission_statement(self, request, **kwargs):
-        return request.user.pk == kwargs["obj"].pk
+    def permission_statement(self, request, obj, **kwargs):
+        return request.user == obj
 
 
-class CustomUser(DjangoObject):
-    model = CustomUserModel
+class IsTheirs(IsAuthenticated):
+    def permission_statement(self, request, obj, **kwargs):
+        return request.user == obj.author
+
+
+def set_password(request, params, **kwargs):
+    # this would set a password to request.user, but for the showcase it is not needed
+    pass
+
+
+def create_post(request, params, **kwargs):
+    data = params["data"]
+    return PostModel.objects.create(title=data["title"], content=data["content"], author=request.user)
+
+
+class User(DjangoObject):
+    model = UserModel
+    only_fields = ("username", )
 
     create_action = CreateAction(permissions=IsAdmin)
     update_action = UpdateAction(permissions=IsAdmin)
     delete_action = DeleteAction(permissions=IsAdmin)
+    detail_action = DetailAction(permissions=IsAdmin)
     list_action = ListAction(permissions=IsAdmin)
-    detail_action = DetailAction(permissions=Or(IsAdmin, IsSelf))
 
     custom_actions = {
-        "changePassword": UpdateAction(only_fields=("password",), permissions=IsSelf)
+        "changePassword": ModelAction(data={"password": StringType()}, exec_fn=set_password,
+                                      permissions=IsAuthenticated),
+        "myProfile": ModelAction(exec_fn=lambda request, **kwargs: request.user, permissions=IsAuthenticated)
     }
-
-
-class IsTheirs(IsAuthenticated):
-    def permission_statement(self, request, **kwargs):
-        return request.user.pk == kwargs["obj"].author.pk
 
 
 class Post(DjangoObject):
     model = PostModel
 
-    create_action = CreateAction(permissions=IsAuthenticated)
+    create_action = CreateAction(exclude_fields=("author_id",), permissions=IsAuthenticated, exec_fn=create_post)
     update_action = UpdateAction(permissions=Or(IsAdmin, IsTheirs))
     delete_action = DeleteAction(permissions=Or(IsAdmin, IsTheirs))
     list_action = ListAction(permissions=IsAuthenticated)
@@ -752,11 +768,19 @@ schema = generate(GraphQLAdapter)
 patterns = build_patterns(schema)
 ```
 
+This slightly more comprehensive example shows how one could do the forum. Let's have two
+types of users: admins and the others. Everyone can view their own profile, change their own
+password, create and list all posts and edit and delete their own posts. Admins on top of that
+can manipulate the database of users and also their posts.
+
 As we can see, for a logical expression consisting of multiple permissions, we can use
 `And`, `Or` and `Not` connectors, which form a universal set of connectors, and therefore
-can express any logical expression. For example, a post can be deleted only by its author,
-or by admin. For sure, we could write a permission class with permission statement covering
-exactly those options, but this way the code is more readable and therefore less error-prone.
+can express any logical expression. For sure, we could write a permission class with permission 
+statement covering exactly those options, but this way the code is more readable and therefore
+less error-prone.
+
+Besides the logical expressions, we also show how to use `ModelAction` and a custom create 
+(the autor of the post is the one who sent the create request).
 
 ### Meta schemas
 

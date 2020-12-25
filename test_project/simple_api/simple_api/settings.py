@@ -76,6 +76,11 @@ TEMPLATES = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    "simple_api.auth_backends.TestcaseUserBackend",  # for automatic login in testcases
+]
+
+
 WSGI_APPLICATION = 'simple_api.wsgi.application'
 
 

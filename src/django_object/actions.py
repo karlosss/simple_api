@@ -76,6 +76,7 @@ class ModelAction(SetReferencesMixin, ToActionMixin):
 class ModelObjectAction(WithObjectMixin, ModelAction):
     def __init__(self, parameters=None, data=None, return_value=None, get_fn=None, exec_fn=None,
                  permissions=None, **kwargs):
+        return_value = return_value or ObjectType("self")
         super().__init__(parameters=parameters, data=data, return_value=return_value, exec_fn=exec_fn,
                          permissions=permissions, **kwargs)
         self.get_fn = get_fn
@@ -162,13 +163,16 @@ class InputDataMixin:
             if self.parent_class.auto_pk and self.parent_class.pk_field_name in self.parent_class.in_fields:
                 only_fields, exclude_fields = remove_item(self.parent_class.pk_field_name, only_fields, exclude_fields)
 
-            data = determine_items(self.parent_class.in_fields, only_fields, exclude_fields, self.custom_fields)
+            data = determine_items(self.parent_class.in_fields, only_fields, exclude_fields, {})
 
             # if the fields should be nullable by default, ensure they are
             if self.force_nullable:
                 for name, field in data.items():
                     if name not in self.required_fields:
                         field._nullable_if_input = True
+
+            # apply custom fields as-is, without forcibly nullifying them
+            data.update(self.custom_fields or {})
 
             self._determined_data = data
 
