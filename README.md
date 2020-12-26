@@ -1,5 +1,7 @@
 # Simple API
 
+![tests](https://github.com/karlosss/simple_api/workflows/Run%20tests/badge.svg)
+
 ## Purpose of the project
 After writing Django models, Simple API builds an API (currently, only GraphQL is supported) extracting the information from the model and requiring to write as little code as possible.
 
