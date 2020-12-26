@@ -1,5 +1,5 @@
-from object.datatypes import StringType, ObjectType
-from object.object import Object
+from simple_api.object.datatypes import StringType, ObjectType
+from simple_api.object.object import Object
 from .a import A
 
 

@@ -1,9 +1,11 @@
-from adapters.graphql.graphql import GraphQLAdapter
-from adapters.utils import generate
-from django_object.actions import CreateAction, UpdateAction
-from django_object.django_object import DjangoObject
-from .models import CustomUser as CustomUserModel, Post as PostModel
+from simple_api.adapters.graphql.graphql import GraphQLAdapter
+from simple_api.adapters.utils import generate
+from simple_api.django_object.actions import CreateAction, UpdateAction
+from simple_api.django_object.django_object import DjangoObject
+
 from tests.graphql.graphql_test_utils import build_patterns
+
+from .models import CustomUser as CustomUserModel, Post as PostModel
 
 
 def custom_create_user(request, params, **kwargs):

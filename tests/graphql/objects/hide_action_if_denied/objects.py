@@ -1,9 +1,9 @@
-from adapters.graphql.graphql import GraphQLAdapter
-from adapters.utils import generate
-from object.actions import Action
-from object.datatypes import StringType, ObjectType, BooleanType
-from object.object import Object
-from object.permissions import AllowNone, Not, AllowAll, Or, And
+from simple_api.adapters.graphql.graphql import GraphQLAdapter
+from simple_api.adapters.utils import generate
+from simple_api.object.actions import Action
+from simple_api.object.datatypes import BooleanType
+from simple_api.object.permissions import AllowNone, AllowAll
+
 from tests.graphql.graphql_test_utils import build_patterns
 
 

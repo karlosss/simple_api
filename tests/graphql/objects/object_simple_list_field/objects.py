@@ -1,7 +1,8 @@
-from adapters.graphql.graphql import GraphQLAdapter
-from adapters.utils import generate
-from object.actions import Action
-from object.datatypes import PlainListType, IntegerType
+from simple_api.adapters.graphql.graphql import GraphQLAdapter
+from simple_api.adapters.utils import generate
+from simple_api.object.actions import Action
+from simple_api.object.datatypes import PlainListType, IntegerType
+
 from tests.graphql.graphql_test_utils import build_patterns
 
 
