@@ -3,9 +3,12 @@ import setuptools
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+with open("VERSION", "r", encoding="utf-8") as ver:
+    version = ver.read()
+
 setuptools.setup(
     name="simple-api",
-    version="0.0.0.0.5",
+    version=version,
     author="Karel Jilek",
     author_email="los.karlosss@gmail.com",
     description="A library to build a backend API (GraphQL) from Django",
