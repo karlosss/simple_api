@@ -463,7 +463,7 @@ class Test(GraphQLTestCase):
                 }
               }
         self.assertResponseNoErrors(resp)
-        self.assertJSONEqual(ret, resp.content)
+        self.assertJSONEqual(resp.content, ret)
         resp = self.query("""
         query detail_of_user{
           CustomUserDetail(id: 1){
@@ -492,9 +492,8 @@ class Test(GraphQLTestCase):
             }
           }
         self.assertResponseNoErrors(resp)
-        self.assertJSONEqual(ret, resp.content)
-        resp = self.query("""
-                query detail_of_user{
+        self.assertJSONEqual(resp.content, ret)
+        resp = self.query("""query detail_of_user{
                   CustomUserDetail(id: 42){
                     id
                     email
@@ -513,7 +512,7 @@ class Test(GraphQLTestCase):
                     "locations": [
                       {
                         "line": 2,
-                        "column": 3
+                        "column": 19
                       }
                     ],
                     "path": [
@@ -525,8 +524,7 @@ class Test(GraphQLTestCase):
               }
         self.assertResponseHasErrors(resp)
         self.assertJSONEqual(resp.content, ret)
-        resp = self.query("""
-                        query detail_of_user{
+        resp = self.query("""query detail_of_user{
                           CustomUserDetail(id: 42){
                             id
                             email
@@ -545,7 +543,7 @@ class Test(GraphQLTestCase):
                     "locations": [
                       {
                         "line": 5,
-                        "column": 5
+                        "column": 29
                       }
                     ]
                   }
@@ -581,7 +579,6 @@ class Test(GraphQLTestCase):
               id
               first_name
               last_name
-              password
             }
           }
         }""")
