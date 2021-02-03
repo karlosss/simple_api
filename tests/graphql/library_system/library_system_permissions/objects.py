@@ -1,10 +1,8 @@
 from simple_api.adapters.graphql.graphql import GraphQLAdapter
 from simple_api.adapters.utils import generate
 from simple_api.django_object.django_object import DjangoObject
-from simple_api.django_object.permissions import IsAuthenticated, BasePermission
-from simple_api.django_object.actions import CreateAction, UpdateAction, DeleteAction, DetailAction, ListAction, \
-    ModelAction
-from simple_api.object.datatypes import IntegerType
+from simple_api.django_object.permissions import IsAuthenticated, DjangoPermission
+from simple_api.django_object.actions import CreateAction, UpdateAction, DeleteAction, DetailAction, ListAction
 
 from tests.graphql.graphql_test_utils import build_patterns
 
@@ -17,7 +15,7 @@ class IsAdmin(IsAuthenticated):
         return request.user.is_staff or request.user.is_superuser
 
 
-class IsNotRestricted(BasePermission):
+class IsNotRestricted(DjangoPermission):
     def permission_statement(self, request, obj, **kwargs):
         return not obj.restricted
 
@@ -26,13 +24,18 @@ class IsNotRestricted(BasePermission):
 
 
 def lend_book(request, params, **kwargs):
-    data = params["data"]
+    if kwargs["obj"].borrowed:
+        kwargs["obj"].borrowed = False
+    else:
+        kwargs["obj"].borrowed = True
+    kwargs["obj"].save()
+    return kwargs["obj"]
 
 
 class Book(DjangoObject):
     model = BookModel
     create_action = CreateAction()
-    update_action = UpdateAction()
+    update_action = UpdateAction(permissions=IsAdmin)
     delete_action = DeleteAction(permissions=IsAdmin)
     custom_actions = {
         "Lend": UpdateAction(exec_fn=lend_book,
