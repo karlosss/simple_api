@@ -2,7 +2,8 @@ from simple_api.adapters.graphql.graphql import GraphQLAdapter
 from simple_api.adapters.utils import generate
 from simple_api.django_object.django_object import DjangoObject
 from simple_api.django_object.permissions import IsAuthenticated, DjangoPermission
-from simple_api.django_object.actions import CreateAction, UpdateAction, DeleteAction, DetailAction, ListAction
+from simple_api.django_object.actions import CreateAction, UpdateAction, DeleteAction, DetailAction, ListAction, \
+    ModelAction
 from simple_api.object.permissions import Or, And
 
 from tests.graphql.graphql_test_utils import build_patterns
@@ -21,7 +22,7 @@ class IsNotRestricted(DjangoPermission):
         return not obj.restricted
 
     def error_message(self, **kwargs):
-        return "Restricted books cannot be borrowed."
+        return "Restricted books cannot be accessed."
 
 
 def lend_book(request, params, **kwargs):
@@ -33,6 +34,10 @@ def lend_book(request, params, **kwargs):
     return kwargs["obj"]
 
 
+def read_book(request, params, **kwargs):
+    return kwargs["obj"]
+
+
 class Book(DjangoObject):
     model = BookModel
     create_action = CreateAction(permissions=IsAdmin)
@@ -41,7 +46,9 @@ class Book(DjangoObject):
     list_action = ListAction(permissions=IsAuthenticated)
     custom_actions = {
         "Lend": UpdateAction(exec_fn=lend_book,
-                             permissions=Or(And(IsAuthenticated, IsNotRestricted), IsAdmin))
+                             permissions=Or(IsAdmin, And(IsAuthenticated, IsNotRestricted))),
+        "Read": DetailAction(exec_fn=read_book,
+                             permissions=IsNotRestricted)
     }
 
 
@@ -66,3 +73,4 @@ class User(DjangoObject):
 
 schema = generate(GraphQLAdapter)
 patterns = build_patterns(schema)
+
