@@ -8,6 +8,7 @@ TEST_DIRS=(
     tests/graphql/objects
     tests/graphql/stack_overflow
     tests/graphql/readme_forum
+    tests/graphql/library_system
 )
 
 cd "${0%/*}"
