@@ -288,6 +288,42 @@ class Test(GraphQLTestCase):
         }
     }
 
+    def _prepare_books(self):
+        admin = User.objects.create_user(username="bookMaker", email="bookMaker@example.com", is_staff=True)
+        self._client.login(user=admin)
+        resp = self.query("""
+        mutation add_book {
+            BookCreate(data: {author: "Karl Marx", title: "Das Kapital", ISBN: "123456789", restricted: false}) {
+                author
+                title
+                ISBN
+                restricted
+              }
+            }""")
+        ret = {"data": {
+            "BookCreate": {"author": "Karl Marx", "title": "Das Kapital", "ISBN": "123456789", "restricted": False}}
+        }
+        self.assertResponseNoErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+        resp = self.query("""
+                mutation add_book {
+                    BookCreate(data: {author: "Ayn Rand", title: "Atlas shrugged", ISBN: "7734", restricted: true}) {
+                        author
+                        title
+                        ISBN
+                        restricted
+                        borrowed
+                      }
+                    }""")
+        ret = {"data": {
+            "BookCreate": {"author": "Ayn Rand", "title": "Atlas shrugged", "ISBN": "7734", "restricted": True,
+                           "borrowed": False}}
+        }
+        self.assertResponseNoErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+        self._client.logout()
+
+
     def test_admin(self):
         admin = User.objects.create_user(username="admin", email="admin@example.com", is_staff=True)
         self._client.login(user=admin)
@@ -377,36 +413,10 @@ class Test(GraphQLTestCase):
         # ignore the order of the elements
         data = json.loads(resp.content)
         self.assertJSONEqualArraysShuffled(data, ret)
-        resp = self.query("""
-        mutation add_book {
-            BookCreate(data: {author: "Karl Marx", title: "Das Kapital", ISBN: "123456789", restricted: false}) {
-                author
-                title
-                ISBN
-                restricted
-              }
-            }""")
-        ret = {"data": {
-            "BookCreate": {"author": "Karl Marx", "title": "Das Kapital", "ISBN": "123456789", "restricted": False}}
-        }
-        self.assertResponseNoErrors(resp)
-        self.assertJSONEqual(resp.content, ret)
-        resp = self.query("""
-                mutation add_book {
-                    BookCreate(data: {author: "Ayn Rand", title: "Atlas shrugged", ISBN: "7734", restricted: true}) {
-                        author
-                        title
-                        ISBN
-                        restricted
-                        borrowed
-                      }
-                    }""")
-        ret = {"data": {
-            "BookCreate": {"author": "Ayn Rand", "title": "Atlas shrugged", "ISBN": "7734", "restricted": True,
-                           "borrowed": False}}
-        }
-        self.assertResponseNoErrors(resp)
-        self.assertJSONEqual(resp.content, ret)
+        self._client.logout()
+        self._prepare_books()
+        self._client.login(user=admin)
+
         resp = self.query("""
             mutation lend_book {
               BookLend(id: 1, data: {}) {
@@ -496,126 +506,7 @@ class Test(GraphQLTestCase):
         self.client.logout()
 
     def test_notAdmin(self):
-        admin = User.objects.create_user(username="admin", email="admin@example.com", is_staff=True)
-        self._client.login(user=admin)
-        resp = self.query("""
-                query{
-                  __objects{
-                    name
-                    pk_field
-                    actions{
-                      name
-                      permitted
-                      deny_reason
-                      retry_in
-                    }
-                  }
-                  __actions{
-                    name
-                    permitted
-                    deny_reason
-                    retry_in
-                  }
-                }
-                """)
-        ret = {
-            "data": {
-                "__objects": [
-                    {
-                        "name": "Book",
-                        "pk_field": "id",
-                        "actions": [
-                            {
-                                "name": "BookList",
-                                "permitted": True,
-                                "deny_reason": None,
-                                "retry_in": None
-                            },
-                            {
-                                "name": "BookCreate",
-                                "permitted": True,
-                                "deny_reason": None,
-                                "retry_in": None
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Subscription",
-                        "pk_field": "id",
-                        "actions": [
-                            {
-                                "name": "SubscriptionList",
-                                "permitted": True,
-                                "deny_reason": None,
-                                "retry_in": None
-                            },
-                            {
-                                "name": "SubscriptionCreate",
-                                "permitted": True,
-                                "deny_reason": None,
-                                "retry_in": None
-                            }
-                        ]
-                    },
-                    {
-                        "name": "User",
-                        "pk_field": "id",
-                        "actions": [
-                            {
-                                "name": "UserList",
-                                "permitted": True,
-                                "deny_reason": None,
-                                "retry_in": None
-                            },
-                            {
-                                "name": "UserCreate",
-                                "permitted": True,
-                                "deny_reason": None,
-                                "retry_in": None
-                            }
-                        ]
-                    }
-                ],
-                "__actions": []
-            }
-        }
-        self.assertResponseNoErrors(resp)
-
-        # ignore the order of the elements
-        data = json.loads(resp.content)
-        self.assertJSONEqualArraysShuffled(data, ret)
-        resp = self.query("""
-        mutation add_book {
-            BookCreate(data: {author: "Karl Marx", title: "Das Kapital", ISBN: "123456789", restricted: false}) {
-                author
-                title
-                ISBN
-                restricted
-              }
-            }""")
-        ret = {"data": {
-            "BookCreate": {"author": "Karl Marx", "title": "Das Kapital", "ISBN": "123456789", "restricted": False}}
-        }
-        self.assertResponseNoErrors(resp)
-        self.assertJSONEqual(resp.content, ret)
-        resp = self.query("""
-                mutation add_book {
-                    BookCreate(data: {author: "Ayn Rand", title: "Atlas shrugged", ISBN: "7734", restricted: true}) {
-                        author
-                        title
-                        ISBN
-                        restricted
-                        borrowed
-                      }
-                    }""")
-        ret = {"data": {
-            "BookCreate": {"author": "Ayn Rand", "title": "Atlas shrugged", "ISBN": "7734", "restricted": True,
-                           "borrowed": False}}
-        }
-        self.assertResponseNoErrors(resp)
-        self.assertJSONEqual(resp.content, ret)
-        self._client.logout()
-
+        self._prepare_books()
         user = User.objects.create_user(username="common", email="common@example.com")
         self._client.login(user=user)
         resp = self.query("""
@@ -764,180 +655,57 @@ class Test(GraphQLTestCase):
         self.client.logout()
 
     def test_anonymous(self):
-        admin = User.objects.create_user(username="admin", email="admin@example.com", is_staff=True)
-        self._client.login(user=admin)
-        resp = self.query("""
-                        query{
-                          __objects{
-                            name
-                            pk_field
-                            actions{
-                              name
-                              permitted
-                              deny_reason
-                              retry_in
-                            }
-                          }
-                          __actions{
-                            name
-                            permitted
-                            deny_reason
-                            retry_in
-                          }
-                        }
-                        """)
-        ret = {
-            "data": {
-                "__objects": [
-                    {
-                        "name": "Book",
-                        "pk_field": "id",
-                        "actions": [
-                            {
-                                "name": "BookList",
-                                "permitted": True,
-                                "deny_reason": None,
-                                "retry_in": None
-                            },
-                            {
-                                "name": "BookCreate",
-                                "permitted": True,
-                                "deny_reason": None,
-                                "retry_in": None
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Subscription",
-                        "pk_field": "id",
-                        "actions": [
-                            {
-                                "name": "SubscriptionList",
-                                "permitted": True,
-                                "deny_reason": None,
-                                "retry_in": None
-                            },
-                            {
-                                "name": "SubscriptionCreate",
-                                "permitted": True,
-                                "deny_reason": None,
-                                "retry_in": None
-                            }
-                        ]
-                    },
-                    {
-                        "name": "User",
-                        "pk_field": "id",
-                        "actions": [
-                            {
-                                "name": "UserList",
-                                "permitted": True,
-                                "deny_reason": None,
-                                "retry_in": None
-                            },
-                            {
-                                "name": "UserCreate",
-                                "permitted": True,
-                                "deny_reason": None,
-                                "retry_in": None
-                            }
-                        ]
-                    }
-                ],
-                "__actions": []
-            }
-        }
-        self.assertResponseNoErrors(resp)
-
-        # ignore the order of the elements
-        data = json.loads(resp.content)
-        self.assertJSONEqualArraysShuffled(data, ret)
-
-        resp = self.query("""
-                mutation add_book {
-                    BookCreate(data: {author: "Karl Marx", title: "Das Kapital", ISBN: "123456789", restricted: false}) {
-                        author
-                        title
-                        ISBN
-                        restricted
-                      }
-                    }""")
-        ret = {"data": {
-            "BookCreate": {"author": "Karl Marx", "title": "Das Kapital", "ISBN": "123456789", "restricted": False}}
-        }
-        self.assertResponseNoErrors(resp)
-        self.assertJSONEqual(resp.content, ret)
-        resp = self.query("""
-                        mutation add_book {
-                            BookCreate(data: {author: "Ayn Rand", title: "Atlas shrugged", ISBN: "7734", restricted: true}) {
-                                author
-                                title
-                                ISBN
-                                restricted
-                                borrowed
-                              }
-                            }""")
-        ret = {"data": {
-            "BookCreate": {"author": "Ayn Rand", "title": "Atlas shrugged", "ISBN": "7734", "restricted": True,
-                           "borrowed": False}}
-        }
-        self.assertResponseNoErrors(resp)
-        self.assertJSONEqual(resp.content, ret)
-        self._client.logout()
-
-        resp = self.query("""
-                            mutation lend_book {
-                              BookLend(id: 1, data: {}) {
-                                id
-                                title
-                                author
-                                borrowed
-                              }
-                            }""")
+        self._prepare_books()
+        resp = self.query("""mutation lend_book {
+                                      BookLend(id: 1, data: {}) {
+                                        id
+                                        title
+                                        author
+                                        borrowed
+                                      }
+                                    }""")
         ret = {"errors": [
-            {"message": "You do not have permission to access this.", "locations": [{"line": 3, "column": 31}],
+            {"message": "You do not have permission to access this.", "locations": [{"line": 2, "column": 39}],
              "path": ["BookLend"]}], "data": None}
         self.assertResponseHasErrors(resp)
         self.assertJSONEqual(resp.content, ret)
 
-        resp = self.query("""
-                            mutation lend_book {
-                              BookLend(id: 2, data: {}) {
-                                id
-                                title
-                                author
-                                borrowed
-                              }
-                            }""")
+        resp = self.query("""mutation lend_book {
+                                      BookLend(id: 2, data: {}) {
+                                        id
+                                        title
+                                        author
+                                        borrowed
+                                      }
+                                    }""")
         ret = {"errors": [
-            {"message": "You do not have permission to access this.", "locations": [{"line": 3, "column": 31}],
+            {"message": "You do not have permission to access this.", "locations": [{"line": 2, "column": 39}],
              "path": ["BookLend"]}], "data": None}
         self.assertResponseHasErrors(resp)
         self.assertJSONEqual(resp.content, ret)
         resp = self.query("""
-                                            query read_book {
-                                              BookRead(id: 1) {
-                                                id
-                                                title
-                                                author
-                                                borrowed
-                                              }
-                                            }""")
+                                                    query read_book {
+                                                      BookRead(id: 1) {
+                                                        id
+                                                        title
+                                                        author
+                                                        borrowed
+                                                      }
+                                                    }""")
         ret = {"data": {
             "BookRead": {"id": 1, "title": "Das Kapital", "author": "Karl Marx", "borrowed": False}}
         }
         self.assertResponseNoErrors(resp)
         self.assertJSONEqual(resp.content, ret)
         resp = self.query("""query read_book {
-                                       BookRead(id: 2) {
-                                         id
-                                         title
-                                         author
-                                         borrowed
-                                       }
-                                    }""")
-        ret = {"errors": [{"message": "Restricted books cannot be accessed.", "locations": [{"line": 2, "column": 40}],
+                                               BookRead(id: 2) {
+                                                 id
+                                                 title
+                                                 author
+                                                 borrowed
+                                               }
+                                            }""")
+        ret = {"errors": [{"message": "Restricted books cannot be accessed.", "locations": [{"line": 2, "column": 48}],
                            "path": ["BookRead"]}], "data": None}
         self.assertResponseHasErrors(resp)
         self.assertJSONEqual(resp.content, ret)
-        self.client.logout()
