@@ -1,5 +1,8 @@
+import json
+
 from .objects import schema
 from tests.graphql.graphql_test_utils import GraphQLTestCase
+from django.contrib.auth.models import User
 
 
 class Test(GraphQLTestCase):
@@ -221,6 +224,7 @@ class Test(GraphQLTestCase):
       username: String
     }
     """
+    # Anonymous
     REF_META_SCHEMA = {
         "data": {
             "__objects": [
@@ -230,14 +234,14 @@ class Test(GraphQLTestCase):
                     "actions": [
                         {
                             "name": "BookList",
-                            "permitted": True,
-                            "deny_reason": None,
+                            "permitted": False,
+                            "deny_reason": "You do not have permission to access this.",
                             "retry_in": None
                         },
                         {
                             "name": "BookCreate",
-                            "permitted": True,
-                            "deny_reason": None,
+                            "permitted": False,
+                            "deny_reason": "You do not have permission to access this.",
                             "retry_in": None
                         }
                     ]
@@ -248,14 +252,14 @@ class Test(GraphQLTestCase):
                     "actions": [
                         {
                             "name": "SubscriptionList",
-                            "permitted": True,
-                            "deny_reason": None,
+                            "permitted": False,
+                            "deny_reason": "You do not have permission to access this.",
                             "retry_in": None
                         },
                         {
                             "name": "SubscriptionCreate",
-                            "permitted": True,
-                            "deny_reason": None,
+                            "permitted": False,
+                            "deny_reason": "You do not have permission to access this.",
                             "retry_in": None
                         }
                     ]
@@ -283,4 +287,189 @@ class Test(GraphQLTestCase):
         }
     }
 
+    def test_admin(self):
+        admin = User.objects.create_user(username="admin", email="admin@example.com", is_staff=True)
+        self._client.login(user=admin)
+        resp = self.query("""
+                query{
+                  __objects{
+                    name
+                    pk_field
+                    actions{
+                      name
+                      permitted
+                      deny_reason
+                      retry_in
+                    }
+                  }
+                  __actions{
+                    name
+                    permitted
+                    deny_reason
+                    retry_in
+                  }
+                }
+                """)
+        ret = {
+            "data": {
+                "__objects": [
+                    {
+                        "name": "Book",
+                        "pk_field": "id",
+                        "actions": [
+                            {
+                                "name": "BookList",
+                                "permitted": True,
+                                "deny_reason": None,
+                                "retry_in": None
+                            },
+                            {
+                                "name": "BookCreate",
+                                "permitted": True,
+                                "deny_reason": None,
+                                "retry_in": None
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Subscription",
+                        "pk_field": "id",
+                        "actions": [
+                            {
+                                "name": "SubscriptionList",
+                                "permitted": True,
+                                "deny_reason": None,
+                                "retry_in": None
+                            },
+                            {
+                                "name": "SubscriptionCreate",
+                                "permitted": True,
+                                "deny_reason": None,
+                                "retry_in": None
+                            }
+                        ]
+                    },
+                    {
+                        "name": "User",
+                        "pk_field": "id",
+                        "actions": [
+                            {
+                                "name": "UserList",
+                                "permitted": True,
+                                "deny_reason": None,
+                                "retry_in": None
+                            },
+                            {
+                                "name": "UserCreate",
+                                "permitted": True,
+                                "deny_reason": None,
+                                "retry_in": None
+                            }
+                        ]
+                    }
+                ],
+                "__actions": []
+            }
+        }
+        self.assertResponseNoErrors(resp)
 
+        # ignore the order of the elements
+        data = json.loads(resp.content)
+        self.assertJSONEqualArraysShuffled(data, ret)
+        self.client.logout()
+
+
+    def test_notAdmin(self):
+        user = User.objects.create_user(username="common", email="common@example.com")
+        self._client.login(user=user)
+        resp = self.query("""
+                query{
+                  __objects{
+                    name
+                    pk_field
+                    actions{
+                      name
+                      permitted
+                      deny_reason
+                      retry_in
+                    }
+                  }
+                  __actions{
+                    name
+                    permitted
+                    deny_reason
+                    retry_in
+                  }
+                }
+                """)
+        ret = {
+            "data": {
+                "__objects": [
+                    {
+                        "name": "Book",
+                        "pk_field": "id",
+                        "actions": [
+                            {
+                                "name": "BookList",
+                                "permitted": True,
+                                "deny_reason": None,
+                                "retry_in": None
+                            },
+                            {
+                                "name": "BookCreate",
+                                "permitted": False,
+                                "deny_reason": "You do not have permission to access this.",
+                                "retry_in": None
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Subscription",
+                        "pk_field": "id",
+                        "actions": [
+                            {
+                                "name": "SubscriptionList",
+                                "permitted": False,
+                                "deny_reason": "You do not have permission to access this.",
+                                "retry_in": None
+                            },
+                            {
+                                "name": "SubscriptionCreate",
+                                "permitted": False,
+                                "deny_reason": "You do not have permission to access this.",
+                                "retry_in": None
+                            }
+                        ]
+                    },
+                    {
+                        "name": "User",
+                        "pk_field": "id",
+                        "actions": [
+                            {
+                                "name": "UserList",
+                                "permitted": False,
+                                "deny_reason": "You do not have permission to access this.",
+                                "retry_in": None
+                            },
+                            {
+                                "name": "UserCreate",
+                                "permitted": False,
+                                "deny_reason": "You do not have permission to access this.",
+                                "retry_in": None
+                            }
+                        ]
+                    }
+                ],
+                "__actions": []
+            }
+        }
+
+        self.assertResponseNoErrors(resp)
+
+        # ignore the order of the elements
+        data = json.loads(resp.content)
+        self.assertJSONEqualArraysShuffled(data, ret)
+        self.client.logout()
+
+    def test_anonymous(self):
+        pass

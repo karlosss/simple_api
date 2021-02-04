@@ -3,6 +3,7 @@ from simple_api.adapters.utils import generate
 from simple_api.django_object.django_object import DjangoObject
 from simple_api.django_object.permissions import IsAuthenticated, DjangoPermission
 from simple_api.django_object.actions import CreateAction, UpdateAction, DeleteAction, DetailAction, ListAction
+from simple_api.object.permissions import Or, And
 
 from tests.graphql.graphql_test_utils import build_patterns
 
@@ -34,17 +35,22 @@ def lend_book(request, params, **kwargs):
 
 class Book(DjangoObject):
     model = BookModel
-    create_action = CreateAction()
+    create_action = CreateAction(permissions=IsAdmin)
     update_action = UpdateAction(permissions=IsAdmin)
     delete_action = DeleteAction(permissions=IsAdmin)
+    list_action = ListAction(permissions=IsAuthenticated)
     custom_actions = {
         "Lend": UpdateAction(exec_fn=lend_book,
-                             permissions=IsNotRestricted),
+                             permissions=Or(And(IsAuthenticated, IsNotRestricted), IsAdmin))
     }
 
 
 class Subscription(DjangoObject):
     model = SubscriptionModel
+    create_action = CreateAction(permissions=IsAdmin)
+    update_action = UpdateAction(permissions=IsAdmin)
+    list_action = ListAction(permissions=IsAdmin)
+    delete_action = DeleteAction(permissions=IsAdmin)
 
 
 class User(DjangoObject):
