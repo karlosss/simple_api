@@ -25,13 +25,11 @@ class IsNotRestricted(DjangoPermission):
         return "Restricted books cannot be accessed."
 
 
-def lend_book(request, params, **kwargs):
-    if kwargs["obj"].borrowed:
-        kwargs["obj"].borrowed = False
-    else:
-        kwargs["obj"].borrowed = True
-    kwargs["obj"].save()
-    return kwargs["obj"]
+def lend_book(request, params, obj, **kwargs):
+    # Function to lend book or return it, based on its current state
+    obj.borrowed = not obj.borrowed
+    obj.save()
+    return obj
 
 
 def read_book(request, params, **kwargs):
