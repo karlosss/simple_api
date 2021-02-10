@@ -1,5 +1,6 @@
 from simple_api.object.function import TemplateFunction
 from simple_api.object.permissions import build_permissions_fn
+from simple_api.object.validators import build_validation_fn
 
 
 class ToActionMixin:
@@ -25,12 +26,14 @@ class SetReferencesMixin:
 
 
 class Action(SetReferencesMixin, ToActionMixin):
-    def __init__(self, parameters=None, data=None, return_value=None, exec_fn=None, permissions=None, **kwargs):
+    def __init__(self, parameters=None, data=None, return_value=None, exec_fn=None, permissions=None, validators=None,
+                 **kwargs):
         self.parameters = parameters or {}
         self.data = data or {}
         self.return_value = return_value
         self.exec_fn = exec_fn
         self.permissions = permissions or ()
+        self.validators = validators or ()
         self.kwargs = kwargs
         self._fn = None
 
@@ -48,6 +51,7 @@ class Action(SetReferencesMixin, ToActionMixin):
     def get_fn(self):
         if self._fn is None:
             self._fn = TemplateFunction(self.exec_fn)
+            self._fn.set_validation_hook(build_validation_fn(self.validators))
             self._fn.set_permissions_hook(build_permissions_fn(self.permissions))
         return self._fn
 
@@ -56,6 +60,9 @@ class Action(SetReferencesMixin, ToActionMixin):
 
     def has_permission(self, *args, **kwargs):
         return build_permissions_fn(self.permissions)(*args, **kwargs)
+
+    def is_valid(self, *args, **kwargs):
+        return build_validation_fn(self.validators)(*args, **kwargs)
 
     def convert(self, adapter, **kwargs):
         return adapter.convert_action(self, **kwargs)
