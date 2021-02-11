@@ -17,18 +17,16 @@ def default_resolver(request, parent_val, params, **kwargs):
 
 class Type(ConvertMixin):
     def __init__(self, nullable=False, default=None, parameters=None, resolver=None,
-                 nullable_if_input=None, default_if_input=None, permissions=None, **kwargs):
+                 nullable_if_input=None, default_if_input=None, **kwargs):
         self.parent_class = None
         self._nullable = nullable
         self._default = default
         self.parameters = parameters or {}
-        self.permissions = permissions
         self._nullable_if_input = nullable_if_input
         self._default_if_input = default_if_input
         self.kwargs = kwargs
         self.resolver = TemplateFunction(resolver or default_resolver)\
-            .set_default_hook(lambda *a, **kwa: self._default)\
-            .set_permissions_hook(build_permissions_fn(self.permissions))
+            .set_default_hook(lambda *a, **kwa: self._default)
 
     def set_parent_class(self, cls):
         self.parent_class = cls
