@@ -2,8 +2,8 @@ from inspect import isclass
 
 from simple_api.constants import OBJECT_SELF_REFERENCE
 from simple_api.object.function import TemplateFunction
-from simple_api.object.permissions import build_permissions_fn
 from simple_api.object.registry import object_storage
+from simple_api.object.validators import build_validation_fn
 
 
 class ConvertMixin:
@@ -17,16 +17,18 @@ def default_resolver(request, parent_val, params, **kwargs):
 
 class Type(ConvertMixin):
     def __init__(self, nullable=False, default=None, parameters=None, resolver=None,
-                 nullable_if_input=None, default_if_input=None, **kwargs):
+                 nullable_if_input=None, default_if_input=None, validators=None, **kwargs):
         self.parent_class = None
         self._nullable = nullable
         self._default = default
         self.parameters = parameters or {}
         self._nullable_if_input = nullable_if_input
         self._default_if_input = default_if_input
+        self.validators = validators or ()
         self.kwargs = kwargs
         self.resolver = TemplateFunction(resolver or default_resolver)\
-            .set_default_hook(lambda *a, **kwa: self._default)
+            .set_default_hook(lambda *a, **kwa: self._default)\
+            .set_validation_hook(build_validation_fn(self.validators))
 
     def set_parent_class(self, cls):
         self.parent_class = cls
