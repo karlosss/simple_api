@@ -43,7 +43,7 @@ class FieldValidator:
         raise NotImplementedError()
 
     def error_message(self, **kwargs):
-        return "Validation failed in field {}".format(self.field_name)
+        return "Validation failed in FieldValidator"
 
 
 class ActionValidator:
@@ -51,10 +51,10 @@ class ActionValidator:
         pass
 
     def is_valid(self, **kwargs):
-        return self.validation_statement(kwargs["params"]["data"], **kwargs)
+        return self.validation_statement(**kwargs)
 
-    def validation_statement(self, value, **kwargs):
+    def validation_statement(self, **kwargs):
         raise NotImplementedError()
 
     def error_message(self, **kwargs):
-        return "Validation failed in action"
+        return "Validation failed in ActionValidator"
