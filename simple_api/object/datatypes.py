@@ -3,7 +3,6 @@ from inspect import isclass
 from simple_api.constants import OBJECT_SELF_REFERENCE
 from simple_api.object.function import TemplateFunction
 from simple_api.object.registry import object_storage
-from simple_api.object.validators import build_validation_fn
 
 
 class ConvertMixin:
@@ -24,11 +23,10 @@ class Type(ConvertMixin):
         self.parameters = parameters or {}
         self._nullable_if_input = nullable_if_input
         self._default_if_input = default_if_input
-        self.validators = validators or ()
+        self.validators = validators
         self.kwargs = kwargs
         self.resolver = TemplateFunction(resolver or default_resolver)\
-            .set_default_hook(lambda *a, **kwa: self._default)\
-            .set_validation_hook(build_validation_fn(self.validators))
+            .set_default_hook(lambda *a, **kwa: self._default)
 
     def set_parent_class(self, cls):
         self.parent_class = cls
