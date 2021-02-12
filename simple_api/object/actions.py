@@ -19,7 +19,9 @@ class SetReferencesMixin:
 
     def set_parent_class(self, cls):
         self.parent_class = cls
-        for field in {**self.parameters, **self.data}.values():
+        for field in self.parameters.values():
+            field.set_parent_class(cls)
+        for field in self.data.values():
             field.set_parent_class(cls)
         if self.return_value is not None:
             self.return_value.set_parent_class(cls)
