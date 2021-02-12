@@ -29,6 +29,7 @@ class TemplateFunction:
         return self
 
     def convert(self, adapter, **kwargs):
+        """Converts template into function which checks permissions and validation before executing"""
         def fn(*args, **kwargs):
             self.permissions_hook(*args, **kwargs)
             self.validation_hook(*args, **kwargs)
