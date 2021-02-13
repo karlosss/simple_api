@@ -23,7 +23,10 @@ class Type(ConvertMixin):
         self.parameters = parameters or {}
         self._nullable_if_input = nullable_if_input
         self._default_if_input = default_if_input
-        self.validators = validators
+        if not isinstance(validators, (tuple, list)) and validators is not None:
+            self.validators = validators,
+        else:
+            self.validators = validators
         self.kwargs = kwargs
         self.resolver = TemplateFunction(resolver or default_resolver)\
             .set_default_hook(lambda *a, **kwa: self._default)

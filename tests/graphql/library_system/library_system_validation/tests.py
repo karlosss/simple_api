@@ -118,9 +118,11 @@ class Test(GraphQLTestCase):
       BookDetail(id: Int!): Book!
       BookList(filters: BookFiltersInput): BookList!
       BookGetById(id: Int!): Book!
+      BookGetById2(id: Int!): Book!
       __objects: [ObjectInfo!]!
       __actions: [ActionInfo!]!
-    }"""
+    }
+    """
 
     REF_META_SCHEMA = {
         "data": {
@@ -143,6 +145,12 @@ class Test(GraphQLTestCase):
                         },
                         {
                             "name": "BookGetById",
+                            "permitted": True,
+                            "deny_reason": None,
+                            "retry_in": None
+                        },
+                        {
+                            "name": "BookGetById2",
                             "permitted": True,
                             "deny_reason": None,
                             "retry_in": None

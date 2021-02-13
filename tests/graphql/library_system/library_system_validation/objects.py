@@ -45,10 +45,15 @@ def get_by_id(**kwargs):
 
 class Book(DjangoObject):
     model = BookModel
-    custom_actions = {"getById": Action(parameters={"id": IntegerType(validators=(NotNegative, NotZero))},
-                      return_value=ObjectType("self"),
-                      validators=ExistingNotRestrictedBook,
-                      exec_fn=get_by_id)}
+    custom_actions = {
+        "getById": Action(parameters={"id": IntegerType(validators=(NotNegative, NotZero))},
+                          return_value=ObjectType("self"),
+                          validators=ExistingNotRestrictedBook,
+                          exec_fn=get_by_id),
+        "getById2": Action(parameters={"id": IntegerType(validators=NotNegative)},
+                           return_value=ObjectType("self"),
+                           validators=ExistingNotRestrictedBook,
+                           exec_fn=get_by_id)}
 
 
 schema = generate(GraphQLAdapter)

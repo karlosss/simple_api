@@ -20,12 +20,12 @@ def build_validation_fn(action_validators, field_validators):
             instantiated_validators.append(cls_or_inst())
         else:
             instantiated_validators.append(cls_or_inst)
-    for tup_of_validators in field_validators:
-        for validator in tup_of_validators[1]:
+    for field_validators_key, field_validators_values in field_validators.items():
+        for validator in field_validators_values:
             if isclass(validator):
-                instantiated_validators.append((tup_of_validators[0], validator()))
+                instantiated_validators.append((field_validators_key, validator()))
             else:
-                instantiated_validators.append((tup_of_validators[0], validator))
+                instantiated_validators.append((field_validators_key, validator))
 
     def fn(**kwargs):
         for valid in instantiated_validators:
@@ -52,7 +52,7 @@ class FieldValidator:
 
     def validation_statement(self, value, **kwargs):
         """Function to validate input value, True -> input is valid, False -> invalid"""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def error_message(self, **kwargs):
         """Message to return in API when validation fails"""
@@ -66,7 +66,7 @@ class ActionValidator:
 
     def validation_statement(self, **kwargs):
         """Function to validate action - called directly as no value argument needs to be extracted"""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def error_message(self, **kwargs):
         """Message to return in API when validation fails"""

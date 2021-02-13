@@ -37,11 +37,9 @@ class Action(SetReferencesMixin, ToActionMixin):
         self.permissions = permissions or ()
         self.action_validators = validators or ()
 
-        # all field validators are read from argument and restructured into [("parameter", (validator1, validator2...))]
-        self.field_validators = []
-        if parameters is not None:
-            self.field_validators = [(x, parameters[x].validators) for x in parameters
-                                     if parameters[x].validators is not None]
+        # all field validators are read from argument and restructured into {"parameter": (validator1, validator2...)}
+        self.field_validators = {name: param.validators for name, param
+                                 in {**self.parameters, **self.data}.items() if param.validators is not None}
 
         self.kwargs = kwargs
         self._fn = None
