@@ -38,8 +38,10 @@ class Action(SetReferencesMixin, ToActionMixin):
         self.action_validators = validators or ()
 
         # all field validators are read from argument and restructured into {"parameter": (validator1, validator2...)}
-        self.field_validators = {name: param.validators for name, param
-                                 in {**self.parameters, **self.data}.items() if param.validators is not None}
+        self.parameters_validators = {name: param.validators for name, param
+                                      in self.parameters.items() if param.validators is not None}
+        self.data_validators = {name: value.validators for name, value
+                                in self.data.items() if value.validators is not None}
 
         self.kwargs = kwargs
         self._fn = None
@@ -58,7 +60,7 @@ class Action(SetReferencesMixin, ToActionMixin):
     def get_fn(self):
         if self._fn is None:
             self._fn = TemplateFunction(self.exec_fn)
-            self._fn.set_validation_hook(build_validation_fn(self.action_validators, self.field_validators))
+            self._fn.set_validation_hook(build_validation_fn(self.action_validators, self.parameters_validators, self.data_validators))
             self._fn.set_permissions_hook(build_permissions_fn(self.permissions))
         return self._fn
 
@@ -67,9 +69,6 @@ class Action(SetReferencesMixin, ToActionMixin):
 
     def has_permission(self, *args, **kwargs):
         return build_permissions_fn(self.permissions)(*args, **kwargs)
-
-    def is_valid(self, *args, **kwargs):
-        return build_validation_fn(self.action_validators, self.field_validators)(*args, **kwargs)
 
     def convert(self, adapter, **kwargs):
         return adapter.convert_action(self, **kwargs)
