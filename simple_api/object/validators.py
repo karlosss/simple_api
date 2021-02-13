@@ -59,8 +59,6 @@ class Validator:
     Base class for input field validation, validation itself is done withing validation_statement(self, value,
     **kwargs)
     """
-    def __init__(self):
-        pass
 
     def validation_statement(self, request, value=None, **kwargs):
         """Function to validate input value, True -> input is valid, False -> invalid"""
