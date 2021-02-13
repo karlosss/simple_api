@@ -23,18 +23,18 @@ def build_validation_fn(action_validators, parameter_validators, data_validators
             ins_action_validators.append(cls_or_inst())
         else:
             ins_action_validators.append(cls_or_inst)
-    for parameter_validators_key, parameter_validators_values in parameter_validators.items():
-        for validator in parameter_validators_values:
+    for parameter_field, parameter_validators in parameter_validators.items():
+        for validator in parameter_validators:
             if isclass(validator):
-                ins_parameter_validators.setdefault(parameter_validators_key, []).append(validator())
+                ins_parameter_validators.setdefault(parameter_field, []).append(validator())
             else:
-                ins_parameter_validators.setdefault(parameter_validators_key, []).append(validator)
-    for data_validators_key, data_validators_values in data_validators.items():
-        for validator in data_validators_values:
+                ins_parameter_validators.setdefault(parameter_field, []).append(validator)
+    for data_field, data_validators in data_validators.items():
+        for validator in data_validators:
             if isclass(validator):
-                ins_data_validators.setdefault(data_validators_key, []).append(validator())
+                ins_data_validators.setdefault(data_field, []).append(validator())
             else:
-                ins_data_validators.setdefault(data_validators_key, []).append(validator)
+                ins_data_validators.setdefault(data_field, []).append(validator)
 
     def fn(**kwargs):
         # Action validators
