@@ -3,6 +3,7 @@ from inspect import isclass
 from simple_api.constants import OBJECT_SELF_REFERENCE
 from simple_api.object.function import TemplateFunction
 from simple_api.object.registry import object_storage
+from simple_api.utils import ensure_tuple
 
 
 class ConvertMixin:
@@ -23,10 +24,7 @@ class Type(ConvertMixin):
         self.parameters = parameters or {}
         self._nullable_if_input = nullable_if_input
         self._default_if_input = default_if_input
-        if not isinstance(validators, (tuple, list)) and validators is not None:
-            self.validators = validators,
-        else:
-            self.validators = validators
+        self.validators = ensure_tuple(validators)
         self.kwargs = kwargs
         self.resolver = TemplateFunction(resolver or default_resolver)\
             .set_default_hook(lambda *a, **kwa: self._default)

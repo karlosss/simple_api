@@ -38,10 +38,10 @@ class Action(SetReferencesMixin, ToActionMixin):
         self.action_validators = validators or ()
 
         # all field validators are read from argument and restructured into {"parameter": (validator1, validator2...)}
-        self.parameters_validators = {name: param.validators for name, param
-                                      in self.parameters.items() if param.validators is not None}
-        self.data_validators = {name: value.validators for name, value
-                                in self.data.items() if value.validators is not None}
+        self.parameters_validators = {param_name: param.validators or ()
+                                      for param_name, param in self.parameters.items()}
+        self.data_validators = {field_name: field.validators or ()
+                                for field_name, field in self.data.items()}
 
         self.kwargs = kwargs
         self._fn = None

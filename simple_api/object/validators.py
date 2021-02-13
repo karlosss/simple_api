@@ -1,4 +1,5 @@
 from inspect import isclass
+from simple_api.utils import ensure_tuple
 
 
 def build_validation_fn(action_validators, parameter_validators, data_validators):
@@ -10,8 +11,7 @@ def build_validation_fn(action_validators, parameter_validators, data_validators
     if action_validators is None and parameter_validators is None and data_validators is None:
         return None
 
-    if not isinstance(action_validators, (list, tuple)):
-        action_validators = action_validators,
+    action_validators = ensure_tuple(action_validators)
 
     ins_action_validators = []
     ins_parameter_validators = {}
@@ -42,14 +42,14 @@ def build_validation_fn(action_validators, parameter_validators, data_validators
             if not valid.validation_statement(**kwargs):
                 raise ValueError(valid.error_message(**kwargs))
         # Parameters validators
-        for key, valid in ins_parameter_validators.items():
+        for param_field, valid in ins_parameter_validators.items():
             for single_valid in valid:
-                if not single_valid.validation_statement(value=kwargs["params"][key], **kwargs):
+                if not single_valid.validation_statement(kwargs["request"], value=kwargs["params"][param_field]):
                     raise ValueError(single_valid.error_message(**kwargs))
         # Data validators
-        for key, valid in ins_data_validators.items():
+        for data_field, valid in ins_data_validators.items():
             for single_valid in valid:
-                if not single_valid.validation_statement(value=kwargs["params"]["data"][key], **kwargs):
+                if not single_valid.validation_statement(kwargs["request"], value=kwargs["params"]["data"][data_field]):
                     raise ValueError(single_valid.error_message(**kwargs))
     return fn
 
