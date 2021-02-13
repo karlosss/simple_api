@@ -87,6 +87,10 @@ class Test(GraphQLTestCase):
       ordering: [String!]
     }
     
+    input BookGetById2Input {
+      Title: String!
+    }
+    
     type BookList {
       count: Int!
       data(limit: Int = 20, offset: Int = 0): [Book!]!
@@ -118,11 +122,10 @@ class Test(GraphQLTestCase):
       BookDetail(id: Int!): Book!
       BookList(filters: BookFiltersInput): BookList!
       BookGetById(id: Int!): Book!
-      BookGetById2(id: Int!): Book!
+      BookGetById2(id: Int!, data: BookGetById2Input!): Book!
       __objects: [ObjectInfo!]!
       __actions: [ActionInfo!]!
-    }
-    """
+    }"""
 
     REF_META_SCHEMA = {
         "data": {
@@ -305,6 +308,80 @@ class Test(GraphQLTestCase):
                 }
             ],
             "data": None
+        }
+        self.assertResponseHasErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+        resp = self.query("""query getByID2 {
+          BookGetById2(id: 1, data: {Title: "Kapital test string"}) {
+            id
+            author
+            title
+          }
+        }""")
+        ret = {
+          "data": {
+            "BookGetById2": {
+              "id": 1,
+              "author": "Karl Marx",
+              "title": "Das Kapital"
+            }
+          }
+        }
+        self.assertResponseNoErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+
+        resp = self.query("""query getByID2 {
+                  BookGetById2(id: -1, data: {Title: "Kapital test string"}) {
+                    id
+                    author
+                    title
+                    shelf
+                  }
+                }""")
+        ret = {
+          "errors": [
+            {
+              "message": "Validation failed in NotNegative",
+              "locations": [
+                {
+                  "line": 2,
+                  "column": 19
+                }
+              ],
+              "path": [
+                "BookGetById2"
+              ]
+            }
+          ],
+          "data": None
+        }
+        self.assertResponseHasErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+
+        resp = self.query("""query getByID2 {
+                  BookGetById2(id: 1, data: {Title: "KO"}) {
+                    id
+                    author
+                    title
+                    shelf
+                  }
+                }""")
+        ret = {
+          "errors": [
+            {
+              "message": "Search term must be at least 4 characters",
+              "locations": [
+                {
+                  "line": 2,
+                  "column": 19
+                }
+              ],
+              "path": [
+                "BookGetById2"
+              ]
+            }
+          ],
+          "data": None
         }
         self.assertResponseHasErrors(resp)
         self.assertJSONEqual(resp.content, ret)
