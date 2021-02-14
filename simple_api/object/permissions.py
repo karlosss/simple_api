@@ -5,11 +5,6 @@ from simple_api.utils import ensure_tuple
 # instantiates permission classes (if they are not already, maybe due to get_fn injection) and builds a
 # function that raises if the permissions are not passed
 def build_permissions_fn(permissions):
-    if permissions is None:
-        return None
-
-    permissions = ensure_tuple(permissions)
-
     instantiated_permissions = []
     for cls_or_inst in permissions:
         if isclass(cls_or_inst) or isinstance(cls_or_inst, LogicalConnector):

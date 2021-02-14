@@ -8,11 +8,6 @@ def build_validation_fn(action_validators, parameter_validators, data_validators
     already instantiated. Action_validators can be a sigle validator, Field_validators a List of tuples
     (string, (validators...)) as prepared in object/actions.py
     """
-    if action_validators is None and parameter_validators is None and data_validators is None:
-        return None
-
-    action_validators = ensure_tuple(action_validators)
-
     ins_action_validators = []
     ins_parameter_validators = {}
     ins_data_validators = {}

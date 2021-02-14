@@ -1,6 +1,7 @@
 from simple_api.object.function import TemplateFunction
 from simple_api.object.permissions import build_permissions_fn
 from simple_api.object.validators import build_validation_fn
+from simple_api.utils import ensure_tuple
 
 
 class ToActionMixin:
@@ -34,14 +35,12 @@ class Action(SetReferencesMixin, ToActionMixin):
         self.data = data or {}
         self.return_value = return_value
         self.exec_fn = exec_fn
-        self.permissions = permissions or ()
-        self.action_validators = validators or ()
+        self.permissions = ensure_tuple(permissions)
+        self.action_validators = ensure_tuple(validators)
 
         # all field validators are read from argument and restructured into {"parameter": (validator1, validator2...)}
-        self.parameters_validators = {param_name: param.validators or ()
-                                      for param_name, param in self.parameters.items()}
-        self.data_validators = {field_name: field.validators or ()
-                                for field_name, field in self.data.items()}
+        self.parameters_validators = {param_name: param.validators for param_name, param in self.parameters.items()}
+        self.data_validators = {field_name: field.validators for field_name, field in self.data.items()}
 
         self.kwargs = kwargs
         self._fn = None
