@@ -37,15 +37,15 @@ def build_validation_fn(action_validators, parameter_validators, data_validators
             if not valid.validation_statement(**kwargs):
                 raise ValueError(valid.error_message(**kwargs))
         # Parameters validators
-        for param_field, valid in ins_parameter_validators.items():
-            for single_valid in valid:
-                if not single_valid.validation_statement(kwargs["request"], value=kwargs["params"][param_field]):
-                    raise ValueError(single_valid.error_message(**kwargs))
+        for param_field, validators in ins_parameter_validators.items():
+            for validator in validators:
+                if not validator.validation_statement(kwargs["request"], value=kwargs["params"][param_field]):
+                    raise ValueError(validator.error_message(**kwargs))
         # Data validators
-        for data_field, valid in ins_data_validators.items():
-            for single_valid in valid:
-                if not single_valid.validation_statement(kwargs["request"], value=kwargs["params"]["data"][data_field]):
-                    raise ValueError(single_valid.error_message(**kwargs))
+        for data_field, validators in ins_data_validators.items():
+            for validator in validators:
+                if not validator.validation_statement(kwargs["request"], value=kwargs["params"]["data"][data_field]):
+                    raise ValueError(validator.error_message(**kwargs))
     return fn
 
 
