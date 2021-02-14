@@ -65,3 +65,12 @@ class Storage(metaclass=StorageMeta):
 
     def reset(self):
         self.storage = {}
+
+
+def ensure_tuple(argument):
+    if argument is None:
+        return ()
+    if not isinstance(argument, (tuple, list)):
+        return argument,
+    else:
+        return argument

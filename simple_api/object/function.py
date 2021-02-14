@@ -10,11 +10,17 @@ class TemplateFunction:
     def __init__(self, main_hook):
         self.default_hook = lambda *args, **kwargs: None
         self.permissions_hook = lambda *args, **kwargs: None
+        self.validation_hook = lambda *args, **kwargs: None
         self.main_hook = main_hook
 
     def set_permissions_hook(self, hook):
         if hook is not None:
             self.permissions_hook = hook
+        return self
+
+    def set_validation_hook(self, hook):
+        if hook is not None:
+            self.validation_hook = hook
         return self
 
     def set_default_hook(self, hook):
@@ -23,8 +29,10 @@ class TemplateFunction:
         return self
 
     def convert(self, adapter, **kwargs):
+        """Converts template into function which checks permissions and validation before executing"""
         def fn(*args, **kwargs):
             self.permissions_hook(*args, **kwargs)
+            self.validation_hook(*args, **kwargs)
             result = self.main_hook(*args, **kwargs)
             if result is None:
                 return self.default_hook(*args, **kwargs)

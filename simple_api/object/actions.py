@@ -1,5 +1,7 @@
 from simple_api.object.function import TemplateFunction
 from simple_api.object.permissions import build_permissions_fn
+from simple_api.object.validators import build_validation_fn
+from simple_api.utils import ensure_tuple
 
 
 class ToActionMixin:
@@ -18,19 +20,28 @@ class SetReferencesMixin:
 
     def set_parent_class(self, cls):
         self.parent_class = cls
-        for field in {**self.parameters, **self.data}.values():
+        for field in self.parameters.values():
+            field.set_parent_class(cls)
+        for field in self.data.values():
             field.set_parent_class(cls)
         if self.return_value is not None:
             self.return_value.set_parent_class(cls)
 
 
 class Action(SetReferencesMixin, ToActionMixin):
-    def __init__(self, parameters=None, data=None, return_value=None, exec_fn=None, permissions=None, **kwargs):
+    def __init__(self, parameters=None, data=None, return_value=None, exec_fn=None, permissions=None, validators=None,
+                 **kwargs):
         self.parameters = parameters or {}
         self.data = data or {}
         self.return_value = return_value
         self.exec_fn = exec_fn
-        self.permissions = permissions or ()
+        self.permissions = ensure_tuple(permissions)
+        self.action_validators = ensure_tuple(validators)
+
+        # all field validators are read from argument and restructured into {"parameter": (validator1, validator2...)}
+        self.parameters_validators = {param_name: param.validators for param_name, param in self.parameters.items()}
+        self.data_validators = {field_name: field.validators for field_name, field in self.data.items()}
+
         self.kwargs = kwargs
         self._fn = None
 
@@ -48,6 +59,7 @@ class Action(SetReferencesMixin, ToActionMixin):
     def get_fn(self):
         if self._fn is None:
             self._fn = TemplateFunction(self.exec_fn)
+            self._fn.set_validation_hook(build_validation_fn(self.action_validators, self.parameters_validators, self.data_validators))
             self._fn.set_permissions_hook(build_permissions_fn(self.permissions))
         return self._fn
 
