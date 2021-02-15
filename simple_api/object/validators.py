@@ -1,5 +1,4 @@
 from inspect import isclass
-from simple_api.utils import ensure_tuple
 
 
 def build_validation_fn(action_validators, parameter_validators, data_validators):

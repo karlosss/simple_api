@@ -1,5 +1,4 @@
 from inspect import isclass
-from simple_api.utils import ensure_tuple
 
 
 # instantiates permission classes (if they are not already, maybe due to get_fn injection) and builds a
