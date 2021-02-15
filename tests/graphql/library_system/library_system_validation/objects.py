@@ -36,7 +36,7 @@ class LongerThen3Characters(Validator):
         return "Search term must be at least 4 characters"
 
 
-class ExistingNotRestrictedBook(Validator):
+class NotRestrictedBook(Validator):
     def validation_statement(self, request, value=None, **kwargs):
         try:
             return not BookModel.objects.get(id=kwargs["params"]["id"]).restricted
@@ -56,12 +56,12 @@ class Book(DjangoObject):
     custom_actions = {
         "getById": Action(parameters={"id": IntegerType(validators=(NotNegative, NotZero))},
                           return_value=ObjectType("self"),
-                          validators=ExistingNotRestrictedBook,
+                          validators=NotRestrictedBook,
                           exec_fn=get_by_id),
         "getById2": Action(parameters={"id": IntegerType(validators=NotNegative)},
                            data={"Title": StringType(validators=LongerThen3Characters)},
                            return_value=ObjectType("self"),
-                           validators=ExistingNotRestrictedBook,
+                           validators=NotRestrictedBook,
                            exec_fn=get_by_id)}
 
 
