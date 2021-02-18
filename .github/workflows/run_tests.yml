@@ -1,4 +1,4 @@
-name: Run tests (3.7)
+name: Run tests
 
 on:
   push:
@@ -13,8 +13,8 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7]
-
+        python-version: ['3.6', '3.7', '3.8', '3.9' ]
+    name: Testing on Python ${{ matrix.python-version }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
