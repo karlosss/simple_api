@@ -72,7 +72,6 @@ def convert_to_object_type(field, field_name, both_fields, input_fields, output_
     converted_pk_field = DJANGO_SIMPLE_API_MAP[target_pk_field.__class__]
     validators = [DjangoValidator(field_name, x) for x in field.validators]
     validators.append(ForeignKeyValidator(target_model))
-    print(validators)
     input_fields[field_name + "_id"] = converted_pk_field(nullable=field.null, exclude_filters=(),
                                                           validators=validators)
     output_fields[field_name] = ObjectType(target_model, nullable=field.null, exclude_filters=(), validators=validators)
