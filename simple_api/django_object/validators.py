@@ -3,19 +3,18 @@ from simple_api.object.validators import Validator
 
 
 class DjangoValidator(Validator):
-    def __init__(self, field_name, validation_fn):
-        self.fn = validation_fn
-        self.field_name = field_name
+    def __init__(self, validation_fn):
+        self.callable = validation_fn
 
     def validation_statement(self, request, value=None, **kwargs):
         try:
-            self.fn(value)
+            self.callable(value)
             return True
         except ValidationError:
             return False
 
     def error_message(self, **kwargs):
-        return "Django validator failed in field {}".format(self.field_name)
+        return "Django validator error"
 
 
 class ForeignKeyValidator(Validator):
@@ -23,7 +22,7 @@ class ForeignKeyValidator(Validator):
         self.target_model = target_model
 
     def validation_statement(self, request, value=None, **kwargs):
-        return self.target_model.objects.filter(id=value).exists()
+        return self.target_model.objects.filter(pk=value).exists()
 
     def error_message(self, **kwargs):
         return "Error: Referenced object doesn't exist"

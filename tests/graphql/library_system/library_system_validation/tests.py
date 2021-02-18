@@ -471,7 +471,7 @@ class Test(GraphQLTestCase):
         ret = {
             "errors": [
                 {
-                    "message": "Django validator failed in field shelf",
+                    "message": "Django validator error",
                     "locations": [
                         {
                             "line": 2,

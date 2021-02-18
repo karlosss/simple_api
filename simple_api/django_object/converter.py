@@ -9,8 +9,7 @@ from simple_api.django_object.datatypes import PaginatedList
 from simple_api.django_object.utils import extract_fields_from_model, determine_items, get_pk_field
 from simple_api.django_object.validators import DjangoValidator, ForeignKeyValidator
 from simple_api.object.datatypes import IntegerType, StringType, BooleanType, FloatType, DateType, TimeType, \
-    DateTimeType, \
-    ObjectType
+    DateTimeType, ObjectType
 
 DJANGO_SIMPLE_API_MAP = {
     AutoField: IntegerType,
@@ -60,7 +59,7 @@ def convert_to_primitive_type(field, field_name, both_fields, input_fields, outp
     assert field.__class__ in DJANGO_SIMPLE_API_MAP, "Cannot convert `{}`".format(field.__class__)
     both_fields[field_name] = DJANGO_SIMPLE_API_MAP[field.__class__](nullable=field.null,
                                                                      default=get_default(field), exclude_filters=(),
-                                                                     validators=[DjangoValidator(field_name, x)
+                                                                     validators=[DjangoValidator(x)
                                                                                  for x in field.validators])
 
 
@@ -70,11 +69,11 @@ def convert_to_object_type(field, field_name, both_fields, input_fields, output_
     target_model = field.remote_field.model
     target_pk_field_name, target_pk_field = get_pk_field(target_model)
     converted_pk_field = DJANGO_SIMPLE_API_MAP[target_pk_field.__class__]
-    validators = [DjangoValidator(field_name, x) for x in field.validators]
+    validators = [DjangoValidator(x) for x in field.validators]
     validators.append(ForeignKeyValidator(target_model))
     input_fields[field_name + "_id"] = converted_pk_field(nullable=field.null, exclude_filters=(),
                                                           validators=validators)
-    output_fields[field_name] = ObjectType(target_model, nullable=field.null, exclude_filters=(), validators=validators)
+    output_fields[field_name] = ObjectType(target_model, nullable=field.null, exclude_filters=())
 
 
 @convert_django_field.register(OneToOneRel)
