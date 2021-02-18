@@ -1,4 +1,4 @@
-name: Run tests (3.7)
+name: Run tests (3.6)
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7]
+        python-version: [3.6]
 
     steps:
     - uses: actions/checkout@v2
