@@ -1,6 +1,5 @@
 from .objects import schema
 from tests.graphql.graphql_test_utils import GraphQLTestCase
-from django.contrib.auth.models import User
 
 
 class Test(GraphQLTestCase):
@@ -25,6 +24,7 @@ class Test(GraphQLTestCase):
       ISBN: String!
       restricted: Boolean!
       shelf: Int!
+      bookmark_set(filters: BookmarkFiltersInput): BookmarkList!
       __str__: String!
       __actions: [ActionInfo!]!
     }
@@ -104,12 +104,66 @@ class Test(GraphQLTestCase):
       shelf: Int
     }
     
+    type Bookmark {
+      id: Int!
+      page: Int!
+      book: Book!
+      __str__: String!
+      __actions: [ActionInfo!]!
+    }
+    
+    input BookmarkCreateInput {
+      page: Int!
+      book_id: Int!
+    }
+    
+    input BookmarkFiltersInput {
+      id: Int
+      id__exact: Int
+      id__gt: Int
+      id__gte: Int
+      id__in: [Int!]
+      id__isnull: Boolean
+      id__lt: Int
+      id__lte: Int
+      page: Int
+      page__exact: Int
+      page__gt: Int
+      page__gte: Int
+      page__in: [Int!]
+      page__isnull: Boolean
+      page__lt: Int
+      page__lte: Int
+      book_id: Int
+      book_id__exact: Int
+      book_id__gt: Int
+      book_id__gte: Int
+      book_id__in: [Int!]
+      book_id__isnull: Boolean
+      book_id__lt: Int
+      book_id__lte: Int
+      ordering: [String!]
+    }
+    
+    type BookmarkList {
+      count: Int!
+      data(limit: Int = 20, offset: Int = 0): [Bookmark!]!
+    }
+    
+    input BookmarkUpdateInput {
+      page: Int
+      book_id: Int
+    }
+    
     scalar Duration
     
     type Mutation {
       BookCreate(data: BookCreateInput!): Book!
       BookUpdate(data: BookUpdateInput!, id: Int!): Book!
       BookDelete(id: Int!): Boolean!
+      BookmarkCreate(data: BookmarkCreateInput!): Bookmark!
+      BookmarkUpdate(data: BookmarkUpdateInput!, id: Int!): Bookmark!
+      BookmarkDelete(id: Int!): Boolean!
     }
     
     type ObjectInfo {
@@ -119,6 +173,8 @@ class Test(GraphQLTestCase):
     }
     
     type Query {
+      BookmarkDetail(id: Int!): Bookmark!
+      BookmarkList(filters: BookmarkFiltersInput): BookmarkList!
       BookDetail(id: Int!): Book!
       BookList(filters: BookFiltersInput): BookList!
       BookGetById(id: Int!): Book!
@@ -159,6 +215,24 @@ class Test(GraphQLTestCase):
                             "retry_in": None
                         }
                     ]
+                },
+                {
+                    "name": "Bookmark",
+                    "pk_field": "id",
+                    "actions": [
+                        {
+                            "name": "BookmarkList",
+                            "permitted": True,
+                            "deny_reason": None,
+                            "retry_in": None
+                        },
+                        {
+                            "name": "BookmarkCreate",
+                            "permitted": True,
+                            "deny_reason": None,
+                            "retry_in": None
+                        }
+                    ]
                 }
             ],
             "__actions": []
@@ -189,7 +263,7 @@ class Test(GraphQLTestCase):
         self.assertResponseNoErrors(resp)
         self.assertJSONEqual(resp.content, ret)
         resp = self.query("""mutation add_restricted_book {
-          BookCreate(data: {author: "Eliška Šestáková", title: "Automaty a Gramatiky", ISBN: "1337", restricted: true, shelf: 6}) {
+          BookCreate(data: {author: "Eliška Šestáková", title: "Automaty a Gramatiky", ISBN: "1337", restricted: true, shelf: 8}) {
             author
             title
             ISBN
@@ -204,7 +278,7 @@ class Test(GraphQLTestCase):
                     "title": "Automaty a Gramatiky",
                     "ISBN": "1337",
                     "restricted": True,
-                    "shelf": 6
+                    "shelf": 8
                 }
             }
         }
@@ -319,13 +393,13 @@ class Test(GraphQLTestCase):
           }
         }""")
         ret = {
-          "data": {
-            "BookGetById2": {
-              "id": 1,
-              "author": "Karl Marx",
-              "title": "Das Kapital"
+            "data": {
+                "BookGetById2": {
+                    "id": 1,
+                    "author": "Karl Marx",
+                    "title": "Das Kapital"
+                }
             }
-          }
         }
         self.assertResponseNoErrors(resp)
         self.assertJSONEqual(resp.content, ret)
@@ -339,21 +413,21 @@ class Test(GraphQLTestCase):
                   }
                 }""")
         ret = {
-          "errors": [
-            {
-              "message": "Validation failed in NotNegative",
-              "locations": [
+            "errors": [
                 {
-                  "line": 2,
-                  "column": 19
+                    "message": "Validation failed in NotNegative",
+                    "locations": [
+                        {
+                            "line": 2,
+                            "column": 19
+                        }
+                    ],
+                    "path": [
+                        "BookGetById2"
+                    ]
                 }
-              ],
-              "path": [
-                "BookGetById2"
-              ]
-            }
-          ],
-          "data": None
+            ],
+            "data": None
         }
         self.assertResponseHasErrors(resp)
         self.assertJSONEqual(resp.content, ret)
@@ -367,21 +441,99 @@ class Test(GraphQLTestCase):
                   }
                 }""")
         ret = {
-          "errors": [
-            {
-              "message": "Search term must be at least 4 characters",
-              "locations": [
+            "errors": [
                 {
-                  "line": 2,
-                  "column": 19
+                    "message": "Search term must be at least 4 characters",
+                    "locations": [
+                        {
+                            "line": 2,
+                            "column": 19
+                        }
+                    ],
+                    "path": [
+                        "BookGetById2"
+                    ]
                 }
-              ],
-              "path": [
-                "BookGetById2"
-              ]
-            }
-          ],
-          "data": None
+            ],
+            "data": None
         }
         self.assertResponseHasErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+        resp = self.query("""mutation add_bad_shelf_book {
+          BookCreate(data: {author: "Eliška Šestáková", title: "Automaty a Gramatiky", ISBN: "1337", restricted: true, shelf: 7}) {
+            author
+            title
+            ISBN
+            restricted
+            shelf
+          }
+        }""")
+        ret = {
+            "errors": [
+                {
+                    "message": "Django validator failed in field shelf",
+                    "locations": [
+                        {
+                            "line": 2,
+                            "column": 11
+                        }
+                    ],
+                    "path": [
+                        "BookCreate"
+                    ]
+                }
+            ],
+            "data": None
+        }
+        self.assertResponseHasErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+        resp = self.query("""mutation add_bookmark {
+          BookmarkCreate(data: {book_id: 4, page: 111}) {
+            book {
+              id
+            }
+          }
+        }""")
+        ret = {
+            "errors": [
+                {
+                    "message": "Error: Referenced object doesn't exist",
+                    "locations": [
+                        {
+                            "line": 2,
+                            "column": 11
+                        }
+                    ],
+                    "path": [
+                        "BookmarkCreate"
+                    ]
+                }
+            ],
+            "data": None
+        }
+        self.assertResponseHasErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+        resp = self.query("""mutation add_bookmark {
+                  BookmarkCreate(data: {book_id: 1, page: 123}) {
+                    page
+                    book {
+                      id
+                      title
+                      author
+                    }
+                  }
+                }""")
+        ret = {
+            "data": {
+                "BookmarkCreate": {
+                    "page": 123,
+                    "book": {
+                        "id": 1,
+                        "title": "Das Kapital",
+                        "author": "Karl Marx"
+                    }
+                }
+            }
+        }
+        self.assertResponseNoErrors(resp)
         self.assertJSONEqual(resp.content, ret)

@@ -9,7 +9,7 @@ from simple_api.object.validators import Validator
 
 from tests.graphql.graphql_test_utils import build_patterns
 
-from .models import Book as BookModel
+from .models import Book as BookModel, Bookmark as BookmarkModel
 
 
 class NotNegative(Validator):
@@ -63,6 +63,10 @@ class Book(DjangoObject):
                            return_value=ObjectType("self"),
                            validators=NotRestrictedBook,
                            exec_fn=get_by_id)}
+
+
+class Bookmark(DjangoObject):
+    model = BookmarkModel
 
 
 schema = generate(GraphQLAdapter)

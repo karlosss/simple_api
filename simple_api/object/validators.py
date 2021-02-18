@@ -38,12 +38,15 @@ def build_validation_fn(action_validators, parameter_validators, data_validators
         # Parameters validators
         for param_field, validators in ins_parameter_validators.items():
             for validator in validators:
-                if not validator.validation_statement(kwargs["request"], value=kwargs["params"][param_field]):
+                if param_field in kwargs["params"] and \
+                        not validator.validation_statement(kwargs["request"], value=kwargs["params"][param_field]):
                     raise ValueError(validator.error_message(**kwargs))
         # Data validators
         for data_field, validators in ins_data_validators.items():
             for validator in validators:
-                if not validator.validation_statement(kwargs["request"], value=kwargs["params"]["data"][data_field]):
+                if data_field in kwargs["params"]["data"] and \
+                        not validator.validation_statement(kwargs["request"],
+                                                           value=kwargs["params"]["data"][data_field]):
                     raise ValueError(validator.error_message(**kwargs))
     return fn
 
