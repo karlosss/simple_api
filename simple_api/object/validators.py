@@ -39,15 +39,16 @@ def build_validation_fn(action_validators, parameter_validators, data_validators
         for param_field, validators in ins_parameter_validators.items():
             for validator in validators:
                 if param_field in kwargs["params"] and \
-                        not validator.validation_statement(kwargs["request"], value=kwargs["params"][param_field]):
+                        not validator.is_valid(kwargs["request"], value=kwargs["params"][param_field]):
                     raise ValueError(validator.error_message(**kwargs))
-        # Data validators
+
+                    # Data validators
         for data_field, validators in ins_data_validators.items():
             for validator in validators:
                 if data_field in kwargs["params"]["data"] and \
-                        not validator.validation_statement(kwargs["request"],
-                                                           value=kwargs["params"]["data"][data_field]):
+                        not validator.is_valid(kwargs["request"], value=kwargs["params"]["data"][data_field]):
                     raise ValueError(validator.error_message(**kwargs))
+
     return fn
 
 
@@ -57,10 +58,56 @@ class Validator:
     **kwargs)
     """
 
+    def is_valid(self, request, value=None, exclude_classes=(), **kwargs):
+        for cls in reversed(self.__class__.__mro__):
+            if cls in (object, Validator) + exclude_classes:
+                continue
+            if not self.validation_statement(request, value=value, **kwargs):
+                return False
+        return True
+
     def validation_statement(self, request, value=None, **kwargs):
         """Function to validate input value, True -> input is valid, False -> invalid"""
         raise NotImplementedError
 
     def error_message(self, **kwargs):
         """Message to return in API when validation fails"""
-        return "Validation failed in FieldValidator"
+        return "Validation failed in Validator"
+
+
+class LogicalConnector:
+    def __init__(self, *validators):
+        self.validators = []
+        for cls_or_inst in validators:
+            if isclass(cls_or_inst):
+                self.validators.append(cls_or_inst())
+            else:
+                self.validators.append(cls_or_inst)
+
+    def is_valid(self, request, value=None, exclude_classes=(), **kwargs):
+        return NotImplementedError
+
+    def error_message(self, **kwargs):
+        return "Validation failed in LogicalConnector"
+
+
+class And(LogicalConnector):
+    def is_valid(self, request, value=None, exclude_classes=(), **kwargs):
+        for validator in self.validators:
+            if not validator.is_valid(request, value, exclude_classes=exclude_classes, **kwargs):
+                return False
+        return True
+
+
+class Or(LogicalConnector):
+    def is_valid(self, request, value=None, exclude_classes=(), **kwargs):
+        for validator in self.validators:
+            if validator.is_valid(request, value, exclude_classes=exclude_classes, **kwargs):
+                return True
+        return False
+
+
+class Not(LogicalConnector):
+    def is_valid(self, request, value=None, exclude_classes=(), **kwargs):
+        assert len(self.validators) == 1, "`Not` accepts only one validator as parameter."
+        return not self.validators[0].is_valid(request, value, exclude_classes=exclude_classes, **kwargs)

@@ -295,7 +295,7 @@ class Test(GraphQLTestCase):
         ret = {
             "errors": [
                 {
-                    "message": "Validation failed in NotNegative",
+                    "message": "Validation failed in LogicalConnector",
                     "locations": [
                         {
                             "line": 2,
@@ -322,7 +322,7 @@ class Test(GraphQLTestCase):
         ret = {
             "errors": [
                 {
-                    "message": "Validation failed in NotZero",
+                    "message": "Validation failed in LogicalConnector",
                     "locations": [
                         {
                             "line": 2,

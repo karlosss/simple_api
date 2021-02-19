@@ -5,7 +5,7 @@ from simple_api.adapters.utils import generate
 from simple_api.django_object.django_object import DjangoObject
 from simple_api.object.actions import Action
 from simple_api.object.datatypes import IntegerType, ObjectType, StringType
-from simple_api.object.validators import Validator
+from simple_api.object.validators import Validator, And
 
 from tests.graphql.graphql_test_utils import build_patterns
 
@@ -54,7 +54,7 @@ def get_by_id(**kwargs):
 class Book(DjangoObject):
     model = BookModel
     custom_actions = {
-        "getById": Action(parameters={"id": IntegerType(validators=(NotNegative, NotZero))},
+        "getById": Action(parameters={"id": IntegerType(validators=And(NotNegative, NotZero))},
                           return_value=ObjectType("self"),
                           validators=NotRestrictedBook,
                           exec_fn=get_by_id),
