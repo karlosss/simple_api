@@ -24,12 +24,36 @@ def build_action_info_fn(actions):
     return build_actions_resolver(dummy_cls, with_object=False)
 
 
+def build_type_info(field):
+    return {
+        "typename": field.to_string().replace("!", ""),
+        "nullable": field.to_string().endswith("!")
+    }
+
+
+def build_field_info(field_name, field):
+    return {
+        "name": field_name,
+        "type": build_type_info(field)
+        # todo validators (i.e. maxLengthValidator can be easily passed to frontend and javascript can validate)
+        # todo widget type to render
+    }
+
+
 def build_actions_resolver(cls, with_object=True):
     def actions_resolver(**kwargs):
         out = []
         for action in cls.actions.values():
             if action.with_object != with_object or action.hidden:
                 continue
+
+            params = []
+            for param_name, param in action.parameters.items():
+                params.append(build_field_info(param_name, param))
+
+            data = []
+            for field_name, field in action.data.items():
+                data.append(build_field_info(field_name, field))
 
             try:
                 action.has_permission(**kwargs)
@@ -47,6 +71,9 @@ def build_actions_resolver(cls, with_object=True):
                 "permitted": permitted,
                 "deny_reason": deny_reason,
                 "retry_in": action.retry_in,
+                "return_type": build_type_info(action.return_value),
+                "parameters": params,
+                "data": data,
             }
             out.append(action_item)
         return out

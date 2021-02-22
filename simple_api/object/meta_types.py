@@ -4,9 +4,30 @@ from simple_api.object.object import Object
 from simple_api.object.datatypes import PlainListType, ObjectType, DurationType, StringType, BooleanType
 
 
+class TypeInfo(Object):
+    fields = {
+        "typename": StringType(),
+        "nullable": BooleanType(),
+        # TODO default value
+    }
+    hidden = True
+
+
+class InputFieldInfo(Object):
+    fields = {
+        "name": StringType(),
+        "type": ObjectType(TypeInfo),
+    }
+    hidden = True
+
+
 class ActionInfo(Object):
     fields = {
         "name": StringType(),
+        "parameters": PlainListType(ObjectType(InputFieldInfo)),
+        "data": PlainListType(ObjectType(InputFieldInfo)),
+        "return_type": ObjectType(TypeInfo),
+
         "permitted": BooleanType(),
         "deny_reason": StringType(nullable=True),
         "retry_in": DurationType(nullable=True),
