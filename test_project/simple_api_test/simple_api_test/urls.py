@@ -13,6 +13,9 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls import url
 from testcases.objects import patterns
+from simple_api.frontend import views
 
 urlpatterns = patterns
+urlpatterns.append(url(r'(?i)^frontend/.*', views.serve_frontend, name='frontend'))
