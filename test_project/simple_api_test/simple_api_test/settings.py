@@ -44,8 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'graphene_django',
-    'testcases',
-    'simple_api.frontend'
+    'testcases'
 ]
 
 MIDDLEWARE = [
