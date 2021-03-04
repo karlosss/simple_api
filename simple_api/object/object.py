@@ -2,7 +2,7 @@ from copy import deepcopy
 
 from django.utils.decorators import classproperty
 
-from simple_api.object.datatypes import PlainListType, ObjectType
+from simple_api.object.datatypes import PlainListType, ObjectType, StringType
 from simple_api.object.meta_resolvers import build_actions_resolver
 from simple_api.object.registry import object_storage
 
@@ -35,6 +35,8 @@ class ObjectMeta(type):
         cls.input_fields = deepcopy(cls.input_fields)
         cls.output_fields = deepcopy(cls.output_fields)
         cls.actions = deepcopy(cls.actions)
+
+        cls.output_fields["__str__"] = StringType(resolver=lambda *a, **kw: kw["parent_val"]())
 
         if "module" in kwargs:
             cls.__module__ = kwargs["module"]

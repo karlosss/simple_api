@@ -1,22 +1,21 @@
 from simple_api.object.actions import Action
-from simple_api.object.meta_resolvers import object_info, build_action_info_fn
+from simple_api.object.meta_resolvers import object_info, type_info, build_action_info_fn
 from simple_api.object.object import Object
 from simple_api.object.datatypes import PlainListType, ObjectType, DurationType, StringType, BooleanType
+
+
+class FieldInfo(Object):
+    fields = {
+        "name": StringType(),
+        "typename": StringType()
+    }
+    hidden = True
 
 
 class TypeInfo(Object):
     fields = {
         "typename": StringType(),
-        "nullable": BooleanType(),
-        # TODO default value
-    }
-    hidden = True
-
-
-class InputFieldInfo(Object):
-    fields = {
-        "name": StringType(),
-        "type": ObjectType(TypeInfo),
+        "fields": PlainListType(ObjectType(FieldInfo))
     }
     hidden = True
 
@@ -24,9 +23,9 @@ class InputFieldInfo(Object):
 class ActionInfo(Object):
     fields = {
         "name": StringType(),
-        "parameters": PlainListType(ObjectType(InputFieldInfo)),
-        "data": PlainListType(ObjectType(InputFieldInfo)),
-        "return_type": ObjectType(TypeInfo),
+        "parameters": PlainListType(ObjectType(FieldInfo)),
+        "data": PlainListType(ObjectType(FieldInfo)),
+        "return_type": StringType(),
 
         "permitted": BooleanType(),
         "deny_reason": StringType(nullable=True),
@@ -47,6 +46,11 @@ class ObjectInfo(Object):
 def build_object_info():
     return Action(return_value=PlainListType(ObjectType(ObjectInfo)),
                   exec_fn=object_info)
+
+
+def build_type_info():
+    return Action(return_value=PlainListType(ObjectType(TypeInfo)),
+                  exec_fn=type_info)
 
 
 def build_action_info(actions):

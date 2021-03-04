@@ -10,10 +10,31 @@ def object_info(**kwargs):
     for cls in object_storage.storage.values():
         if getattr(cls, "hidden", False):
             continue
+        if not cls.actions:
+            continue
         item = {
             "name": cls.__name__,
             "pk_field": getattr(cls, "pk_field", None),
             "actions": build_actions_resolver(cls, with_object=False)(**kwargs)
+        }
+        out.append(item)
+    return out
+
+
+def type_info(**kwargs):
+    out = []
+    for cls in object_storage.storage.values():
+        if getattr(cls, "hidden", False):
+            continue
+
+        fields = []
+        for field_name, field in cls.out_fields.items():
+            if not field_name.startswith("__"):
+                fields.append(build_field_info(field_name, field))
+
+        item = {
+            "typename": cls.__name__,
+            "fields": fields
         }
         out.append(item)
     return out
@@ -24,19 +45,10 @@ def build_action_info_fn(actions):
     return build_actions_resolver(dummy_cls, with_object=False)
 
 
-def build_type_info(field):
-    return {
-        "typename": field.to_string().replace("!", ""),
-        "nullable": field.to_string().endswith("!")
-    }
-
-
 def build_field_info(field_name, field):
     return {
         "name": field_name,
-        "type": build_type_info(field)
-        # todo validators (i.e. maxLengthValidator can be easily passed to frontend and javascript can validate)
-        # todo widget type to render
+        "typename": str(field)
     }
 
 
@@ -71,7 +83,7 @@ def build_actions_resolver(cls, with_object=True):
                 "permitted": permitted,
                 "deny_reason": deny_reason,
                 "retry_in": action.retry_in,
-                "return_type": build_type_info(action.return_value),
+                "return_type": str(action.return_value),
                 "parameters": params,
                 "data": data,
             }
