@@ -3,6 +3,8 @@ from simple_api.django_object.datatypes import PaginatedList, resolve_filtering
 from simple_api.django_object.utils import determine_items, remove_item
 from simple_api.object.actions import Action, ToActionMixin, SetReferencesMixin
 from simple_api.object.datatypes import ObjectType, BooleanType
+from .permissions import permission_class_with_get_fn
+from ..utils import ensure_tuple
 
 
 class WithObjectMixin:
@@ -23,7 +25,7 @@ class ModelAction(SetReferencesMixin, ToActionMixin):
         self.data = data or {}
         self.return_value = return_value or ObjectType("self")
         self.exec_fn = exec_fn
-        self.permissions = permissions
+        self.permissions = ensure_tuple(permissions)
         self.kwargs = kwargs
 
         # these attributes exist to ensure that 1) the input from the user is stored unmodified in the attributes above
@@ -111,17 +113,15 @@ class ModelObjectAction(WithObjectMixin, ModelAction):
     # injects get_fn into the permission classes so that this information can be used to determine permissions
     def determine_permissions(self):
         if self._determined_permissions is None:
-            self._determined_permissions = self.permissions
-            if self._determined_permissions is None:
-                return
-            if not isinstance(self._determined_permissions, (list, tuple)):
-                self._determined_permissions = self._determined_permissions,
-
+            self._determined_permissions = []
             self.determine_get_fn()
-            instantiated_permissions = []
-            for pc in self._determined_permissions:
-                instantiated_permissions.append(pc(get_fn=self._determined_get_fn))
-            self._determined_permissions = instantiated_permissions
+            for pc in self.permissions:
+                # here we extract the information from a permission class and use it to build a new class with the
+                # function to get the related object embedded; this is because permissions are supposed to be classes
+                # and not their instances and since django actions are implemented as composition with respect to
+                # actions, there would be a problem with actions seeing instantiated permission classes, which would
+                # create problems later
+                self._determined_permissions.append(permission_class_with_get_fn(pc, self._determined_get_fn))
 
     def determine_parameters(self):
         if self._determined_parameters is None:

@@ -1,20 +1,11 @@
 from inspect import isclass
 
 
-# instantiates permission classes (if they are not already, maybe due to get_fn injection) and builds a
-# function that raises if the permissions are not passed
 def build_permissions_fn(permissions):
-    instantiated_permissions = []
-    for cls_or_inst in permissions:
-        if isclass(cls_or_inst) or isinstance(cls_or_inst, LogicalConnector):
-            instantiated_permissions.append(cls_or_inst())
-        else:
-            instantiated_permissions.append(cls_or_inst)
-
     def fn(**kwargs):
-        for perm in instantiated_permissions:
-            if not perm.has_permission(**kwargs):
-                raise PermissionError(perm.error_message(**kwargs))
+        for perm in permissions:
+            if not perm().has_permission(**kwargs):
+                raise PermissionError(perm().error_message(**kwargs))
     return fn
 
 
@@ -25,12 +16,21 @@ class BasePermission:
     def permission_statement(self, **kwargs):
         raise NotImplementedError
 
-    def has_permission(self, exclude_classes=(), **kwargs):
+    def has_permission(self, **kwargs):
+        # to achieve hierarchical checking for permissions (a subclass calls the permission statement of the superclass
+        # and only if it passes, executes its own), we need to traverse over the whole linearization order of the
+        # permission class; however, classes like object, which are naturally also a part of the chain, do not
+        # contain the `permission_statement` method and therefore should be just skipped; the same is true for abstract
+        # permission classes which contain the method, but is not implemented - like this one for example: to achieve
+        # this, we try calling the method and if it turns out to not be implemented, we skip it as well
         for cls in reversed(self.__class__.__mro__):
-            if cls in (object, BasePermission, LogicalResolver) + exclude_classes:
+            if not hasattr(cls, "permission_statement"):
                 continue
-            if not cls.permission_statement(self, **kwargs):
-                return False
+            try:
+                if not cls.permission_statement(self, **kwargs):
+                    return False
+            except NotImplementedError:
+                continue
         return True
 
     def error_message(self, **kwargs):
@@ -42,12 +42,10 @@ class LogicalConnector:
         self.permissions = permissions
 
     def __call__(self, **kwargs):
-        instantiated_perms = []
         for perm in self.permissions:
             assert isclass(perm) or isinstance(perm, LogicalConnector), \
                 "Permissions in logical connectors must be classes."
-            instantiated_perms.append(perm(**kwargs))
-        return LogicalResolver(instantiated_perms, self.resolve_fn)
+        return LogicalResolver(self.permissions, self.resolve_fn)
 
     def resolve_fn(self, permissions, **kwargs):
         raise NotImplementedError
@@ -68,7 +66,7 @@ class LogicalResolver:
 class Or(LogicalConnector):
     def resolve_fn(self, permissions, **kwargs):
         for perm in permissions:
-            if perm.has_permission(**kwargs):
+            if perm().has_permission(**kwargs):
                 return True
         return False
 
@@ -76,7 +74,7 @@ class Or(LogicalConnector):
 class And(LogicalConnector):
     def resolve_fn(self, permissions, **kwargs):
         for perm in permissions:
-            if not perm.has_permission(**kwargs):
+            if not perm().has_permission(**kwargs):
                 return False
         return True
 
@@ -84,7 +82,7 @@ class And(LogicalConnector):
 class Not(LogicalConnector):
     def resolve_fn(self, permissions, **kwargs):
         assert len(permissions) == 1, "`Not` accepts only one permission class as parameter."
-        return not permissions[0].has_permission(**kwargs)
+        return not permissions[0]().has_permission(**kwargs)
 
 
 class AllowAll(BasePermission):
