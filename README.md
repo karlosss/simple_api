@@ -1,6 +1,6 @@
 # Simple API
 
-![tests](https://github.com/karlosss/simple_api/workflows/Run%20tests/badge.svg)
+[![Run tests](https://github.com/ladal1/simple_api/actions/workflows/run_tests.yml/badge.svg)](https://github.com/ladal1/simple_api/actions/workflows/run_tests.yml)
 
 ## Purpose of the project
 After writing Django models, Simple API builds an API (currently, only GraphQL is supported) extracting the information from the model and requiring to write as little code as possible.
