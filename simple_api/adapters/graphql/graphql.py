@@ -30,7 +30,7 @@ class GraphQLAdapter(Adapter):
             data_params = {}
             for name, field in action.data.items():
                 data_params[name] = field.convert(self, _as=ConversionType.INPUT)
-            cls = type("{}{}{}".format(action.parent_class.__name__, capitalize(action.name), INPUT_CLASS_SUFFIX),
+            cls = type("{}{}{}".format(action.parent_class.__name__ if action.parent_class is not None else "", capitalize(action.name), INPUT_CLASS_SUFFIX),
                        (graphene.InputObjectType,), data_params)
             params["data"] = graphene.Argument(cls, required=True)
         return params
