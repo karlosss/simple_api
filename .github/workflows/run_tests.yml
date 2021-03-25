@@ -2,9 +2,9 @@ name: Run tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, generate-frontend ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, generate-frontend ]
 
 jobs:
   build:
@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
+      fail-fast: false
       matrix:
         python-version: ['3.6', '3.7', '3.8', '3.9' ]
     name: Testing on Python ${{ matrix.python-version }}
