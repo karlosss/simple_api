@@ -7,7 +7,8 @@ from simple_api.object.datatypes import PlainListType, ObjectType, DurationType,
 class FieldInfo(Object):
     fields = {
         "name": StringType(),
-        "typename": StringType()
+        "typename": StringType(),
+        "default": StringType(nullable=True)
     }
     hidden = True
 
@@ -30,6 +31,8 @@ class ActionInfo(Object):
         "permitted": BooleanType(),
         "deny_reason": StringType(nullable=True),
         "retry_in": DurationType(nullable=True),
+
+        "mutation": BooleanType()
     }
     hidden = True
 
