@@ -30,13 +30,14 @@ class SetReferencesMixin:
 
 class Action(SetReferencesMixin, ToActionMixin):
     def __init__(self, parameters=None, data=None, return_value=None, exec_fn=None, permissions=None, validators=None,
-                 **kwargs):
+                 action_weight=1, **kwargs):
         self.parameters = parameters or {}
         self.data = data or {}
         self.return_value = return_value
         self.exec_fn = exec_fn
         self.permissions = ensure_tuple(permissions)
         self.action_validators = ensure_tuple(validators)
+        self.action_weight = action_weight
 
         # all field validators are read from argument and restructured into {"parameter": (validator1, validator2...)}
         self.parameters_validators = {param_name: param.validators for param_name, param in self.parameters.items()}

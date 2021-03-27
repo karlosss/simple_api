@@ -1,10 +1,11 @@
 from enum import Enum
 
-from graphene_django.views import GraphQLView
 from django.urls import path
+from graphene_django.views import GraphQLView
+from django.conf import settings
 
+from simple_api.adapters.graphql.security.DifficultyScoreGraphQLView import DifficultyScoreGraphQlView
 from simple_api.adapters.graphql.security.disable_introspection import DisableIntrospectionMiddleware
-from simple_api.adapters.graphql.security.security import PreflightQueryManager
 
 
 class ConversionType(Enum):
@@ -31,5 +32,27 @@ def capitalize(string):
 def build_patterns(url_path, schema, **kwargs):
     return [path(url_path, GraphQLView.as_view(graphiql=True,
                                                schema=schema,
-                                               backend=PreflightQueryManager(),
-                                               middleware=[DisableIntrospectionMiddleware()], **kwargs))]
+                                               **kwargs))]
+
+
+def build_patterns_w(url_path, schema, weight_schema, **kwargs):
+    list_limit = None
+    depth_limit = None
+    weight_limit = None
+    settings_dict = getattr(settings, "SIMPLE_API", None)
+    if settings_dict and "SECURITY" in settings_dict:
+        if "LIST_LIMIT" in settings_dict["SECURITY"]:
+            list_limit = settings_dict["SECURITY"]["LIST_LIMIT"]
+        if "DEPTH_LIMIT" in settings_dict["SECURITY"]:
+            depth_limit = settings_dict["SECURITY"]["DEPTH_LIMIT"]
+        if "WEIGHT_LIMIT" in settings_dict["SECURITY"]:
+            weight_limit = settings_dict["SECURITY"]["WEIGHT_LIMIT"]
+
+    return [path(url_path, DifficultyScoreGraphQlView.as_view(graphiql=True,
+                                                              schema=schema,
+                                                              sec_weight_schema=weight_schema,
+                                                              middleware=[DisableIntrospectionMiddleware()],
+                                                              weight_limit=weight_limit,
+                                                              list_limit=list_limit,
+                                                              depth_limit=depth_limit,
+                                                              **kwargs))]

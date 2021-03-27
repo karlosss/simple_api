@@ -2,11 +2,11 @@ class ResourceLimitReached(Exception):
     pass
 
 
-class DepthLimitReached(ResourceLimitReached):
+class QueryWeightExceeded(ResourceLimitReached):
     pass
 
 
-class SelectionsLimitReached(ResourceLimitReached):
+class DepthLimitReached(ResourceLimitReached):
     pass
 
 

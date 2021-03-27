@@ -13,8 +13,10 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf.urls import url
+from django.urls import path
 from testcases.objects import patterns
-from simple_api.frontend import views
+from simple_api_admin import views
 
 urlpatterns = patterns
+urlpatterns += path('simple/', views.site.urls),
+

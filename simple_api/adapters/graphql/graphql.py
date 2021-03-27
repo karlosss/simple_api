@@ -30,7 +30,8 @@ class GraphQLAdapter(Adapter):
             data_params = {}
             for name, field in action.data.items():
                 data_params[name] = field.convert(self, _as=ConversionType.INPUT)
-            cls = type("{}{}{}".format(action.parent_class.__name__ if action.parent_class is not None else "", capitalize(action.name), INPUT_CLASS_SUFFIX),
+            cls = type("{}{}{}".format(action.parent_class.__name__ if action.parent_class is not None else "",
+                                       capitalize(action.name), INPUT_CLASS_SUFFIX),
                        (graphene.InputObjectType,), data_params)
             params["data"] = graphene.Argument(cls, required=True)
         return params
@@ -103,6 +104,32 @@ class GraphQLAdapter(Adapter):
             assert name not in mutation_classes, "Duplicate mutation action name: `{}`".format(name)
             mutation_classes[name] = action
 
+    def generate_weight_schema(self):
+        weight_schema = {"types": {}, "actions": {}}
+        for obj in self.objects:
+            if getattr(obj, "hidden", False):
+                continue
+            weight_schema["types"][obj.__name__] = {'direct': obj.difficulty_scores, 'connected': obj.connected_fields}
+            for act_name, action in obj.actions.items():
+                if action.hidden:
+                    continue
+                weight_schema["actions"] \
+                    ["{}{}".format(action.parent_class.__name__ if action.parent_class is not None else "",
+                                   capitalize(action.name))] = {
+                    "weight": action.action_weight,
+                    "returnType": str(action.return_value)
+                }
+        for act_name, action in self.extra_actions.items():
+            if action.hidden:
+                continue
+            weight_schema["actions"][ \
+                "{}{}".format(action.parent_class.__name__ if action.parent_class is not None else "",
+                              capitalize(action.name if action.name is not None else act_name))] = {
+                "weight": action.action_weight,
+                "returnType": str(action.return_value)
+            }
+        return weight_schema
+
     def generate(self):
         query_classes = []
         mutation_classes = {}
@@ -125,7 +152,7 @@ class GraphQLAdapter(Adapter):
             self.update_mutation_classes(mutation_actions, mutation_classes)
 
         query_actions, mutation_actions = self.convert_actions(self.extra_actions)
-        
+
         # if there are no query actions, create a dummy one, since graphene-python needs that
         if not query_actions and not at_least_one_query_action_exists:
             query_actions = {"dummy": Action(return_value=BooleanType(),

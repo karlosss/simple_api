@@ -52,6 +52,7 @@ class Object(metaclass=ObjectMeta):
     input_fields = {}
     output_fields = {}
     actions = {}
+    field_difficulty_scores = {}
 
     @classproperty
     def in_fields(cls):
@@ -64,3 +65,13 @@ class Object(metaclass=ObjectMeta):
         for f in cls.output_fields:
             assert f not in cls.fields, "Redefinition of `{}` field.".format(f)
         return {**cls.fields, **cls.output_fields}
+
+    @classproperty
+    def difficulty_scores(cls):
+        default_values = {k: 1 for k in cls.out_fields}
+        return {**default_values, **cls.field_difficulty_scores}
+
+    @classproperty
+    def connected_fields(cls):
+        connected_fields = {k: str(v) for k, v in cls.out_fields.items() if hasattr(v, 'to')}
+        return connected_fields
