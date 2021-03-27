@@ -40,21 +40,21 @@ def build_validation_fn(action_validators, parameter_validators, data_validators
             for validator in validators:
                 if param_field in kwargs["params"] and \
                         not validator.is_valid(kwargs["request"], value=kwargs["params"][param_field]):
-                    raise ValueError(validator.error_message(**kwargs))
+                    raise ValueError(validator.error_message(error_field=param_field, **kwargs))
 
-                    # Data validators
+        # Data validators
         for data_field, validators in ins_data_validators.items():
             for validator in validators:
                 if data_field in kwargs["params"]["data"] and \
                         not validator.is_valid(kwargs["request"], value=kwargs["params"]["data"][data_field]):
-                    raise ValueError(validator.error_message(**kwargs))
+                    raise ValueError(validator.error_message(error_field=data_field, **kwargs))
 
     return fn
 
 
 class Validator:
     """
-    Base class for input field validation, validation itself is done withing validation_statement(self, value,
+    Base class for input field validation, validation itself is done within validation_statement(self, value,
     **kwargs)
     """
 
@@ -70,9 +70,12 @@ class Validator:
         """Function to validate input value, True -> input is valid, False -> invalid"""
         raise NotImplementedError
 
-    def error_message(self, **kwargs):
+    def error_message(self, error_field=None, **kwargs):
         """Message to return in API when validation fails"""
-        return "Validation failed in Validator"
+
+        if error_field:
+            return "Validation failed in Validator \"{}\" on field \"{}\"".format(self.__class__.__name__, error_field)
+        return "Validation failed in Validator \"{}\"".format(self.__class__.__name__)
 
 
 class LogicalConnector:
@@ -87,8 +90,12 @@ class LogicalConnector:
     def is_valid(self, request, value=None, exclude_classes=(), **kwargs):
         return NotImplementedError
 
-    def error_message(self, **kwargs):
-        return "Validation failed in LogicalConnector"
+    def error_message(self, error_field=None, **kwargs):
+        """Message to return in API when validation fails"""
+
+        if error_field:
+            return "Validation failed in LogicalConnector \"{}\" on field \"{}\"".format(self.__class__.__name__, error_field)
+        return "Validation failed in LogicalConnector \"{}\"".format(self.__class__.__name__)
 
 
 class And(LogicalConnector):
