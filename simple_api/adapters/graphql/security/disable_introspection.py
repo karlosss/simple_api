@@ -2,6 +2,7 @@ from graphql import GraphQLSchema, GraphQLObjectType, GraphQLField, GraphQLStrin
 
 
 class DisableIntrospectionMiddleware(object):
+
     @staticmethod
     def resolve(next, root, info, **kwargs):
         if info.field_name.lower() in ['__schema', '__introspection']:
