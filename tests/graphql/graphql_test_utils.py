@@ -41,19 +41,50 @@ class GraphQLTestCase(OriginalGraphQLTestCase):
 
         resp = self.query(
             """
-            query{
+            query Metaschema{
+              __types{
+                typename
+                fields{
+                name
+                typename
+                }
+              }
               __objects{
                 name
                 pk_field
                 actions{
-                  name
-                  permitted
-                  deny_reason
-                  retry_in
+                name
+                parameters{
+                    name
+                    typename
+                  default
+                }
+                data{
+                    name
+                    typename
+                  default
+                }
+                mutation
+                return_type
+                permitted
+                deny_reason
+                retry_in
                 }
               }
               __actions{
                 name
+                parameters{
+                  name
+                  typename
+                  default
+                }
+                data{
+                    name
+                    typename
+                  default
+                }
+                mutation
+                return_type
                 permitted
                 deny_reason
                 retry_in
