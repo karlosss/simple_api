@@ -208,7 +208,8 @@ class DifficultyScoreGraphQlView(GraphQLView):
                             raise ListLimitTooHigh(
                                 "Number of items requested must be below " + str(self.list_limit))
                     else:
-                        raise ListLimitRequired("Requests for paginated data require limit")
+                        if self.list_limit:
+                            raise ListLimitRequired("Requests for paginated data require limit")
                 # Calculate cost for subselections
                 weight_of_subselections = self.calculate_field_score(data_object_type, field.selection_set, fragments,
                                                                      depth_level + 1)
