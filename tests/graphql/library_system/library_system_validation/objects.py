@@ -7,7 +7,7 @@ from simple_api.object.actions import Action
 from simple_api.object.datatypes import IntegerType, ObjectType, StringType
 from simple_api.object.validators import Validator, And
 
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 from .models import Book as BookModel, Bookmark as BookmarkModel
 

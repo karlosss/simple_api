@@ -3,7 +3,7 @@ from simple_api.adapters.utils import generate
 from simple_api.django_object.django_object import DjangoObject
 
 from .models import TestModelPrimitiveFields
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 
 class TestModelObjectAllFields(DjangoObject):

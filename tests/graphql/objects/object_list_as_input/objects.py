@@ -3,7 +3,7 @@ from simple_api.adapters.utils import generate
 from simple_api.object.actions import Action
 from simple_api.object.datatypes import IntegerType, PlainListType
 
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 
 def plus_one(request, params, **kwargs):

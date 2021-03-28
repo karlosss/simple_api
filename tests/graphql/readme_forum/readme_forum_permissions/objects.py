@@ -8,7 +8,7 @@ from simple_api.django_object.permissions import IsAuthenticated
 from simple_api.object.datatypes import StringType
 from simple_api.object.permissions import Or
 
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 from .models import Post as PostModel
 
