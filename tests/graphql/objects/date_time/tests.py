@@ -11,9 +11,14 @@ class Test(GraphQLTestCase):
         
         type ActionInfo {
           name: String!
+          parameters: [FieldInfo!]!
+          data: [FieldInfo!]!
+          return_type: String!
           permitted: Boolean!
           deny_reason: String
           retry_in: Duration
+          mutation: Boolean!
+          __str__: String!
         }
         
         scalar Date
@@ -22,10 +27,18 @@ class Test(GraphQLTestCase):
         
         scalar Duration
         
+        type FieldInfo {
+          name: String!
+          typename: String!
+          default: String
+          __str__: String!
+        }
+        
         type ObjectInfo {
           name: String!
           pk_field: String
           actions: [ActionInfo!]!
+          __str__: String!
         }
         
         type Query {
@@ -34,6 +47,7 @@ class Test(GraphQLTestCase):
           getTime: Time!
           getDatetime: DateTime!
           echo(date: Date!, time: Time!, datetime: DateTime!): TestObject!
+          __types: [TypeInfo!]!
           __objects: [ObjectInfo!]!
           __actions: [ActionInfo!]!
         }
@@ -42,54 +56,110 @@ class Test(GraphQLTestCase):
           date: Date!
           time: Time!
           datetime: DateTime!
+          __str__: String!
           __actions: [ActionInfo!]!
         }
         
         scalar Time
+        
+        type TypeInfo {
+          typename: String!
+          fields: [FieldInfo!]!
+          __str__: String!
+        }
     """
 
     REF_META_SCHEMA = {
-      "data": {
-        "__objects": [
-          {
-            "name": "TestObject",
-            "pk_field": None,
-            "actions": []
-          }
-        ],
-        "__actions": [
-          {
-            "name": "getObject",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          },
-          {
-            "name": "getDate",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          },
-          {
-            "name": "getTime",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          },
-          {
-            "name": "getDatetime",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          },
-          {
-            "name": "echo",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          }
-        ]
-      }
+        "data": {
+            "__types": [
+                {
+                    "typename": "TestObject",
+                    "fields": [
+                        {
+                            "name": "date",
+                            "typename": "Date!"
+                        },
+                        {
+                            "name": "time",
+                            "typename": "Time!"
+                        },
+                        {
+                            "name": "datetime",
+                            "typename": "DateTime!"
+                        }
+                    ]
+                }
+            ],
+            "__objects": [],
+            "__actions": [
+                {
+                    "name": "getObject",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "TestObject!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                },
+                {
+                    "name": "getDate",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "Date!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                },
+                {
+                    "name": "getTime",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "Time!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                },
+                {
+                    "name": "getDatetime",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "DateTime!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                },
+                {
+                    "name": "echo",
+                    "parameters": [
+                        {
+                            "name": "date",
+                            "typename": "Date!",
+                            "default": None
+                        },
+                        {
+                            "name": "time",
+                            "typename": "Time!",
+                            "default": None
+                        },
+                        {
+                            "name": "datetime",
+                            "typename": "DateTime!",
+                            "default": None
+                        }
+                    ],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "TestObject!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                }
+            ]
+        }
     }
 
     def test_request(self):

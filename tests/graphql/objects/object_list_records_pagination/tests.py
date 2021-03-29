@@ -11,22 +11,36 @@ class Test(GraphQLTestCase):
         
         type ActionInfo {
           name: String!
+          parameters: [FieldInfo!]!
+          data: [FieldInfo!]!
+          return_type: String!
           permitted: Boolean!
           deny_reason: String
           retry_in: Duration
+          mutation: Boolean!
+          __str__: String!
         }
         
         scalar Duration
+        
+        type FieldInfo {
+          name: String!
+          typename: String!
+          default: String
+          __str__: String!
+        }
         
         type ObjectInfo {
           name: String!
           pk_field: String
           actions: [ActionInfo!]!
+          __str__: String!
         }
         
         type Person {
           name: String!
           age: Int!
+          __str__: String!
           __actions: [ActionInfo!]!
         }
         
@@ -38,40 +52,74 @@ class Test(GraphQLTestCase):
         type PersonList {
           count: Int!
           records(limit: Int = 20, offset: Int = 0): [Person!]!
+          __str__: String!
           __actions: [ActionInfo!]!
         }
         
         type Query {
           get(input: [PersonInput!]!): PersonList!
+          __types: [TypeInfo!]!
           __objects: [ObjectInfo!]!
           __actions: [ActionInfo!]!
         }
-
+        
+        type TypeInfo {
+          typename: String!
+          fields: [FieldInfo!]!
+          __str__: String!
+        }
     """
 
     REF_META_SCHEMA = {
-      "data": {
-        "__objects": [
-          {
-            "name": "Person",
-            "pk_field": None,
-            "actions": []
-          },
-          {
-            "name": "PersonList",
-            "pk_field": None,
-            "actions": []
-          }
-        ],
-        "__actions": [
-          {
-            "name": "get",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          }
-        ]
-      }
+        "data": {
+            "__types": [
+                {
+                    "typename": "Person",
+                    "fields": [
+                        {
+                            "name": "name",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "age",
+                            "typename": "Integer!"
+                        }
+                    ]
+                },
+                {
+                    "typename": "PersonList",
+                    "fields": [
+                        {
+                            "name": "count",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "records",
+                            "typename": "[Person!]!"
+                        }
+                    ]
+                }
+            ],
+            "__objects": [],
+            "__actions": [
+                {
+                    "name": "get",
+                    "parameters": [
+                        {
+                            "name": "input",
+                            "typename": "[Person!]!",
+                            "default": None
+                        }
+                    ],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "PersonList!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                }
+            ]
+        }
     }
 
     def test_request_no_pag(self):

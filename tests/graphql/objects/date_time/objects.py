@@ -56,4 +56,4 @@ actions = {
 
 
 schema = generate(GraphQLAdapter, actions)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)

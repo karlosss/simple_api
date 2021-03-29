@@ -5,108 +5,168 @@ from tests.graphql.graphql_test_utils import GraphQLTestCase, remove_ws
 class Test(GraphQLTestCase):
     GRAPHQL_SCHEMA = schema
     REF_GRAPHQL_SCHEMA = """
-                schema {
-                  query: Query
-                }
-                
-                type ActionInfo {
-                  name: String!
-                  permitted: Boolean!
-                  deny_reason: String
-                  retry_in: Duration
-                }
-                
-                scalar Duration
-                
-                type ObjectInfo {
-                  name: String!
-                  pk_field: String
-                  actions: [ActionInfo!]!
-                }
-                
-                type Query {
-                  allow1: Boolean!
-                  allow2: Boolean!
-                  allow3: Boolean!
-                  allow4: Boolean!
-                  allow5: Boolean!
-                  deny1: Boolean!
-                  deny2: Boolean!
-                  deny3: Boolean!
-                  deny4: Boolean!
-                  deny5: Boolean!
-                  __objects: [ObjectInfo!]!
-                  __actions: [ActionInfo!]!
-                }
-                """
+        schema {
+          query: Query
+        }
+        
+        type ActionInfo {
+          name: String!
+          parameters: [FieldInfo!]!
+          data: [FieldInfo!]!
+          return_type: String!
+          permitted: Boolean!
+          deny_reason: String
+          retry_in: Duration
+          mutation: Boolean!
+          __str__: String!
+        }
+        
+        scalar Duration
+        
+        type FieldInfo {
+          name: String!
+          typename: String!
+          default: String
+          __str__: String!
+        }
+        
+        type ObjectInfo {
+          name: String!
+          pk_field: String
+          actions: [ActionInfo!]!
+          __str__: String!
+        }
+        
+        type Query {
+          allow1: Boolean!
+          allow2: Boolean!
+          allow3: Boolean!
+          allow4: Boolean!
+          allow5: Boolean!
+          deny1: Boolean!
+          deny2: Boolean!
+          deny3: Boolean!
+          deny4: Boolean!
+          deny5: Boolean!
+          __types: [TypeInfo!]!
+          __objects: [ObjectInfo!]!
+          __actions: [ActionInfo!]!
+        }
+        
+        type TypeInfo {
+          typename: String!
+          fields: [FieldInfo!]!
+          __str__: String!
+        }"""
 
     REF_META_SCHEMA = {
-            "data": {
-                "__objects": [],
-                "__actions": [
-                  {
+        "data": {
+            "__types": [],
+            "__objects": [],
+            "__actions": [
+                {
                     "name": "allow1",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "Boolean!",
                     "permitted": True,
                     "deny_reason": None,
                     "retry_in": None
-                  },
-                  {
+                },
+                {
                     "name": "allow2",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "Boolean!",
                     "permitted": True,
                     "deny_reason": None,
                     "retry_in": None
-                  },
-                  {
+                },
+                {
                     "name": "allow3",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "Boolean!",
                     "permitted": True,
                     "deny_reason": None,
                     "retry_in": None
-                  },
-                  {
+                },
+                {
                     "name": "allow4",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "Boolean!",
                     "permitted": True,
                     "deny_reason": None,
                     "retry_in": None
-                  },
-                  {
+                },
+                {
                     "name": "allow5",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "Boolean!",
                     "permitted": True,
                     "deny_reason": None,
                     "retry_in": None
-                  },
-                  {
+                },
+                {
                     "name": "deny1",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "Boolean!",
                     "permitted": False,
                     "deny_reason": "You do not have permission to access this.",
                     "retry_in": None
-                  },
-                  {
+                },
+                {
                     "name": "deny2",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "Boolean!",
                     "permitted": False,
                     "deny_reason": "You do not have permission to access this.",
                     "retry_in": None
-                  },
-                  {
+                },
+                {
                     "name": "deny3",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "Boolean!",
                     "permitted": False,
                     "deny_reason": "You do not have permission to access this.",
                     "retry_in": None
-                  },
-                  {
+                },
+                {
                     "name": "deny4",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "Boolean!",
                     "permitted": False,
                     "deny_reason": "You do not have permission to access this.",
                     "retry_in": None
-                  },
-                  {
+                },
+                {
                     "name": "deny5",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "Boolean!",
                     "permitted": False,
                     "deny_reason": "You do not have permission to access this.",
                     "retry_in": None
-                  }
-                ]
-              }
+                }
+            ]
         }
+    }
 
     def test_allow1(self):
         resp = self.query(
@@ -118,9 +178,9 @@ class Test(GraphQLTestCase):
         )
 
         exp = {
-          "data": {
-            "allow1": True
-          }
+            "data": {
+                "allow1": True
+            }
         }
 
         self.assertResponseNoErrors(resp)
@@ -136,9 +196,9 @@ class Test(GraphQLTestCase):
         )
 
         exp = {
-          "data": {
-            "allow2": True
-          }
+            "data": {
+                "allow2": True
+            }
         }
 
         self.assertResponseNoErrors(resp)
@@ -154,9 +214,9 @@ class Test(GraphQLTestCase):
         )
 
         exp = {
-          "data": {
-            "allow3": True
-          }
+            "data": {
+                "allow3": True
+            }
         }
 
         self.assertResponseNoErrors(resp)
@@ -172,9 +232,9 @@ class Test(GraphQLTestCase):
         )
 
         exp = {
-          "data": {
-            "allow4": True
-          }
+            "data": {
+                "allow4": True
+            }
         }
 
         self.assertResponseNoErrors(resp)
@@ -190,9 +250,9 @@ class Test(GraphQLTestCase):
         )
 
         exp = {
-          "data": {
-            "allow5": True
-          }
+            "data": {
+                "allow5": True
+            }
         }
 
         self.assertResponseNoErrors(resp)
@@ -208,21 +268,21 @@ class Test(GraphQLTestCase):
         )
 
         exp = {
-          "errors": [
-            {
-              "message": "You do not have permission to access this.",
-              "locations": [
+            "errors": [
                 {
-                  "line": 3,
-                  "column": 15
+                    "message": "You do not have permission to access this.",
+                    "locations": [
+                        {
+                            "line": 3,
+                            "column": 15
+                        }
+                    ],
+                    "path": [
+                        "deny1"
+                    ]
                 }
-              ],
-              "path": [
-                "deny1"
-              ]
-            }
-          ],
-          "data": None
+            ],
+            "data": None
         }
 
         self.assertResponseHasErrors(resp)
@@ -238,21 +298,21 @@ class Test(GraphQLTestCase):
         )
 
         exp = {
-          "errors": [
-            {
-              "message": "You do not have permission to access this.",
-              "locations": [
+            "errors": [
                 {
-                  "line": 3,
-                  "column": 15
+                    "message": "You do not have permission to access this.",
+                    "locations": [
+                        {
+                            "line": 3,
+                            "column": 15
+                        }
+                    ],
+                    "path": [
+                        "deny2"
+                    ]
                 }
-              ],
-              "path": [
-                "deny2"
-              ]
-            }
-          ],
-          "data": None
+            ],
+            "data": None
         }
 
         self.assertResponseHasErrors(resp)
@@ -268,21 +328,21 @@ class Test(GraphQLTestCase):
         )
 
         exp = {
-          "errors": [
-            {
-              "message": "You do not have permission to access this.",
-              "locations": [
+            "errors": [
                 {
-                  "line": 3,
-                  "column": 15
+                    "message": "You do not have permission to access this.",
+                    "locations": [
+                        {
+                            "line": 3,
+                            "column": 15
+                        }
+                    ],
+                    "path": [
+                        "deny3"
+                    ]
                 }
-              ],
-              "path": [
-                "deny3"
-              ]
-            }
-          ],
-          "data": None
+            ],
+            "data": None
         }
 
         self.assertResponseHasErrors(resp)
@@ -298,21 +358,21 @@ class Test(GraphQLTestCase):
         )
 
         exp = {
-          "errors": [
-            {
-              "message": "You do not have permission to access this.",
-              "locations": [
+            "errors": [
                 {
-                  "line": 3,
-                  "column": 15
+                    "message": "You do not have permission to access this.",
+                    "locations": [
+                        {
+                            "line": 3,
+                            "column": 15
+                        }
+                    ],
+                    "path": [
+                        "deny4"
+                    ]
                 }
-              ],
-              "path": [
-                "deny4"
-              ]
-            }
-          ],
-          "data": None
+            ],
+            "data": None
         }
 
         self.assertResponseHasErrors(resp)
@@ -328,21 +388,21 @@ class Test(GraphQLTestCase):
         )
 
         exp = {
-          "errors": [
-            {
-              "message": "You do not have permission to access this.",
-              "locations": [
+            "errors": [
                 {
-                  "line": 3,
-                  "column": 15
+                    "message": "You do not have permission to access this.",
+                    "locations": [
+                        {
+                            "line": 3,
+                            "column": 15
+                        }
+                    ],
+                    "path": [
+                        "deny5"
+                    ]
                 }
-              ],
-              "path": [
-                "deny5"
-              ]
-            }
-          ],
-          "data": None
+            ],
+            "data": None
         }
 
         self.assertResponseHasErrors(resp)

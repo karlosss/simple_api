@@ -31,4 +31,4 @@ class Owner(Object):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)

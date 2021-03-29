@@ -12,9 +12,14 @@ class Test(GraphQLTestCase):
         
         type ActionInfo {
           name: String!
+          parameters: [FieldInfo!]!
+          data: [FieldInfo!]!
+          return_type: String!
           permitted: Boolean!
           deny_reason: String
           retry_in: Duration
+          mutation: Boolean!
+          __str__: String!
         }
         
         type CustomUser {
@@ -114,9 +119,17 @@ class Test(GraphQLTestCase):
         type CustomUserList {
           count: Int!
           data(limit: Int = 20, offset: Int = 0): [CustomUser!]!
+          __str__: String!
         }
         
         scalar Duration
+        
+        type FieldInfo {
+          name: String!
+          typename: String!
+          default: String
+          __str__: String!
+        }
         
         type Mutation {
           CustomUserCreate(data: CustomUserCreateInput!): CustomUser!
@@ -130,6 +143,7 @@ class Test(GraphQLTestCase):
           name: String!
           pk_field: String
           actions: [ActionInfo!]!
+          __str__: String!
         }
         
         type Post {
@@ -190,6 +204,7 @@ class Test(GraphQLTestCase):
         type PostList {
           count: Int!
           data(limit: Int = 20, offset: Int = 0): [Post!]!
+          __str__: String!
         }
         
         input PostUpdateInput {
@@ -203,53 +218,608 @@ class Test(GraphQLTestCase):
           PostList(filters: PostFiltersInput): PostList!
           CustomUserDetail(id: Int!): CustomUser!
           CustomUserList(filters: CustomUserFiltersInput): CustomUserList!
+          __types: [TypeInfo!]!
           __objects: [ObjectInfo!]!
           __actions: [ActionInfo!]!
+        }
+        
+        type TypeInfo {
+          typename: String!
+          fields: [FieldInfo!]!
+          __str__: String!
         }
     """
 
     REF_META_SCHEMA = {
-      "data": {
-        "__objects": [
-          {
-            "name": "CustomUser",
-            "pk_field": "id",
-            "actions": [
-              {
-                "name": "CustomUserList",
-                "permitted": True,
-                "deny_reason": None,
-                "retry_in": None
-              },
-              {
-                "name": "CustomUserCreate",
-                "permitted": True,
-                "deny_reason": None,
-                "retry_in": None
-              }
-            ]
-          },
-          {
-            "name": "Post",
-            "pk_field": "id",
-            "actions": [
-              {
-                "name": "PostList",
-                "permitted": True,
-                "deny_reason": None,
-                "retry_in": None
-              },
-              {
-                "name": "PostCreate",
-                "permitted": True,
-                "deny_reason": None,
-                "retry_in": None
-              }
-            ]
-          }
-        ],
-        "__actions": []
-      }
+        "data": {
+            "__types": [
+                {
+                    "typename": "CustomUserFilters",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "email",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "email__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "email__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "email__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "email__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "email__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "email__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "email__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "email__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "email__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "username__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "username__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "first_name",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "first_name__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "first_name__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "first_name__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "first_name__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "first_name__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "first_name__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "first_name__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "first_name__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "first_name__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "last_name",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "last_name__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "last_name__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "last_name__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "last_name__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "last_name__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "last_name__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "last_name__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "last_name__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "last_name__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "password",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "password__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "password__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "password__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "password__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "password__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "password__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "password__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "password__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "password__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "bio",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "bio__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "bio__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "bio__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "bio__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "bio__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "bio__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "bio__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "bio__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "bio__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ordering",
+                            "typename": "[String!]"
+                        }
+                    ]
+                },
+                {
+                    "typename": "CustomUser",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "email",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "username",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "first_name",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "last_name",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "password",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "bio",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "is_admin",
+                            "typename": "Boolean!"
+                        },
+                        {
+                            "name": "post_set",
+                            "typename": "Paginated[Post]!"
+                        }
+                    ]
+                },
+                {
+                    "typename": "PostFilters",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "title",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "title__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "title__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "content",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "content__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "content__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "content__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "content__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "content__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "content__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "content__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "content__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "content__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author_id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "author_id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "author_id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "author_id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "author_id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "author_id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "author_id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "author_id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "ordering",
+                            "typename": "[String!]"
+                        }
+                    ]
+                },
+                {
+                    "typename": "Post",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "title",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "content",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "author",
+                            "typename": "CustomUser!"
+                        }
+                    ]
+                }
+            ],
+            "__objects": [
+                {
+                    "name": "CustomUser",
+                    "pk_field": "id",
+                    "actions": [
+                        {
+                            "name": "CustomUserList",
+                            "parameters": [
+                                {
+                                    "name": "filters",
+                                    "typename": "CustomUserFilters",
+                                    "default": None
+                                }
+                            ],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "Paginated[CustomUser]!",
+                            "permitted": True,
+                            "deny_reason": None,
+                            "retry_in": None
+                        },
+                        {
+                            "name": "CustomUserCreate",
+                            "parameters": [],
+                            "data": [
+                                {
+                                    "name": "username",
+                                    "typename": "String!",
+                                    "default": None
+                                }
+                            ],
+                            "mutation": True,
+                            "return_type": "CustomUser!",
+                            "permitted": True,
+                            "deny_reason": None,
+                            "retry_in": None
+                        }
+                    ]
+                },
+                {
+                    "name": "Post",
+                    "pk_field": "id",
+                    "actions": [
+                        {
+                            "name": "PostList",
+                            "parameters": [
+                                {
+                                    "name": "filters",
+                                    "typename": "PostFilters",
+                                    "default": None
+                                }
+                            ],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "Paginated[Post]!",
+                            "permitted": True,
+                            "deny_reason": None,
+                            "retry_in": None
+                        },
+                        {
+                            "name": "PostCreate",
+                            "parameters": [],
+                            "data": [
+                                {
+                                    "name": "title",
+                                    "typename": "String!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "content",
+                                    "typename": "String!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "author_id",
+                                    "typename": "Integer!",
+                                    "default": None
+                                }
+                            ],
+                            "mutation": True,
+                            "return_type": "Post!",
+                            "permitted": True,
+                            "deny_reason": None,
+                            "retry_in": None
+                        }
+                    ]
+                }
+            ],
+            "__actions": []
+        }
     }
 
     def test_requests(self):
@@ -270,18 +840,18 @@ class Test(GraphQLTestCase):
               }
               """)
         exp = {
-          "data": {
-            "CustomUserCreate": {
-              "id": 1,
-              "email": "default@example.com",
-              "username": "adam",
-              "first_name": "Name",
-              "last_name": "Surname",
-              "password": "default",
-              "bio": "",
-              "is_admin": False
+            "data": {
+                "CustomUserCreate": {
+                    "id": 1,
+                    "email": "default@example.com",
+                    "username": "adam",
+                    "first_name": "Name",
+                    "last_name": "Surname",
+                    "password": "default",
+                    "bio": "",
+                    "is_admin": False
+                }
             }
-          }
         }
         self.assertResponseNoErrors(resp)
         self.assertJSONEqual(resp.content, exp)
@@ -305,30 +875,30 @@ class Test(GraphQLTestCase):
         }
         """)
         exp = {
-          "data": {
-            "CustomUserList": {
-              "count": 1,
-              "data": [
-                {
-                  "id": 1,
-                  "username": "adam",
-                  "password": "default",
-                  "__actions": [
-                    {
-                      "name": "CustomUserDetail",
-                      "permitted": True,
-                      "deny_reason": None,
-                      "retry_in": None
-                    },
-                    {
-                      "name": "CustomUserChangePassword",
-                      "permitted": True,
-                      "deny_reason": None,
-                      "retry_in": None
-                    }
-                  ]
+            "data": {
+                "CustomUserList": {
+                    "count": 1,
+                    "data": [
+                        {
+                            "id": 1,
+                            "username": "adam",
+                            "password": "default",
+                            "__actions": [
+                                {
+                                    "name": "CustomUserDetail",
+                                    "permitted": True,
+                                    "deny_reason": None,
+                                    "retry_in": None
+                                },
+                                {
+                                    "name": "CustomUserChangePassword",
+                                    "permitted": True,
+                                    "deny_reason": None,
+                                    "retry_in": None
+                                }
+                            ]
+                        }
+                    ]
                 }
-              ]
             }
-          }
         }

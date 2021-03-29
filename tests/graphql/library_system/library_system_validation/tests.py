@@ -12,9 +12,14 @@ class Test(GraphQLTestCase):
     
     type ActionInfo {
       name: String!
+      parameters: [FieldInfo!]!
+      data: [FieldInfo!]!
+      return_type: String!
       permitted: Boolean!
       deny_reason: String
       retry_in: Duration
+      mutation: Boolean!
+      __str__: String!
     }
     
     type Book {
@@ -94,6 +99,7 @@ class Test(GraphQLTestCase):
     type BookList {
       count: Int!
       data(limit: Int = 20, offset: Int = 0): [Book!]!
+      __str__: String!
     }
     
     input BookUpdateInput {
@@ -148,6 +154,7 @@ class Test(GraphQLTestCase):
     type BookmarkList {
       count: Int!
       data(limit: Int = 20, offset: Int = 0): [Bookmark!]!
+      __str__: String!
     }
     
     input BookmarkUpdateInput {
@@ -156,6 +163,13 @@ class Test(GraphQLTestCase):
     }
     
     scalar Duration
+    
+    type FieldInfo {
+      name: String!
+      typename: String!
+      default: String
+      __str__: String!
+    }
     
     type Mutation {
       BookCreate(data: BookCreateInput!): Book!
@@ -170,6 +184,7 @@ class Test(GraphQLTestCase):
       name: String!
       pk_field: String
       actions: [ActionInfo!]!
+      __str__: String!
     }
     
     type Query {
@@ -179,12 +194,370 @@ class Test(GraphQLTestCase):
       BookList(filters: BookFiltersInput): BookList!
       BookGetById(id: Int!): Book!
       BookGetById2(id: Int!, data: BookGetById2Input!): Book!
+      __types: [TypeInfo!]!
       __objects: [ObjectInfo!]!
       __actions: [ActionInfo!]!
-    }"""
+    }
+    
+    type TypeInfo {
+      typename: String!
+      fields: [FieldInfo!]!
+      __str__: String!
+    }
+"""
 
     REF_META_SCHEMA = {
         "data": {
+            "__types": [
+                {
+                    "typename": "BookFilters",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "author",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "author__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "author__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "title__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "title__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "ISBN__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "ISBN__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "shelf",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "shelf__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "shelf__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "shelf__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "shelf__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "shelf__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "shelf__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "shelf__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "ordering",
+                            "typename": "[String!]"
+                        }
+                    ]
+                },
+                {
+                    "typename": "Book",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "author",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "title",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "ISBN",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "restricted",
+                            "typename": "Boolean!"
+                        },
+                        {
+                            "name": "shelf",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "bookmark_set",
+                            "typename": "Paginated[Bookmark]!"
+                        }
+                    ]
+                },
+                {
+                    "typename": "BookmarkFilters",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "page",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "page__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "page__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "page__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "page__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "page__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "page__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "page__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "book_id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "book_id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "book_id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "book_id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "book_id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "book_id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "book_id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "book_id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "ordering",
+                            "typename": "[String!]"
+                        }
+                    ]
+                },
+                {
+                    "typename": "Bookmark",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "page",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "book",
+                            "typename": "Book!"
+                        }
+                    ]
+                }
+            ],
             "__objects": [
                 {
                     "name": "Book",
@@ -192,24 +565,90 @@ class Test(GraphQLTestCase):
                     "actions": [
                         {
                             "name": "BookList",
+                            "parameters": [
+                                {
+                                    "name": "filters",
+                                    "typename": "BookFilters",
+                                    "default": None
+                                }
+                            ],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "Paginated[Book]!",
                             "permitted": True,
                             "deny_reason": None,
                             "retry_in": None
                         },
                         {
                             "name": "BookCreate",
+                            "parameters": [],
+                            "data": [
+                                {
+                                    "name": "author",
+                                    "typename": "String!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "title",
+                                    "typename": "String!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "ISBN",
+                                    "typename": "String!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "restricted",
+                                    "typename": "Boolean!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "shelf",
+                                    "typename": "Integer!",
+                                    "default": None
+                                }
+                            ],
+                            "mutation": True,
+                            "return_type": "Book!",
                             "permitted": True,
                             "deny_reason": None,
                             "retry_in": None
                         },
                         {
                             "name": "BookGetById",
+                            "parameters": [
+                                {
+                                    "name": "id",
+                                    "typename": "Integer!",
+                                    "default": None
+                                }
+                            ],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "Book!",
                             "permitted": True,
                             "deny_reason": None,
                             "retry_in": None
                         },
                         {
                             "name": "BookGetById2",
+                            "parameters": [
+                                {
+                                    "name": "id",
+                                    "typename": "Integer!",
+                                    "default": None
+                                }
+                            ],
+                            "data": [
+                                {
+                                    "name": "Title",
+                                    "typename": "String!",
+                                    "default": None
+                                }
+                            ],
+                            "mutation": False,
+                            "return_type": "Book!",
                             "permitted": True,
                             "deny_reason": None,
                             "retry_in": None
@@ -222,12 +661,37 @@ class Test(GraphQLTestCase):
                     "actions": [
                         {
                             "name": "BookmarkList",
+                            "parameters": [
+                                {
+                                    "name": "filters",
+                                    "typename": "BookmarkFilters",
+                                    "default": None
+                                }
+                            ],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "Paginated[Bookmark]!",
                             "permitted": True,
                             "deny_reason": None,
                             "retry_in": None
                         },
                         {
                             "name": "BookmarkCreate",
+                            "parameters": [],
+                            "data": [
+                                {
+                                    "name": "page",
+                                    "typename": "Integer!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "book_id",
+                                    "typename": "Integer!",
+                                    "default": None
+                                }
+                            ],
+                            "mutation": True,
+                            "return_type": "Bookmark!",
                             "permitted": True,
                             "deny_reason": None,
                             "retry_in": None
@@ -295,7 +759,7 @@ class Test(GraphQLTestCase):
         ret = {
             "errors": [
                 {
-                    "message": "Validation failed in LogicalConnector",
+                    "message": "Validation failed in LogicalConnector \"And\" on field \"id\"",
                     "locations": [
                         {
                             "line": 2,
@@ -322,7 +786,7 @@ class Test(GraphQLTestCase):
         ret = {
             "errors": [
                 {
-                    "message": "Validation failed in LogicalConnector",
+                    "message": "Validation failed in LogicalConnector \"And\" on field \"id\"",
                     "locations": [
                         {
                             "line": 2,

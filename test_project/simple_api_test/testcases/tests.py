@@ -13,16 +13,16 @@ class Test(GraphQLTestCase):
           query: Query
           mutation: Mutation
         }
-        
+
         type ActionInfo {
           name: String!
           permitted: Boolean!
           deny_reason: String
           retry_in: Duration
         }
-        
+
         scalar Duration
-        
+
         type Mutation {
           UserCreate(data: UserCreateInput!): User!
           UserUpdate(data: UserUpdateInput!, id: Int!): User!
@@ -31,13 +31,13 @@ class Test(GraphQLTestCase):
           PostUpdate(data: PostUpdateInput!, id: Int!): Post!
           PostDelete(id: Int!): Boolean!
         }
-        
+
         type ObjectInfo {
           name: String!
           pk_field: String
           actions: [ActionInfo!]!
         }
-        
+
         type Post {
           id: Int!
           title: String!
@@ -46,12 +46,12 @@ class Test(GraphQLTestCase):
           __str__: String!
           __actions: [ActionInfo!]!
         }
-        
+
         input PostCreateInput {
           title: String!
           content: String!
         }
-        
+
         input PostFiltersInput {
           id: Int
           id__exact: Int
@@ -91,18 +91,18 @@ class Test(GraphQLTestCase):
           author_id__lte: Int
           ordering: [String!]
         }
-        
+
         type PostList {
           count: Int!
           data(limit: Int = 20, offset: Int = 0): [Post!]!
         }
-        
+
         input PostUpdateInput {
           title: String
           content: String
           author_id: Int
         }
-        
+
         type Query {
           PostDetail(id: Int!): Post!
           PostList(filters: PostFiltersInput): PostList!
@@ -113,22 +113,22 @@ class Test(GraphQLTestCase):
           __objects: [ObjectInfo!]!
           __actions: [ActionInfo!]!
         }
-        
+
         type User {
           id: Int!
           username: String!
           __str__: String!
           __actions: [ActionInfo!]!
         }
-        
+
         input UserChangePasswordInput {
           password: String!
         }
-        
+
         input UserCreateInput {
           username: String!
         }
-        
+
         input UserFiltersInput {
           id: Int
           id__exact: Int
@@ -150,12 +150,12 @@ class Test(GraphQLTestCase):
           username__startswith: String
           ordering: [String!]
         }
-        
+
         type UserList {
           count: Int!
           data(limit: Int = 20, offset: Int = 0): [User!]!
         }
-        
+
         input UserUpdateInput {
           username: String
         }
@@ -163,65 +163,65 @@ class Test(GraphQLTestCase):
 
     # anonymous user
     REF_META_SCHEMA = {
-      "data": {
-        "__objects": [
-          {
-            "name": "User",
-            "pk_field": "id",
-            "actions": [
-              {
-                "name": "UserList",
-                "permitted": False,
-                "deny_reason": "You do not have permission to access this.",
-                "retry_in": None
-              },
-              {
-                "name": "UserCreate",
-                "permitted": False,
-                "deny_reason": "You do not have permission to access this.",
-                "retry_in": None
-              },
-              {
-                "name": "UserChangePassword",
-                "permitted": False,
-                "deny_reason": "You do not have permission to access this.",
-                "retry_in": None
-              },
-              {
-                "name": "UserMyProfile",
-                "permitted": False,
-                "deny_reason": "You do not have permission to access this.",
-                "retry_in": None
-              }
-            ]
-          },
-          {
-            "name": "Post",
-            "pk_field": "id",
-            "actions": [
-              {
-                "name": "PostList",
-                "permitted": False,
-                "deny_reason": "You do not have permission to access this.",
-                "retry_in": None
-              },
-              {
-                "name": "PostCreate",
-                "permitted": False,
-                "deny_reason": "You do not have permission to access this.",
-                "retry_in": None
-              }
-            ]
-          }
-        ],
-        "__actions": []
-      }
-    } 
+        "data": {
+            "__objects": [
+                {
+                    "name": "User",
+                    "pk_field": "id",
+                    "actions": [
+                        {
+                            "name": "UserList",
+                            "permitted": False,
+                            "deny_reason": "You do not have permission to access this.",
+                            "retry_in": None
+                        },
+                        {
+                            "name": "UserCreate",
+                            "permitted": False,
+                            "deny_reason": "You do not have permission to access this.",
+                            "retry_in": None
+                        },
+                        {
+                            "name": "UserChangePassword",
+                            "permitted": False,
+                            "deny_reason": "You do not have permission to access this.",
+                            "retry_in": None
+                        },
+                        {
+                            "name": "UserMyProfile",
+                            "permitted": False,
+                            "deny_reason": "You do not have permission to access this.",
+                            "retry_in": None
+                        }
+                    ]
+                },
+                {
+                    "name": "Post",
+                    "pk_field": "id",
+                    "actions": [
+                        {
+                            "name": "PostList",
+                            "permitted": False,
+                            "deny_reason": "You do not have permission to access this.",
+                            "retry_in": None
+                        },
+                        {
+                            "name": "PostCreate",
+                            "permitted": False,
+                            "deny_reason": "You do not have permission to access this.",
+                            "retry_in": None
+                        }
+                    ]
+                }
+            ],
+            "__actions": []
+        }
+    }
 
     def test_non_admin(self):
-      user = User.objects.create_user(username="common", email="common@example.com")
-      self._client.login(user=user)
-      resp = self.query("""
+        user = User.objects.create_user(username="common", email="common@example.com")
+        self._client.login(user=user)
+        resp = self.query("""
         query{
           __objects{
             name
@@ -241,26 +241,26 @@ class Test(GraphQLTestCase):
           }
         }
         """)
-      data = json.loads(resp.content)  # check what nonadmin can do with users
-      for object in data["data"]["__objects"]:
-        if object["name"] == "User":
-          for action in object["actions"]:
-            if action["name"] == "UserList":
-              self.assertFalse(action["permitted"])
-            elif action["name"] == "UserCreate":
-              self.assertFalse(action["permitted"])
-            elif action["name"] == "UserChangePassword":
-              self.assertTrue(action["permitted"])
-            elif action["name"] == "UserMyProfile":
-              self.assertTrue(action["permitted"])
-        if object["name"] == "Post":
-          for action in object["actions"]:
-            if action["name"] == "PostList":
-              self.assertTrue(action["permitted"])
-            elif action["name"] == "PostCreate":
-              self.assertTrue(action["permitted"])
+        data = json.loads(resp.content)  # check what nonadmin can do with users
+        for object in data["data"]["__objects"]:
+            if object["name"] == "User":
+                for action in object["actions"]:
+                    if action["name"] == "UserList":
+                        self.assertFalse(action["permitted"])
+                    elif action["name"] == "UserCreate":
+                        self.assertFalse(action["permitted"])
+                    elif action["name"] == "UserChangePassword":
+                        self.assertTrue(action["permitted"])
+                    elif action["name"] == "UserMyProfile":
+                        self.assertTrue(action["permitted"])
+            if object["name"] == "Post":
+                for action in object["actions"]:
+                    if action["name"] == "PostList":
+                        self.assertTrue(action["permitted"])
+                    elif action["name"] == "PostCreate":
+                        self.assertTrue(action["permitted"])
 
-      self.query("""
+        self.query("""
         mutation post_create{
           PostCreate(data: {title: "A post", content: "Nothing here..."}){
             id
@@ -273,7 +273,7 @@ class Test(GraphQLTestCase):
         }
       """)
 
-      resp = self.query("""
+        resp = self.query("""
         query{
           PostList{
             data{
@@ -292,14 +292,14 @@ class Test(GraphQLTestCase):
         }
       """)
 
-      data = json.loads(resp.content)["data"]["PostList"]["data"]  # check what nonadmin can do with their posts
-      for action in data[0]["__actions"]:
-        self.assertTrue(action["permitted"])
+        data = json.loads(resp.content)["data"]["PostList"]["data"]  # check what nonadmin can do with their posts
+        for action in data[0]["__actions"]:
+            self.assertTrue(action["permitted"])
 
-      user2 = User.objects.create_user(username="common2", email="common2@example.com")
-      self._client.login(user=user2)
+        user2 = User.objects.create_user(username="common2", email="common2@example.com")
+        self._client.login(user=user2)
 
-      resp = self.query("""
+        resp = self.query("""
         query{
           PostList{
             data{
@@ -318,14 +318,14 @@ class Test(GraphQLTestCase):
         }
       """)
 
-      data = json.loads(resp.content)["data"]["PostList"]["data"]  # check what nonadmin can do with not their posts
-      for action in data[0]["__actions"]:
-        if action["name"] == "PostDetail":
-          self.assertTrue(action["permitted"])
-        else:
-          self.assertFalse(action["permitted"])
+        data = json.loads(resp.content)["data"]["PostList"]["data"]  # check what nonadmin can do with not their posts
+        for action in data[0]["__actions"]:
+            if action["name"] == "PostDetail":
+                self.assertTrue(action["permitted"])
+            else:
+                self.assertFalse(action["permitted"])
 
-      resp = self.query("""
+        resp = self.query("""
         query{
           UserMyProfile{
             id
@@ -334,19 +334,19 @@ class Test(GraphQLTestCase):
         }
       """)
 
-      exp = {"data":{"UserMyProfile":{"id":2,"username":"common2"}}}
+        exp = {"data": {"UserMyProfile": {"id": 2, "username": "common2"}}}
 
-      self.assertResponseNoErrors(resp)
-      self.assertJSONEqual(resp.content, exp)
+        self.assertResponseNoErrors(resp)
+        self.assertJSONEqual(resp.content, exp)
 
     def test_admin(self):
-      admin = User.objects.create_user(username="admin", email="admin@example.com", is_staff=True)
-      user = User.objects.create_user(username="common", email="common@example.com")
+        admin = User.objects.create_user(username="admin", email="admin@example.com", is_staff=True)
+        user = User.objects.create_user(username="common", email="common@example.com")
 
-      # check if admin can delete someone else's post
-      self._client.login(user=user)
+        # check if admin can delete someone else's post
+        self._client.login(user=user)
 
-      self.query("""
+        self.query("""
         mutation post_create{
           PostCreate(data: {title: "A post", content: "Nothing here..."}){
             id
@@ -359,9 +359,9 @@ class Test(GraphQLTestCase):
         }
       """)
 
-      self._client.login(user=admin)
+        self._client.login(user=admin)
 
-      resp = self.query("""
+        resp = self.query("""
         query{
           PostList{
             data{
@@ -380,6 +380,6 @@ class Test(GraphQLTestCase):
         }
       """)
 
-      data = json.loads(resp.content)["data"]["PostList"]["data"]  # check what nonadmin can do with their posts
-      for action in data[0]["__actions"]:
-        self.assertTrue(action["permitted"])
+        data = json.loads(resp.content)["data"]["PostList"]["data"]  # check what nonadmin can do with their posts
+        for action in data[0]["__actions"]:
+            self.assertTrue(action["permitted"])

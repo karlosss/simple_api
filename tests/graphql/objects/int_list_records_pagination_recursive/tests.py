@@ -11,17 +11,30 @@ class Test(GraphQLTestCase):
         
         type ActionInfo {
           name: String!
+          parameters: [FieldInfo!]!
+          data: [FieldInfo!]!
+          return_type: String!
           permitted: Boolean!
           deny_reason: String
           retry_in: Duration
+          mutation: Boolean!
+          __str__: String!
         }
         
         scalar Duration
+        
+        type FieldInfo {
+          name: String!
+          typename: String!
+          default: String
+          __str__: String!
+        }
         
         type IntList {
           count: Int!
           all_records: [Int!]!
           records(limit: Int = 20, offset: Int = 0): IntList!
+          __str__: String!
           __actions: [ActionInfo!]!
         }
         
@@ -29,33 +42,64 @@ class Test(GraphQLTestCase):
           name: String!
           pk_field: String
           actions: [ActionInfo!]!
+          __str__: String!
         }
         
         type Query {
           get(input: [Int!]!): IntList!
+          __types: [TypeInfo!]!
           __objects: [ObjectInfo!]!
           __actions: [ActionInfo!]!
+        }
+        
+        type TypeInfo {
+          typename: String!
+          fields: [FieldInfo!]!
+          __str__: String!
         }
     """
 
     REF_META_SCHEMA = {
-      "data": {
-        "__objects": [
-          {
-            "name": "IntList",
-            "pk_field": None,
-            "actions": []
-          }
-        ],
-        "__actions": [
-          {
-            "name": "get",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          }
-        ]
-      }
+        "data": {
+            "__types": [
+                {
+                    "typename": "IntList",
+                    "fields": [
+                        {
+                            "name": "count",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "all_records",
+                            "typename": "[Integer!]!"
+                        },
+                        {
+                            "name": "records",
+                            "typename": "IntList!"
+                        }
+                    ]
+                }
+            ],
+            "__objects": [],
+            "__actions": [
+                {
+                    "name": "get",
+                    "parameters": [
+                        {
+                            "name": "input",
+                            "typename": "[Integer!]!",
+                            "default": None
+                        }
+                    ],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "IntList!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                }
+            ]
+        }
     }
 
     def test_request_no_pag(self):
