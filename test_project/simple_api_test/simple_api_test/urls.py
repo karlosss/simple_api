@@ -15,8 +15,6 @@ Including another URLconf
 """
 from django.urls import path
 from testcases.objects import patterns
-from simple_api_admin import views
 
 urlpatterns = patterns
-urlpatterns += path('simple/', views.site.urls),
 
