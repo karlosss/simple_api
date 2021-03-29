@@ -104,6 +104,8 @@ class DifficultyScoreGraphQlView(GraphQLView):
                             definition.selection_set,
                             fragments)
                         definitions_total_weight += def_weight
+                        if self.weight_limit and definitions_total_weight > self.weight_limit:
+                            raise QueryWeightExceeded("Your query exceeds the maximum query weight allowed")
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
 
@@ -142,8 +144,8 @@ class DifficultyScoreGraphQlView(GraphQLView):
             actionDetails = self.sec_weight_schema["actions"][action.name.value]
 
             if action.selection_set:
-                total_weight += actionDetails["weight"] * \
-                                self.calculate_field_score(actionDetails["returnType"],
+                total_weight += actionDetails["weight"]
+                total_weight += self.calculate_field_score(actionDetails["returnType"],
                                                            action.selection_set,
                                                            fragments)
             else:
