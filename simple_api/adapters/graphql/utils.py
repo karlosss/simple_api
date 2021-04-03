@@ -35,7 +35,7 @@ def build_patterns(url_path, schema, **kwargs):
                                                **kwargs))]
 
 
-def build_patterns_w(url_path, schema, weight_schema, **kwargs):
+def build_patterns_w(url_path, schema, weight_schema, default_introspection=False, middleware=None, **kwargs):
     list_limit = None
     depth_limit = None
     weight_limit = None
@@ -48,10 +48,17 @@ def build_patterns_w(url_path, schema, weight_schema, **kwargs):
         if "WEIGHT_LIMIT" in settings_dict["SECURITY"]:
             weight_limit = settings_dict["SECURITY"]["WEIGHT_LIMIT"]
 
+    middleware_list = []
+    if isinstance(middleware, list):
+        middleware_list = middleware
+
+    if not default_introspection:
+        middleware_list.append(DisableIntrospectionMiddleware())
+
     return [path(url_path, DifficultyScoreGraphQlView.as_view(graphiql=True,
                                                               schema=schema,
                                                               sec_weight_schema=weight_schema,
-                                                              middleware=[DisableIntrospectionMiddleware()],
+                                                              middleware=middleware,
                                                               weight_limit=weight_limit,
                                                               list_limit=list_limit,
                                                               depth_limit=depth_limit,
