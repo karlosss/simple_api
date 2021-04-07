@@ -1,385 +1,785 @@
-import json
-
-from django.contrib.auth.models import User
-
 from .objects import schema
-from tests.graphql.graphql_test_utils import remove_ws, GraphQLTestCase
+from tests.graphql.graphql_test_utils import GraphQLTestCase
+
+"""
+Test expects django settings:
+SIMPLE_API = {
+    "SECURITY": {
+        "LIST_LIMIT": 100,
+        "DEPTH_LIMIT": 20,
+        "WEIGHT_LIMIT": 20000
+    }
+}
+"""
 
 
 class Test(GraphQLTestCase):
     GRAPHQL_SCHEMA = schema
     REF_GRAPHQL_SCHEMA = """
-        schema {
-          query: Query
-          mutation: Mutation
-        }
-
-        type ActionInfo {
-          name: String!
-          permitted: Boolean!
-          deny_reason: String
-          retry_in: Duration
-        }
-
-        scalar Duration
-
-        type Mutation {
-          UserCreate(data: UserCreateInput!): User!
-          UserUpdate(data: UserUpdateInput!, id: Int!): User!
-          UserDelete(id: Int!): Boolean!
-          PostCreate(data: PostCreateInput!): Post!
-          PostUpdate(data: PostUpdateInput!, id: Int!): Post!
-          PostDelete(id: Int!): Boolean!
-        }
-
-        type ObjectInfo {
-          name: String!
-          pk_field: String
-          actions: [ActionInfo!]!
-        }
-
-        type Post {
-          id: Int!
-          title: String!
-          content: String!
-          author: User!
-          __str__: String!
-          __actions: [ActionInfo!]!
-        }
-
-        input PostCreateInput {
-          title: String!
-          content: String!
-        }
-
-        input PostFiltersInput {
-          id: Int
-          id__exact: Int
-          id__gt: Int
-          id__gte: Int
-          id__in: [Int!]
-          id__isnull: Boolean
-          id__lt: Int
-          id__lte: Int
-          title: String
-          title__contains: String
-          title__endswith: String
-          title__exact: String
-          title__icontains: String
-          title__in: [String!]
-          title__iregex: String
-          title__isnull: Boolean
-          title__regex: String
-          title__startswith: String
-          content: String
-          content__contains: String
-          content__endswith: String
-          content__exact: String
-          content__icontains: String
-          content__in: [String!]
-          content__iregex: String
-          content__isnull: Boolean
-          content__regex: String
-          content__startswith: String
-          author_id: Int
-          author_id__exact: Int
-          author_id__gt: Int
-          author_id__gte: Int
-          author_id__in: [Int!]
-          author_id__isnull: Boolean
-          author_id__lt: Int
-          author_id__lte: Int
-          ordering: [String!]
-        }
-
-        type PostList {
-          count: Int!
-          data(limit: Int = 20, offset: Int = 0): [Post!]!
-        }
-
-        input PostUpdateInput {
-          title: String
-          content: String
-          author_id: Int
-        }
-
-        type Query {
-          PostDetail(id: Int!): Post!
-          PostList(filters: PostFiltersInput): PostList!
-          UserDetail(id: Int!): User!
-          UserList(filters: UserFiltersInput): UserList!
-          UserChangePassword(data: UserChangePasswordInput!): User!
-          UserMyProfile: User!
-          __objects: [ObjectInfo!]!
-          __actions: [ActionInfo!]!
-        }
-
-        type User {
-          id: Int!
-          username: String!
-          __str__: String!
-          __actions: [ActionInfo!]!
-        }
-
-        input UserChangePasswordInput {
-          password: String!
-        }
-
-        input UserCreateInput {
-          username: String!
-        }
-
-        input UserFiltersInput {
-          id: Int
-          id__exact: Int
-          id__gt: Int
-          id__gte: Int
-          id__in: [Int!]
-          id__isnull: Boolean
-          id__lt: Int
-          id__lte: Int
-          username: String
-          username__contains: String
-          username__endswith: String
-          username__exact: String
-          username__icontains: String
-          username__in: [String!]
-          username__iregex: String
-          username__isnull: Boolean
-          username__regex: String
-          username__startswith: String
-          ordering: [String!]
-        }
-
-        type UserList {
-          count: Int!
-          data(limit: Int = 20, offset: Int = 0): [User!]!
-        }
-
-        input UserUpdateInput {
-          username: String
-        }
+    schema {
+      query: Query
+      mutation: Mutation
+    }
+    
+    type ActionInfo {
+      name: String!
+      parameters: [FieldInfo!]!
+      data: [FieldInfo!]!
+      return_type: String!
+      permitted: Boolean!
+      deny_reason: String
+      retry_in: Duration
+      mutation: Boolean!
+      __str__: String!
+    }
+    
+    type Book {
+      id: Int!
+      shelf: Int!
+      bookmark_set(filters: BookmarkFiltersInput): BookmarkList!
+      __str__: String!
+      __actions: [ActionInfo!]!
+    }
+    
+    input BookCreateInput {
+      shelf: Int!
+    }
+    
+    input BookFiltersInput {
+      id: Int
+      id__exact: Int
+      id__gt: Int
+      id__gte: Int
+      id__in: [Int!]
+      id__isnull: Boolean
+      id__lt: Int
+      id__lte: Int
+      shelf: Int
+      shelf__exact: Int
+      shelf__gt: Int
+      shelf__gte: Int
+      shelf__in: [Int!]
+      shelf__isnull: Boolean
+      shelf__lt: Int
+      shelf__lte: Int
+      ordering: [String!]
+    }
+    
+    type BookList {
+      count: Int!
+      data(limit: Int = 20, offset: Int = 0): [Book!]!
+      __str__: String!
+    }
+    
+    input BookUpdateInput {
+      shelf: Int
+    }
+    
+    type Bookmark {
+      id: Int!
+      page: Int!
+      book: Book!
+      __str__: String!
+      __actions: [ActionInfo!]!
+    }
+    
+    input BookmarkCreateInput {
+      page: Int!
+      book_id: Int!
+    }
+    
+    input BookmarkFiltersInput {
+      id: Int
+      id__exact: Int
+      id__gt: Int
+      id__gte: Int
+      id__in: [Int!]
+      id__isnull: Boolean
+      id__lt: Int
+      id__lte: Int
+      page: Int
+      page__exact: Int
+      page__gt: Int
+      page__gte: Int
+      page__in: [Int!]
+      page__isnull: Boolean
+      page__lt: Int
+      page__lte: Int
+      book_id: Int
+      book_id__exact: Int
+      book_id__gt: Int
+      book_id__gte: Int
+      book_id__in: [Int!]
+      book_id__isnull: Boolean
+      book_id__lt: Int
+      book_id__lte: Int
+      ordering: [String!]
+    }
+    
+    type BookmarkList {
+      count: Int!
+      data(limit: Int = 20, offset: Int = 0): [Bookmark!]!
+      __str__: String!
+    }
+    
+    input BookmarkUpdateInput {
+      page: Int
+      book_id: Int
+    }
+    
+    scalar Duration
+    
+    type FieldInfo {
+      name: String!
+      typename: String!
+      default: String
+      __str__: String!
+    }
+    
+    type Mutation {
+      BookCreate(data: BookCreateInput!): Book!
+      BookUpdate(data: BookUpdateInput!, id: Int!): Book!
+      BookDelete(id: Int!): Boolean!
+      BookmarkCreate(data: BookmarkCreateInput!): Bookmark!
+      BookmarkUpdate(data: BookmarkUpdateInput!, id: Int!): Bookmark!
+      BookmarkDelete(id: Int!): Boolean!
+    }
+    
+    type ObjectInfo {
+      name: String!
+      pk_field: String
+      actions: [ActionInfo!]!
+      __str__: String!
+    }
+    
+    type Query {
+      BookmarkDetail(id: Int!): Bookmark!
+      BookmarkList(filters: BookmarkFiltersInput): BookmarkList!
+      BookDetail(id: Int!): Book!
+      BookList(filters: BookFiltersInput): BookList!
+      Heavy_Action: String!
+      Light_Action: String!
+      __types: [TypeInfo!]!
+      __objects: [ObjectInfo!]!
+      __actions: [ActionInfo!]!
+    }
+    
+    type TypeInfo {
+      typename: String!
+      fields: [FieldInfo!]!
+      __str__: String!
+    }
     """
 
-    # anonymous user
     REF_META_SCHEMA = {
         "data": {
+            "__types": [
+                {
+                    "typename": "BookFilters",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "shelf",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "shelf__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "shelf__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "shelf__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "shelf__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "shelf__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "shelf__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "shelf__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "ordering",
+                            "typename": "[String!]"
+                        }
+                    ]
+                },
+                {
+                    "typename": "Book",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "shelf",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "bookmark_set",
+                            "typename": "Paginated[Bookmark]!"
+                        }
+                    ]
+                },
+                {
+                    "typename": "BookmarkFilters",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "page",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "page__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "page__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "page__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "page__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "page__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "page__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "page__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "book_id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "book_id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "book_id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "book_id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "book_id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "book_id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "book_id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "book_id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "ordering",
+                            "typename": "[String!]"
+                        }
+                    ]
+                },
+                {
+                    "typename": "Bookmark",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "page",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "book",
+                            "typename": "Book!"
+                        }
+                    ]
+                }
+            ],
             "__objects": [
                 {
-                    "name": "User",
+                    "name": "Book",
                     "pk_field": "id",
                     "actions": [
                         {
-                            "name": "UserList",
-                            "permitted": False,
-                            "deny_reason": "You do not have permission to access this.",
+                            "name": "BookList",
+                            "parameters": [
+                                {
+                                    "name": "filters",
+                                    "typename": "BookFilters",
+                                    "default": None
+                                }
+                            ],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "Paginated[Book]!",
+                            "permitted": True,
+                            "deny_reason": None,
                             "retry_in": None
                         },
                         {
-                            "name": "UserCreate",
-                            "permitted": False,
-                            "deny_reason": "You do not have permission to access this.",
-                            "retry_in": None
-                        },
-                        {
-                            "name": "UserChangePassword",
-                            "permitted": False,
-                            "deny_reason": "You do not have permission to access this.",
-                            "retry_in": None
-                        },
-                        {
-                            "name": "UserMyProfile",
-                            "permitted": False,
-                            "deny_reason": "You do not have permission to access this.",
+                            "name": "BookCreate",
+                            "parameters": [],
+                            "data": [
+                                {
+                                    "name": "shelf",
+                                    "typename": "Integer!",
+                                    "default": None
+                                }
+                            ],
+                            "mutation": True,
+                            "return_type": "Book!",
+                            "permitted": True,
+                            "deny_reason": None,
                             "retry_in": None
                         }
                     ]
                 },
                 {
-                    "name": "Post",
+                    "name": "Bookmark",
                     "pk_field": "id",
                     "actions": [
                         {
-                            "name": "PostList",
-                            "permitted": False,
-                            "deny_reason": "You do not have permission to access this.",
+                            "name": "BookmarkList",
+                            "parameters": [
+                                {
+                                    "name": "filters",
+                                    "typename": "BookmarkFilters",
+                                    "default": None
+                                }
+                            ],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "Paginated[Bookmark]!",
+                            "permitted": True,
+                            "deny_reason": None,
                             "retry_in": None
                         },
                         {
-                            "name": "PostCreate",
-                            "permitted": False,
-                            "deny_reason": "You do not have permission to access this.",
+                            "name": "BookmarkCreate",
+                            "parameters": [],
+                            "data": [
+                                {
+                                    "name": "page",
+                                    "typename": "Integer!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "book_id",
+                                    "typename": "Integer!",
+                                    "default": None
+                                }
+                            ],
+                            "mutation": True,
+                            "return_type": "Bookmark!",
+                            "permitted": True,
+                            "deny_reason": None,
                             "retry_in": None
                         }
                     ]
                 }
             ],
-            "__actions": []
+            "__actions": [
+                {
+                    "name": "Heavy_Action",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "String!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                },
+                {
+                    "name": "Light_Action",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "String!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                }
+            ]
         }
     }
 
-    def test_non_admin(self):
-        user = User.objects.create_user(username="common", email="common@example.com")
-        self._client.login(user=user)
-        resp = self.query("""
-        query{
-          __objects{
-            name
-            pk_field
-            actions{
-              name
-              permitted
-              deny_reason
-              retry_in
+    def test_requests(self):
+        resp = self.query("""mutation {
+          BookCreate(data: {shelf: 6}) {
+            shelf
+          }
+        }""")
+        ret = {
+            "data": {
+                "BookCreate": {
+                    "shelf": 6
+                }
             }
-          }
-          __actions{
-            name
-            permitted
-            deny_reason
-            retry_in
-          }
         }
-        """)
-        data = json.loads(resp.content)  # check what nonadmin can do with users
-        for object in data["data"]["__objects"]:
-            if object["name"] == "User":
-                for action in object["actions"]:
-                    if action["name"] == "UserList":
-                        self.assertFalse(action["permitted"])
-                    elif action["name"] == "UserCreate":
-                        self.assertFalse(action["permitted"])
-                    elif action["name"] == "UserChangePassword":
-                        self.assertTrue(action["permitted"])
-                    elif action["name"] == "UserMyProfile":
-                        self.assertTrue(action["permitted"])
-            if object["name"] == "Post":
-                for action in object["actions"]:
-                    if action["name"] == "PostList":
-                        self.assertTrue(action["permitted"])
-                    elif action["name"] == "PostCreate":
-                        self.assertTrue(action["permitted"])
-
-        self.query("""
-        mutation post_create{
-          PostCreate(data: {title: "A post", content: "Nothing here..."}){
-            id
-            title
-            content
-            author{
-              username
-            }
-          }
-        }
-      """)
-
-        resp = self.query("""
-        query{
-          PostList{
-            data{
-              id
-              title
-              author{
-                username
-              }
-              content
-              __actions{
-                name
-                permitted
-              }
-            }
-          }
-        }
-      """)
-
-        data = json.loads(resp.content)["data"]["PostList"]["data"]  # check what nonadmin can do with their posts
-        for action in data[0]["__actions"]:
-            self.assertTrue(action["permitted"])
-
-        user2 = User.objects.create_user(username="common2", email="common2@example.com")
-        self._client.login(user=user2)
-
-        resp = self.query("""
-        query{
-          PostList{
-            data{
-              id
-              title
-              author{
-                username
-              }
-              content
-              __actions{
-                name
-                permitted
-              }
-            }
-          }
-        }
-      """)
-
-        data = json.loads(resp.content)["data"]["PostList"]["data"]  # check what nonadmin can do with not their posts
-        for action in data[0]["__actions"]:
-            if action["name"] == "PostDetail":
-                self.assertTrue(action["permitted"])
-            else:
-                self.assertFalse(action["permitted"])
-
-        resp = self.query("""
-        query{
-          UserMyProfile{
-            id
-            username
-          }
-        }
-      """)
-
-        exp = {"data": {"UserMyProfile": {"id": 2, "username": "common2"}}}
-
         self.assertResponseNoErrors(resp)
-        self.assertJSONEqual(resp.content, exp)
-
-    def test_admin(self):
-        admin = User.objects.create_user(username="admin", email="admin@example.com", is_staff=True)
-        user = User.objects.create_user(username="common", email="common@example.com")
-
-        # check if admin can delete someone else's post
-        self._client.login(user=user)
-
-        self.query("""
-        mutation post_create{
-          PostCreate(data: {title: "A post", content: "Nothing here..."}){
-            id
-            title
-            content
-            author{
-              username
+        self.assertJSONEqual(resp.content, ret)
+        resp = self.query("""mutation add_bookmark {
+                  BookmarkCreate(data: {book_id: 1, page: 123}) {
+                    page
+                  }
+                }""")
+        ret = {
+            "data": {
+                "BookmarkCreate": {
+                    "page": 123,
+                }
             }
-          }
         }
-      """)
+        self.assertResponseNoErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+        resp = self.query("""mutation add_bookmark {
+                          BookmarkCreate(data: {book_id: 1, page: 666}) {
+                            page
+                          }
+                        }""")
+        ret = {
+            "data": {
+                "BookmarkCreate": {
+                    "page": 666,
+                }
+            }
+        }
+        self.assertResponseNoErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+        # TEST DEPTH
 
-        self._client.login(user=admin)
-
+        resp = self.query("""query depth {
+                    BookDetail(id: 1) {
+                        shelf
+                        bookmark_set {
+                            count
+                            data(limit: 1) {
+                                book {
+                                    bookmark_set {
+                                        count
+                                        data(limit: 1) {
+                                            book {
+                                                bookmark_set {
+                                                    data(limit: 1) {
+                                                        book {
+                                                            bookmark_set {
+                                                                count
+                                                                data(limit: 1) {
+                                                                    book {
+                                                                        bookmark_set {
+                                                                            count
+                                                                            data(limit: 1) {
+                                                                                book {
+                                                                                    bookmark_set {
+                                                                                        data(limit: 1) {
+                                                                                            book {
+                                                                                                bookmark_set {
+                                                                                                    data(limit: 1) {
+                                                                                                        book {
+                                                                                                            shelf
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                """)
+        ret = {
+            "errors": [
+                {
+                    "message": "Query depth limit exceeded"
+                }
+            ]
+        }
+        self.assertResponseHasErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
         resp = self.query("""
-        query{
-          PostList{
-            data{
-              id
-              title
-              author{
-                username
-              }
-              content
-              __actions{
-                name
-                permitted
-              }
+            query depthOK {
+                BookDetail(id: 1) {
+                    shelf
+                    bookmark_set {
+                        count
+                        data(limit: 1) {
+                            book {
+                                bookmark_set {
+                                    count
+                                    data(limit: 1) {
+                                        book {
+                                            bookmark_set {
+                                                data(limit: 1) {
+                                                    book {
+                                                        bookmark_set {
+                                                            count
+                                                            data(limit: 1) {
+                                                                book {
+                                                                    bookmark_set {
+                                                                        count
+                                                                        data(limit: 1) {
+                                                                            book {
+                                                                                shelf
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-          }
-        }
-      """)
+        """)
 
-        data = json.loads(resp.content)["data"]["PostList"]["data"]  # check what nonadmin can do with their posts
-        for action in data[0]["__actions"]:
-            self.assertTrue(action["permitted"])
+        ret = {
+            "data": {
+                "BookDetail": {
+                    "shelf": 6,
+                    "bookmark_set": {
+                        "count": 2,
+                        "data": [
+                            {
+                                "book": {
+                                    "bookmark_set": {
+                                        "count": 2,
+                                        "data": [
+                                            {
+                                                "book": {
+                                                    "bookmark_set": {
+                                                        "data": [
+                                                            {
+                                                                "book": {
+                                                                    "bookmark_set": {
+                                                                        "count": 2,
+                                                                        "data": [
+                                                                            {
+                                                                                "book": {
+                                                                                    "bookmark_set": {
+                                                                                        "count": 2,
+                                                                                        "data": [
+                                                                                            {
+                                                                                                "book": {
+                                                                                                    "shelf": 6
+                                                                                                }
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+        self.assertResponseNoErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+        # TEST LIST LIMITING
+        resp = self.query("""
+            query depthOK {
+                BookDetail(id: 1) {
+                    shelf
+                    bookmark_set {
+                        count
+                        data{
+                            page
+                        }
+                    }
+                }
+            }
+        """)
+        ret = {
+            "errors": [
+                {
+                    "message": "Requests for paginated data require limit"
+                }
+            ]
+        }
+        self.assertResponseHasErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+        resp = self.query("""
+            query depthOK {
+                BookDetail(id: 1) {
+                    shelf
+                    bookmark_set {
+                        count
+                        data (limit:2) {
+                            page
+                        }
+                    }
+                }
+            }
+        """)
+        ret = {
+            "data": {
+                "BookDetail": {
+                    "shelf": 6,
+                    "bookmark_set": {
+                        "count": 2,
+                        "data": [
+                            {
+                                "page": 123
+                            },
+                            {
+                                "page": 666
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+        self.assertResponseNoErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+        # Score Limit
+        resp = self.query("""
+        query score {
+          first: Heavy_Action
+          second: Heavy_Action
+        }""")
+        ret = {
+            "errors": [
+                {
+                    "message": "Your query exceeds the maximum query weight allowed"
+                }
+            ]
+        }
+        self.assertResponseHasErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
+        resp = self.query("""
+                query scoreOK {
+                  first: Heavy_Action
+                  second: Light_Action
+                }""")
+        ret = {
+            "data": {
+                "first": "Action run",
+                "second": "Action run"
+            }
+        }
+        self.assertResponseNoErrors(resp)
+        self.assertJSONEqual(resp.content, ret)
