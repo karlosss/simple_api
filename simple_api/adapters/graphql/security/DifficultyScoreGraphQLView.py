@@ -6,7 +6,7 @@ from graphql.execution import ExecutionResult
 from graphql.language.ast import FragmentDefinition, FragmentSpread, OperationDefinition, IntValue
 
 from simple_api.adapters.graphql.security.exceptions import ListLimitRequired, ListLimitTooHigh, QueryWeightExceeded, \
-    DepthLimitReached
+    DepthLimitReached, ActionsLimitExceeded
 
 
 def parse_paginated_list_type(list_type_name):
@@ -43,6 +43,7 @@ class DifficultyScoreGraphQlView(GraphQLView):
     list_limit = None
     weight_limit = None
     depth_limit = None
+    action_limit=None
     default_expected_list_size = 20
 
     def __init__(self, *args,
@@ -50,11 +51,13 @@ class DifficultyScoreGraphQlView(GraphQLView):
                  list_limit=None,
                  weight_limit=None,
                  depth_limit=None,
+                 action_limit=None,
                  default_expected_list_size=20, **kwargs):
         self.sec_weight_schema = sec_weight_schema
         self.list_limit = list_limit
         self.weight_limit = weight_limit
         self.depth_limit = depth_limit
+        self.action_limit = action_limit
         self.default_expected_list_size = default_expected_list_size
         super().__init__(*args, **kwargs)
 
@@ -97,15 +100,20 @@ class DifficultyScoreGraphQlView(GraphQLView):
                 if document:
                     fragments = get_fragments(document.document_ast.definitions)
                     definitions_total_weight = 0
+                    total_actions = 0
                     for definition in document.document_ast.definitions:
                         if not isinstance(definition, OperationDefinition):
                             continue
-                        def_weight = self.calculate_action_score(
+
+                        def_weight, additional_actions = self.calculate_action_score(
                             definition.selection_set,
                             fragments)
+                        total_actions += additional_actions
                         definitions_total_weight += def_weight
                         if self.weight_limit and definitions_total_weight > self.weight_limit:
                             raise QueryWeightExceeded("Your query exceeds the maximum query weight allowed")
+                        if self.action_limit and total_actions > self.action_limit:
+                            raise ActionsLimitExceeded("Your request contains too many actions")
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
 
@@ -133,13 +141,17 @@ class DifficultyScoreGraphQlView(GraphQLView):
         from its return and then multiply it by its own weight.
         """
         total_weight = 0
+        total_actions = 0
         if self.depth_limit and depth_level > self.depth_limit:
             raise DepthLimitReached("Query depth limit exceeded")
         # Take every action from selection_set
         for action in selection_set.selections:
             if isinstance(action, FragmentSpread):
                 action = fragments.get(action.name.value)
-
+            # add to action amount
+            total_actions += 1
+            if self.action_limit and total_actions > self.action_limit:
+                raise ActionsLimitExceeded("Your request contains too many actions")
             # Get action return type
             actionDetails = self.sec_weight_schema["actions"][action.name.value]
 
@@ -154,7 +166,7 @@ class DifficultyScoreGraphQlView(GraphQLView):
                 raise QueryWeightExceeded("Your query exceeds the maximum query weight allowed")
         if self.weight_limit and total_weight > self.weight_limit:
             raise QueryWeightExceeded("Your query exceeds the maximum query weight allowed")
-        return total_weight
+        return total_weight, total_actions
 
     def calculate_field_score(self, object_type, selection_set, fragments, depth_level=1):
         total_weight = 0

@@ -39,6 +39,7 @@ def build_patterns_w(url_path, schema, weight_schema, default_introspection=Fals
     list_limit = None
     depth_limit = None
     weight_limit = None
+    action_limit = None
     settings_dict = getattr(settings, "SIMPLE_API", None)
     if settings_dict and "SECURITY" in settings_dict:
         if "LIST_LIMIT" in settings_dict["SECURITY"]:
@@ -47,6 +48,8 @@ def build_patterns_w(url_path, schema, weight_schema, default_introspection=Fals
             depth_limit = settings_dict["SECURITY"]["DEPTH_LIMIT"]
         if "WEIGHT_LIMIT" in settings_dict["SECURITY"]:
             weight_limit = settings_dict["SECURITY"]["WEIGHT_LIMIT"]
+        if "ACTION_LIMIT" in settings_dict["SECURITY"]:
+            action_limit = settings_dict["SECURITY"]["ACTION_LIMIT"]
 
     middleware_list = []
     if isinstance(middleware, list):
@@ -62,4 +65,5 @@ def build_patterns_w(url_path, schema, weight_schema, default_introspection=Fals
                                                               weight_limit=weight_limit,
                                                               list_limit=list_limit,
                                                               depth_limit=depth_limit,
+                                                              action_limit=action_limit,
                                                               **kwargs))]

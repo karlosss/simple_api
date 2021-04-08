@@ -16,3 +16,7 @@ class ListLimitRequired(ResourceLimitReached):
 
 class ListLimitTooHigh(ResourceLimitReached):
     pass
+
+
+class ActionsLimitExceeded(ResourceLimitReached):
+    pass
