@@ -105,6 +105,9 @@ class DifficultyScoreGraphQlView(GraphQLView):
                         if not isinstance(definition, OperationDefinition):
                             continue
 
+                        if operation_name and definition.name != operation_name:
+                            continue
+
                         def_weight, additional_actions = self.calculate_action_score(
                             definition.selection_set,
                             fragments)

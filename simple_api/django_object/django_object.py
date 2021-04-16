@@ -84,6 +84,9 @@ class DjangoObjectMeta(type):
 
         object_stub.add_attr("actions", converted_actions)
 
+        if cls.field_difficulty_scores is not None:
+            object_stub.add_attr("field_difficulty_scores", cls.field_difficulty_scores)
+
         cls._object = object_stub.build(ObjectMeta)
 
         return cls
@@ -100,6 +103,7 @@ class DjangoObject(metaclass=DjangoObjectMeta):
     custom_fields = {}
     input_custom_fields = {}
     output_custom_fields = {}
+    field_difficulty_scores = {}
 
     detail_action = DetailAction()
     list_action = ListAction()
