@@ -53,6 +53,7 @@ class Object(metaclass=ObjectMeta):
     output_fields = {}
     actions = {}
     field_difficulty_scores = {}
+    default_field_difficulty = 1
 
     @classproperty
     def in_fields(cls):
@@ -68,7 +69,7 @@ class Object(metaclass=ObjectMeta):
 
     @classproperty
     def difficulty_scores(cls):
-        default_values = {k: 1 for k in cls.out_fields}
+        default_values = {k: cls.default_field_difficulty for k in cls.out_fields}
         return {**default_values, **cls.field_difficulty_scores}
 
     @classproperty
