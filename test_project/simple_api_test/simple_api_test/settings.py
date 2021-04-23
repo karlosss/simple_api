@@ -137,7 +137,6 @@ SIMPLE_API = {
     "SECURITY": {
         "LIST_LIMIT": 100,
         "DEPTH_LIMIT": 20,
-        "WEIGHT_LIMIT": 200000,
-        "ACTION_LIMIT": 4
+        "WEIGHT_LIMIT": 200000
     }
 }

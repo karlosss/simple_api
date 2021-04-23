@@ -48,8 +48,6 @@ def build_patterns_w(url_path, schema, weight_schema, default_introspection=Fals
             depth_limit = settings_dict["SECURITY"]["DEPTH_LIMIT"]
         if "WEIGHT_LIMIT" in settings_dict["SECURITY"]:
             weight_limit = settings_dict["SECURITY"]["WEIGHT_LIMIT"]
-        if "ACTION_LIMIT" in settings_dict["SECURITY"]:
-            action_limit = settings_dict["SECURITY"]["ACTION_LIMIT"]
 
     middleware_list = []
     if isinstance(middleware, list):
