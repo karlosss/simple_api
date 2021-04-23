@@ -63,5 +63,4 @@ def build_patterns_w(url_path, schema, weight_schema, default_introspection=Fals
                                                               weight_limit=weight_limit,
                                                               list_limit=list_limit,
                                                               depth_limit=depth_limit,
-                                                              action_limit=action_limit,
                                                               **kwargs))]
