@@ -38,7 +38,7 @@ def get_limit_if_exists(arguments):
     return None
 
 
-class DifficultyScoreGraphQlView(GraphQLView):
+class DifficultyScoreGraphQLView(GraphQLView):
     sec_weight_schema = None
     list_limit = None
     weight_limit = None

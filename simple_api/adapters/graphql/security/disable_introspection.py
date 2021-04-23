@@ -5,7 +5,7 @@ class DisableIntrospectionMiddleware(object):
 
     @staticmethod
     def resolve(next, root, info, **kwargs):
-        if info.field_name.lower() in ['__schema', '__introspection']:
+        if info.field_name.lower() in ['__schema', '__introspection', '__field', '__directive']:
             query = GraphQLObjectType(
                 "Query", lambda: {"ID": GraphQLField(GraphQLString, resolver=lambda *_: "I am a teapot")}
             )

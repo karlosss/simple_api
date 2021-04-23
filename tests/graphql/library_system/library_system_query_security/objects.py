@@ -11,6 +11,7 @@ from .models import Book as BookModel, Bookmark as BookmarkModel
 
 class Book(DjangoObject):
     model = BookModel
+    field_difficulty_scores = {"shelf": 200001}
 
 
 class Bookmark(DjangoObject):

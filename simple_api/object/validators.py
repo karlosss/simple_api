@@ -67,7 +67,7 @@ class Validator:
         return True
 
     def validation_statement(self, request, value=None, **kwargs):
-        """Function to validate input value, True -> input is valid, False -> invalid"""
+        """Method to validate input value, True -> input is valid, False -> invalid"""
         raise NotImplementedError
 
     def error_message(self, error_field=None, **kwargs):

@@ -4,7 +4,7 @@ from django.urls import path
 from graphene_django.views import GraphQLView
 from django.conf import settings
 
-from simple_api.adapters.graphql.security.DifficultyScoreGraphQLView import DifficultyScoreGraphQlView
+from simple_api.adapters.graphql.security.DifficultyScoreGraphQLView import DifficultyScoreGraphQLView
 from simple_api.adapters.graphql.security.disable_introspection import DisableIntrospectionMiddleware
 
 
@@ -58,7 +58,7 @@ def build_patterns_w(url_path, schema, weight_schema, default_introspection=Fals
     if not default_introspection:
         middleware_list.append(DisableIntrospectionMiddleware())
 
-    return [path(url_path, DifficultyScoreGraphQlView.as_view(graphiql=True,
+    return [path(url_path, DifficultyScoreGraphQLView.as_view(graphiql=True,
                                                               schema=schema,
                                                               sec_weight_schema=weight_schema,
                                                               middleware=middleware_list,
