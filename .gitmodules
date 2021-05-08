@@ -1,0 +1,4 @@
+[submodule "documentation"]
+	path = documentation
+	url = https://github.com/ladal1/simple_api_documentation
+	branch = master

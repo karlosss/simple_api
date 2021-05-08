@@ -7,8 +7,9 @@ from django.db.models import AutoField, IntegerField, CharField, TextField, Bool
 
 from simple_api.django_object.datatypes import PaginatedList
 from simple_api.django_object.utils import extract_fields_from_model, determine_items, get_pk_field
-from simple_api.object.datatypes import IntegerType, StringType, BooleanType, FloatType, DateType, TimeType, DateTimeType, \
-    ObjectType
+from simple_api.django_object.validators import DjangoValidator, ForeignKeyValidator
+from simple_api.object.datatypes import IntegerType, StringType, BooleanType, FloatType, DateType, TimeType, \
+    DateTimeType, ObjectType
 
 DJANGO_SIMPLE_API_MAP = {
     AutoField: IntegerType,
@@ -39,7 +40,7 @@ def get_default(field):
 
 
 @singledispatch
-def convert_django_field(field, field_name, both_fields, input_fields, output_fields, field_validators):
+def convert_django_field(field, field_name, both_fields, input_fields, output_fields):
     raise NotImplementedError(field.__class__)
 
 
@@ -54,25 +55,29 @@ def convert_django_field(field, field_name, both_fields, input_fields, output_fi
 @convert_django_field.register(DateTimeField)
 @convert_django_field.register(EmailField)
 @convert_django_field.register(PositiveSmallIntegerField)
-def convert_to_primitive_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
+def convert_to_primitive_type(field, field_name, both_fields, input_fields, output_fields):
     assert field.__class__ in DJANGO_SIMPLE_API_MAP, "Cannot convert `{}`".format(field.__class__)
     both_fields[field_name] = DJANGO_SIMPLE_API_MAP[field.__class__](nullable=field.null,
-                                                                     default=get_default(field), exclude_filters=())
+                                                                     default=get_default(field), exclude_filters=(),
+                                                                     validators=[DjangoValidator(x)
+                                                                                 for x in field.validators])
 
 
 @convert_django_field.register(ForeignKey)
 @convert_django_field.register(OneToOneField)
-def convert_to_object_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
+def convert_to_object_type(field, field_name, both_fields, input_fields, output_fields):
     target_model = field.remote_field.model
     target_pk_field_name, target_pk_field = get_pk_field(target_model)
     converted_pk_field = DJANGO_SIMPLE_API_MAP[target_pk_field.__class__]
-
-    input_fields[field_name + "_id"] = converted_pk_field(nullable=field.null, exclude_filters=())
+    validators = [DjangoValidator(x) for x in field.validators]
+    validators.append(ForeignKeyValidator(target_model))
+    input_fields[field_name + "_id"] = converted_pk_field(nullable=field.null, exclude_filters=(),
+                                                          validators=validators)
     output_fields[field_name] = ObjectType(target_model, nullable=field.null, exclude_filters=())
 
 
 @convert_django_field.register(OneToOneRel)
-def convert_to_readonly_object_type(field, field_name, both_fields, input_fields, output_fields, field_validators):
+def convert_to_readonly_object_type(field, field_name, both_fields, input_fields, output_fields):
     target_model = field.remote_field.model
     # for OneToOneRel, we don't want to generate filters, as one_to_one_rel_id does not exist in Django
     output_fields[field_name] = ObjectType(target_model, nullable=field.null)
@@ -81,8 +86,7 @@ def convert_to_readonly_object_type(field, field_name, both_fields, input_fields
 @convert_django_field.register(ManyToOneRel)
 @convert_django_field.register(ManyToManyField)
 @convert_django_field.register(ManyToManyRel)
-def convert_to_readonly_list_of_object_type(field, field_name, both_fields, input_fields, output_fields,
-                                            field_validators):
+def convert_to_readonly_list_of_object_type(field, field_name, both_fields, input_fields, output_fields):
     target_model = field.remote_field.model
     output_fields[field_name] = PaginatedList(target_model)
 
@@ -94,7 +98,7 @@ def get_all_simple_api_model_fields(fields):
     field_validators = OrderedDict()
 
     for field_name, field in fields.items():
-        convert_django_field(field, field_name, both_fields, input_fields, output_fields, field_validators)
+        convert_django_field(field, field_name, both_fields, input_fields, output_fields)
     return both_fields, input_fields, output_fields, field_validators
 
 

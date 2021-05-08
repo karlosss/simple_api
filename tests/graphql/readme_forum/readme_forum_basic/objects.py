@@ -2,7 +2,7 @@ from simple_api.adapters.graphql.graphql import GraphQLAdapter
 from simple_api.adapters.utils import generate
 from simple_api.django_object.django_object import DjangoObject
 
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 from .models import CustomUser as CustomUserModel, Post as PostModel
 
@@ -16,4 +16,4 @@ class Post(DjangoObject):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)

@@ -11,23 +11,37 @@ class Test(GraphQLTestCase):
         
         type ActionInfo {
           name: String!
+          parameters: [FieldInfo!]!
+          data: [FieldInfo!]!
+          return_type: String!
           permitted: Boolean!
           deny_reason: String
           retry_in: Duration
+          mutation: Boolean!
+          __str__: String!
         }
         
         scalar Duration
+        
+        type FieldInfo {
+          name: String!
+          typename: String!
+          default: String
+          __str__: String!
+        }
         
         type ObjectInfo {
           name: String!
           pk_field: String
           actions: [ActionInfo!]!
+          __str__: String!
         }
         
         type Query {
           get(id: TestObjectInput!): String!
           getNull(id: TestObjectInput): String!
           getNullDefault(id: TestObjectInput = {int1: 10, int2: 20}): String!
+          __types: [TypeInfo!]!
           __objects: [ObjectInfo!]!
           __actions: [ActionInfo!]!
         }
@@ -36,38 +50,83 @@ class Test(GraphQLTestCase):
           int1: Int!
           int2: Int!
         }
+        
+        type TypeInfo {
+          typename: String!
+          fields: [FieldInfo!]!
+          __str__: String!
+        }
     """
 
     REF_META_SCHEMA = {
-      "data": {
-        "__objects": [
-          {
-            "name": "TestObject",
-            "pk_field": None,
-            "actions": []
-          }
-        ],
-        "__actions": [
-          {
-            "name": "get",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          },
-          {
-            "name": "getNull",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          },
-          {
-            "name": "getNullDefault",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          }
-        ]
-      }
+        "data": {
+            "__types": [
+                {
+                    "typename": "TestObject",
+                    "fields": [
+                        {
+                            "name": "int1",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "int2",
+                            "typename": "Integer!"
+                        }
+                    ]
+                }
+            ],
+            "__objects": [],
+            "__actions": [
+                {
+                    "name": "get",
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "typename": "TestObject!",
+                            "default": None
+                        }
+                    ],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "String!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                },
+                {
+                    "name": "getNull",
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "typename": "TestObject",
+                            "default": None
+                        }
+                    ],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "String!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                },
+                {
+                    "name": "getNullDefault",
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "typename": "TestObject",
+                            "default": "{'int1': 10, 'int2': 20}"
+                        }
+                    ],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "String!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                }
+            ]
+        }
     }
 
     def test_request_non_null(self):

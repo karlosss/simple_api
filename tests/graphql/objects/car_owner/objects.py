@@ -5,7 +5,7 @@ from simple_api.object.datatypes import StringType, IntegerType, ObjectType
 from simple_api.object.object import Object
 from simple_api.utils import AttrDict
 
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 
 def get_by_id(request, params, **kwargs):
@@ -31,4 +31,4 @@ class Owner(Object):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)

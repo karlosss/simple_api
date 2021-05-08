@@ -11,9 +11,14 @@ class Test(GraphQLTestCase):
         
         type ActionInfo {
           name: String!
+          parameters: [FieldInfo!]!
+          data: [FieldInfo!]!
+          return_type: String!
           permitted: Boolean!
           deny_reason: String
           retry_in: Duration
+          mutation: Boolean!
+          __str__: String!
         }
         
         type ContentType {
@@ -29,6 +34,13 @@ class Test(GraphQLTestCase):
         scalar DateTime
         
         scalar Duration
+        
+        type FieldInfo {
+          name: String!
+          typename: String!
+          default: String
+          __str__: String!
+        }
         
         type Group {
           id: Int!
@@ -64,6 +76,7 @@ class Test(GraphQLTestCase):
         type GroupList {
           count: Int!
           data(limit: Int = 20, offset: Int = 0): [Group!]!
+          __str__: String!
         }
         
         type LogEntry {
@@ -148,12 +161,14 @@ class Test(GraphQLTestCase):
         type LogEntryList {
           count: Int!
           data(limit: Int = 20, offset: Int = 0): [LogEntry!]!
+          __str__: String!
         }
         
         type ObjectInfo {
           name: String!
           pk_field: String
           actions: [ActionInfo!]!
+          __str__: String!
         }
         
         type Permission {
@@ -210,13 +225,21 @@ class Test(GraphQLTestCase):
         type PermissionList {
           count: Int!
           data(limit: Int = 20, offset: Int = 0): [Permission!]!
+          __str__: String!
         }
         
         type Query {
           UserDetail(id: Int!): User!
           UserList(filters: UserFiltersInput): UserList!
+          __types: [TypeInfo!]!
           __objects: [ObjectInfo!]!
           __actions: [ActionInfo!]!
+        }
+        
+        type TypeInfo {
+          typename: String!
+          fields: [FieldInfo!]!
+          __str__: String!
         }
         
         type User {
@@ -303,11 +326,1040 @@ class Test(GraphQLTestCase):
         type UserList {
           count: Int!
           data(limit: Int = 20, offset: Int = 0): [User!]!
+          __str__: String!
         }
-    """
+        """
 
     REF_META_SCHEMA = {
       "data": {
+        "__types": [
+          {
+            "typename": "UserFilters",
+            "fields": [
+              {
+                "name": "id",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__exact",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__gt",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__gte",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__in",
+                "typename": "[Integer!]"
+              },
+              {
+                "name": "id__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "id__lt",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__lte",
+                "typename": "Integer"
+              },
+              {
+                "name": "password",
+                "typename": "String"
+              },
+              {
+                "name": "password__contains",
+                "typename": "String"
+              },
+              {
+                "name": "password__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "password__exact",
+                "typename": "String"
+              },
+              {
+                "name": "password__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "password__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "password__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "password__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "password__regex",
+                "typename": "String"
+              },
+              {
+                "name": "password__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "username",
+                "typename": "String"
+              },
+              {
+                "name": "username__contains",
+                "typename": "String"
+              },
+              {
+                "name": "username__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "username__exact",
+                "typename": "String"
+              },
+              {
+                "name": "username__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "username__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "username__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "username__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "username__regex",
+                "typename": "String"
+              },
+              {
+                "name": "username__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "first_name",
+                "typename": "String"
+              },
+              {
+                "name": "first_name__contains",
+                "typename": "String"
+              },
+              {
+                "name": "first_name__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "first_name__exact",
+                "typename": "String"
+              },
+              {
+                "name": "first_name__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "first_name__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "first_name__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "first_name__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "first_name__regex",
+                "typename": "String"
+              },
+              {
+                "name": "first_name__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "last_name",
+                "typename": "String"
+              },
+              {
+                "name": "last_name__contains",
+                "typename": "String"
+              },
+              {
+                "name": "last_name__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "last_name__exact",
+                "typename": "String"
+              },
+              {
+                "name": "last_name__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "last_name__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "last_name__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "last_name__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "last_name__regex",
+                "typename": "String"
+              },
+              {
+                "name": "last_name__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "email",
+                "typename": "String"
+              },
+              {
+                "name": "email__contains",
+                "typename": "String"
+              },
+              {
+                "name": "email__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "email__exact",
+                "typename": "String"
+              },
+              {
+                "name": "email__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "email__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "email__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "email__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "email__regex",
+                "typename": "String"
+              },
+              {
+                "name": "email__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "ordering",
+                "typename": "[String!]"
+              }
+            ]
+          },
+          {
+            "typename": "User",
+            "fields": [
+              {
+                "name": "id",
+                "typename": "Integer!"
+              },
+              {
+                "name": "password",
+                "typename": "String!"
+              },
+              {
+                "name": "last_login",
+                "typename": "DateTime"
+              },
+              {
+                "name": "is_superuser",
+                "typename": "Boolean!"
+              },
+              {
+                "name": "username",
+                "typename": "String!"
+              },
+              {
+                "name": "first_name",
+                "typename": "String!"
+              },
+              {
+                "name": "last_name",
+                "typename": "String!"
+              },
+              {
+                "name": "email",
+                "typename": "String!"
+              },
+              {
+                "name": "is_staff",
+                "typename": "Boolean!"
+              },
+              {
+                "name": "is_active",
+                "typename": "Boolean!"
+              },
+              {
+                "name": "date_joined",
+                "typename": "DateTime!"
+              },
+              {
+                "name": "groups",
+                "typename": "Paginated[Group]!"
+              },
+              {
+                "name": "user_permissions",
+                "typename": "Paginated[Permission]!"
+              },
+              {
+                "name": "logentry_set",
+                "typename": "Paginated[LogEntry]!"
+              }
+            ]
+          },
+          {
+            "typename": "LogEntryFilters",
+            "fields": [
+              {
+                "name": "id",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__exact",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__gt",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__gte",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__in",
+                "typename": "[Integer!]"
+              },
+              {
+                "name": "id__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "id__lt",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__lte",
+                "typename": "Integer"
+              },
+              {
+                "name": "object_id",
+                "typename": "String"
+              },
+              {
+                "name": "object_id__contains",
+                "typename": "String"
+              },
+              {
+                "name": "object_id__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "object_id__exact",
+                "typename": "String"
+              },
+              {
+                "name": "object_id__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "object_id__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "object_id__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "object_id__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "object_id__regex",
+                "typename": "String"
+              },
+              {
+                "name": "object_id__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "object_repr",
+                "typename": "String"
+              },
+              {
+                "name": "object_repr__contains",
+                "typename": "String"
+              },
+              {
+                "name": "object_repr__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "object_repr__exact",
+                "typename": "String"
+              },
+              {
+                "name": "object_repr__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "object_repr__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "object_repr__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "object_repr__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "object_repr__regex",
+                "typename": "String"
+              },
+              {
+                "name": "object_repr__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "action_flag",
+                "typename": "Integer"
+              },
+              {
+                "name": "action_flag__exact",
+                "typename": "Integer"
+              },
+              {
+                "name": "action_flag__gt",
+                "typename": "Integer"
+              },
+              {
+                "name": "action_flag__gte",
+                "typename": "Integer"
+              },
+              {
+                "name": "action_flag__in",
+                "typename": "[Integer!]"
+              },
+              {
+                "name": "action_flag__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "action_flag__lt",
+                "typename": "Integer"
+              },
+              {
+                "name": "action_flag__lte",
+                "typename": "Integer"
+              },
+              {
+                "name": "change_message",
+                "typename": "String"
+              },
+              {
+                "name": "change_message__contains",
+                "typename": "String"
+              },
+              {
+                "name": "change_message__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "change_message__exact",
+                "typename": "String"
+              },
+              {
+                "name": "change_message__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "change_message__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "change_message__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "change_message__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "change_message__regex",
+                "typename": "String"
+              },
+              {
+                "name": "change_message__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "user_id",
+                "typename": "Integer"
+              },
+              {
+                "name": "user_id__exact",
+                "typename": "Integer"
+              },
+              {
+                "name": "user_id__gt",
+                "typename": "Integer"
+              },
+              {
+                "name": "user_id__gte",
+                "typename": "Integer"
+              },
+              {
+                "name": "user_id__in",
+                "typename": "[Integer!]"
+              },
+              {
+                "name": "user_id__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "user_id__lt",
+                "typename": "Integer"
+              },
+              {
+                "name": "user_id__lte",
+                "typename": "Integer"
+              },
+              {
+                "name": "content_type_id",
+                "typename": "Integer"
+              },
+              {
+                "name": "content_type_id__exact",
+                "typename": "Integer"
+              },
+              {
+                "name": "content_type_id__gt",
+                "typename": "Integer"
+              },
+              {
+                "name": "content_type_id__gte",
+                "typename": "Integer"
+              },
+              {
+                "name": "content_type_id__in",
+                "typename": "[Integer!]"
+              },
+              {
+                "name": "content_type_id__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "content_type_id__lt",
+                "typename": "Integer"
+              },
+              {
+                "name": "content_type_id__lte",
+                "typename": "Integer"
+              },
+              {
+                "name": "ordering",
+                "typename": "[String!]"
+              }
+            ]
+          },
+          {
+            "typename": "LogEntry",
+            "fields": [
+              {
+                "name": "id",
+                "typename": "Integer!"
+              },
+              {
+                "name": "action_time",
+                "typename": "DateTime!"
+              },
+              {
+                "name": "object_id",
+                "typename": "String"
+              },
+              {
+                "name": "object_repr",
+                "typename": "String!"
+              },
+              {
+                "name": "action_flag",
+                "typename": "Integer!"
+              },
+              {
+                "name": "change_message",
+                "typename": "String!"
+              },
+              {
+                "name": "user",
+                "typename": "User!"
+              },
+              {
+                "name": "content_type",
+                "typename": "ContentType"
+              }
+            ]
+          },
+          {
+            "typename": "PermissionFilters",
+            "fields": [
+              {
+                "name": "id",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__exact",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__gt",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__gte",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__in",
+                "typename": "[Integer!]"
+              },
+              {
+                "name": "id__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "id__lt",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__lte",
+                "typename": "Integer"
+              },
+              {
+                "name": "name",
+                "typename": "String"
+              },
+              {
+                "name": "name__contains",
+                "typename": "String"
+              },
+              {
+                "name": "name__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "name__exact",
+                "typename": "String"
+              },
+              {
+                "name": "name__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "name__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "name__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "name__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "name__regex",
+                "typename": "String"
+              },
+              {
+                "name": "name__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "codename",
+                "typename": "String"
+              },
+              {
+                "name": "codename__contains",
+                "typename": "String"
+              },
+              {
+                "name": "codename__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "codename__exact",
+                "typename": "String"
+              },
+              {
+                "name": "codename__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "codename__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "codename__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "codename__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "codename__regex",
+                "typename": "String"
+              },
+              {
+                "name": "codename__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "content_type_id",
+                "typename": "Integer"
+              },
+              {
+                "name": "content_type_id__exact",
+                "typename": "Integer"
+              },
+              {
+                "name": "content_type_id__gt",
+                "typename": "Integer"
+              },
+              {
+                "name": "content_type_id__gte",
+                "typename": "Integer"
+              },
+              {
+                "name": "content_type_id__in",
+                "typename": "[Integer!]"
+              },
+              {
+                "name": "content_type_id__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "content_type_id__lt",
+                "typename": "Integer"
+              },
+              {
+                "name": "content_type_id__lte",
+                "typename": "Integer"
+              },
+              {
+                "name": "ordering",
+                "typename": "[String!]"
+              }
+            ]
+          },
+          {
+            "typename": "Permission",
+            "fields": [
+              {
+                "name": "id",
+                "typename": "Integer!"
+              },
+              {
+                "name": "name",
+                "typename": "String!"
+              },
+              {
+                "name": "codename",
+                "typename": "String!"
+              },
+              {
+                "name": "content_type",
+                "typename": "ContentType!"
+              },
+              {
+                "name": "group_set",
+                "typename": "Paginated[Group]!"
+              },
+              {
+                "name": "user_set",
+                "typename": "Paginated[User]!"
+              }
+            ]
+          },
+          {
+            "typename": "GroupFilters",
+            "fields": [
+              {
+                "name": "id",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__exact",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__gt",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__gte",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__in",
+                "typename": "[Integer!]"
+              },
+              {
+                "name": "id__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "id__lt",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__lte",
+                "typename": "Integer"
+              },
+              {
+                "name": "name",
+                "typename": "String"
+              },
+              {
+                "name": "name__contains",
+                "typename": "String"
+              },
+              {
+                "name": "name__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "name__exact",
+                "typename": "String"
+              },
+              {
+                "name": "name__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "name__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "name__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "name__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "name__regex",
+                "typename": "String"
+              },
+              {
+                "name": "name__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "ordering",
+                "typename": "[String!]"
+              }
+            ]
+          },
+          {
+            "typename": "Group",
+            "fields": [
+              {
+                "name": "id",
+                "typename": "Integer!"
+              },
+              {
+                "name": "name",
+                "typename": "String!"
+              },
+              {
+                "name": "permissions",
+                "typename": "Paginated[Permission]!"
+              },
+              {
+                "name": "user_set",
+                "typename": "Paginated[User]!"
+              }
+            ]
+          },
+          {
+            "typename": "ContentTypeFilters",
+            "fields": [
+              {
+                "name": "id",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__exact",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__gt",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__gte",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__in",
+                "typename": "[Integer!]"
+              },
+              {
+                "name": "id__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "id__lt",
+                "typename": "Integer"
+              },
+              {
+                "name": "id__lte",
+                "typename": "Integer"
+              },
+              {
+                "name": "app_label",
+                "typename": "String"
+              },
+              {
+                "name": "app_label__contains",
+                "typename": "String"
+              },
+              {
+                "name": "app_label__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "app_label__exact",
+                "typename": "String"
+              },
+              {
+                "name": "app_label__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "app_label__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "app_label__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "app_label__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "app_label__regex",
+                "typename": "String"
+              },
+              {
+                "name": "app_label__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "model",
+                "typename": "String"
+              },
+              {
+                "name": "model__contains",
+                "typename": "String"
+              },
+              {
+                "name": "model__endswith",
+                "typename": "String"
+              },
+              {
+                "name": "model__exact",
+                "typename": "String"
+              },
+              {
+                "name": "model__icontains",
+                "typename": "String"
+              },
+              {
+                "name": "model__in",
+                "typename": "[String!]"
+              },
+              {
+                "name": "model__iregex",
+                "typename": "String"
+              },
+              {
+                "name": "model__isnull",
+                "typename": "Boolean"
+              },
+              {
+                "name": "model__regex",
+                "typename": "String"
+              },
+              {
+                "name": "model__startswith",
+                "typename": "String"
+              },
+              {
+                "name": "ordering",
+                "typename": "[String!]"
+              }
+            ]
+          },
+          {
+            "typename": "ContentType",
+            "fields": [
+              {
+                "name": "id",
+                "typename": "Integer!"
+              },
+              {
+                "name": "app_label",
+                "typename": "String!"
+              },
+              {
+                "name": "model",
+                "typename": "String!"
+              },
+              {
+                "name": "logentry_set",
+                "typename": "Paginated[LogEntry]!"
+              },
+              {
+                "name": "permission_set",
+                "typename": "Paginated[Permission]!"
+              }
+            ]
+          }
+        ],
         "__objects": [
           {
             "name": "User",
@@ -315,32 +1367,21 @@ class Test(GraphQLTestCase):
             "actions": [
               {
                 "name": "UserList",
+                "parameters": [
+                  {
+                    "name": "filters",
+                    "typename": "UserFilters",
+                    "default": None
+                  }
+                ],
+                "data": [],
+                "mutation": False,
+                "return_type": "Paginated[User]!",
                 "permitted": True,
                 "deny_reason": None,
                 "retry_in": None
               }
             ]
-          },
-            {
-                "name": "Group",
-                "pk_field": "id",
-                "actions": []
-            },
-            {
-                "name": "Permission",
-                "pk_field": "id",
-                "actions": []
-            },
-          {
-            "name": "LogEntry",
-            "pk_field": "id",
-            "actions": []
-          },
-
-          {
-            "name": "ContentType",
-            "pk_field": "id",
-            "actions": []
           }
         ],
         "__actions": []

@@ -5,7 +5,7 @@ from simple_api.object.datatypes import ObjectType, StringType
 from simple_api.object.object import Object
 from simple_api.utils import AttrDict
 
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 
 def non_null_only(request, params, **kwargs):
@@ -35,4 +35,4 @@ class TestObject(Object):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)

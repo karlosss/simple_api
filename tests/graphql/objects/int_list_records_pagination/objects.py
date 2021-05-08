@@ -5,7 +5,7 @@ from simple_api.object.datatypes import ObjectType, PlainListType, IntegerType
 from simple_api.object.object import Object
 from simple_api.utils import AttrDict
 
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 
 def resolve(request, parent_val, params, **kwargs):
@@ -36,4 +36,4 @@ actions = {
 }
 
 schema = generate(GraphQLAdapter, actions)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)

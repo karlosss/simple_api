@@ -5,7 +5,6 @@ from simple_api.django_object.datatypes import create_associated_list_type
 from simple_api.django_object.filters import generate_filters
 from simple_api.django_object.converter import determine_simple_api_fields
 from simple_api.django_object.utils import get_pk_field
-from simple_api.object.datatypes import StringType
 from simple_api.object.object import Object, ObjectMeta
 from simple_api.object.registry import object_storage
 from simple_api.django_object.registry import model_django_object_storage
@@ -45,8 +44,6 @@ class DjangoObjectMeta(type):
             cls.custom_fields, cls.input_custom_fields, cls.output_custom_fields,
         )
 
-        output_fields["__str__"] = StringType(resolver=lambda *a, **kw: kw["parent_val"]())
-
         for f in input_fields:
             assert f not in fields, "Redefinition of `{}` field.".format(f)
         cls.in_fields = {**fields, **input_fields}
@@ -60,8 +57,7 @@ class DjangoObjectMeta(type):
         object_stub.add_attr("output_fields", output_fields)
 
         # create filters and List type for potential listing actions
-        cls.filter_type = ObjectMeta("{}Filters".format(cls.__name__), (Object,), {"fields": generate_filters(cls),
-                                                                                   "hidden": True})
+        cls.filter_type = ObjectMeta("{}Filters".format(cls.__name__), (Object,), {"fields": generate_filters(cls)})
         object_stub.add_attr("filter_type", cls.filter_type)
         create_associated_list_type(cls)
 
@@ -88,6 +84,9 @@ class DjangoObjectMeta(type):
 
         object_stub.add_attr("actions", converted_actions)
 
+        if cls.field_difficulty_scores is not None:
+            object_stub.add_attr("field_difficulty_scores", cls.field_difficulty_scores)
+
         cls._object = object_stub.build(ObjectMeta)
 
         return cls
@@ -104,6 +103,7 @@ class DjangoObject(metaclass=DjangoObjectMeta):
     custom_fields = {}
     input_custom_fields = {}
     output_custom_fields = {}
+    field_difficulty_scores = {}
 
     detail_action = DetailAction()
     list_action = ListAction()

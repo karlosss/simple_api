@@ -15,9 +15,14 @@ class Test(GraphQLTestCase):
     
     type ActionInfo {
       name: String!
+      parameters: [FieldInfo!]!
+      data: [FieldInfo!]!
+      return_type: String!
       permitted: Boolean!
       deny_reason: String
       retry_in: Duration
+      mutation: Boolean!
+      __str__: String!
     }
     
     type Book {
@@ -92,6 +97,7 @@ class Test(GraphQLTestCase):
     type BookList {
       count: Int!
       data(limit: Int = 20, offset: Int = 0): [Book!]!
+      __str__: String!
     }
     
     input BookUpdateInput {
@@ -105,6 +111,13 @@ class Test(GraphQLTestCase):
     scalar Date
     
     scalar Duration
+    
+    type FieldInfo {
+      name: String!
+      typename: String!
+      default: String
+      __str__: String!
+    }
     
     type Mutation {
       BookCreate(data: BookCreateInput!): Book!
@@ -123,6 +136,7 @@ class Test(GraphQLTestCase):
       name: String!
       pk_field: String
       actions: [ActionInfo!]!
+      __str__: String!
     }
     
     type Query {
@@ -133,6 +147,7 @@ class Test(GraphQLTestCase):
       BookDetail(id: Int!): Book!
       BookList(filters: BookFiltersInput): BookList!
       BookRead(id: Int!): Book!
+      __types: [TypeInfo!]!
       __objects: [ObjectInfo!]!
       __actions: [ActionInfo!]!
     }
@@ -175,12 +190,19 @@ class Test(GraphQLTestCase):
     type SubscriptionList {
       count: Int!
       data(limit: Int = 20, offset: Int = 0): [Subscription!]!
+      __str__: String!
     }
     
     input SubscriptionUpdateInput {
       start: Date
       end: Date
       user_id: Int
+    }
+    
+    type TypeInfo {
+      typename: String!
+      fields: [FieldInfo!]!
+      __str__: String!
     }
     
     type User {
@@ -219,6 +241,7 @@ class Test(GraphQLTestCase):
     type UserList {
       count: Int!
       data(limit: Int = 20, offset: Int = 0): [User!]!
+      __str__: String!
     }
     
     input UserUpdateInput {
@@ -228,6 +251,386 @@ class Test(GraphQLTestCase):
     # Anonymous
     REF_META_SCHEMA = {
         "data": {
+            "__types": [
+                {
+                    "typename": "BookFilters",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "author",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "author__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "author__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "author__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "title__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "title__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "title__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "ISBN__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "ISBN__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ISBN__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ordering",
+                            "typename": "[String!]"
+                        }
+                    ]
+                },
+                {
+                    "typename": "Book",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "author",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "title",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "ISBN",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "restricted",
+                            "typename": "Boolean!"
+                        },
+                        {
+                            "name": "borrowed",
+                            "typename": "Boolean!"
+                        }
+                    ]
+                },
+                {
+                    "typename": "SubscriptionFilters",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "user_id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "user_id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "user_id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "user_id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "user_id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "user_id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "user_id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "user_id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "ordering",
+                            "typename": "[String!]"
+                        }
+                    ]
+                },
+                {
+                    "typename": "Subscription",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "start",
+                            "typename": "Date!"
+                        },
+                        {
+                            "name": "end",
+                            "typename": "Date!"
+                        },
+                        {
+                            "name": "user",
+                            "typename": "User!"
+                        }
+                    ]
+                },
+                {
+                    "typename": "UserFilters",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__exact",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__gte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__in",
+                            "typename": "[Integer!]"
+                        },
+                        {
+                            "name": "id__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "id__lt",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "id__lte",
+                            "typename": "Integer"
+                        },
+                        {
+                            "name": "username",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__contains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__endswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__exact",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__icontains",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__in",
+                            "typename": "[String!]"
+                        },
+                        {
+                            "name": "username__iregex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__isnull",
+                            "typename": "Boolean"
+                        },
+                        {
+                            "name": "username__regex",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "username__startswith",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "ordering",
+                            "typename": "[String!]"
+                        }
+                    ]
+                },
+                {
+                    "typename": "User",
+                    "fields": [
+                        {
+                            "name": "id",
+                            "typename": "Integer!"
+                        },
+                        {
+                            "name": "username",
+                            "typename": "String!"
+                        }
+                    ]
+                }
+            ],
             "__objects": [
                 {
                     "name": "Book",
@@ -235,12 +638,52 @@ class Test(GraphQLTestCase):
                     "actions": [
                         {
                             "name": "BookList",
+                            "parameters": [
+                                {
+                                    "name": "filters",
+                                    "typename": "BookFilters",
+                                    "default": None
+                                }
+                            ],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "Paginated[Book]!",
                             "permitted": False,
                             "deny_reason": "You do not have permission to access this.",
                             "retry_in": None
                         },
                         {
                             "name": "BookCreate",
+                            "parameters": [],
+                            "data": [
+                                {
+                                    "name": "author",
+                                    "typename": "String!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "title",
+                                    "typename": "String!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "ISBN",
+                                    "typename": "String!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "restricted",
+                                    "typename": "Boolean!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "borrowed",
+                                    "typename": "Boolean!",
+                                    "default": "false"
+                                }
+                            ],
+                            "mutation": True,
+                            "return_type": "Book!",
                             "permitted": False,
                             "deny_reason": "You do not have permission to access this.",
                             "retry_in": None
@@ -253,12 +696,42 @@ class Test(GraphQLTestCase):
                     "actions": [
                         {
                             "name": "SubscriptionList",
+                            "parameters": [
+                                {
+                                    "name": "filters",
+                                    "typename": "SubscriptionFilters",
+                                    "default": None
+                                }
+                            ],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "Paginated[Subscription]!",
                             "permitted": False,
                             "deny_reason": "You do not have permission to access this.",
                             "retry_in": None
                         },
                         {
                             "name": "SubscriptionCreate",
+                            "parameters": [],
+                            "data": [
+                                {
+                                    "name": "start",
+                                    "typename": "Date!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "end",
+                                    "typename": "Date!",
+                                    "default": None
+                                },
+                                {
+                                    "name": "user_id",
+                                    "typename": "Integer!",
+                                    "default": None
+                                }
+                            ],
+                            "mutation": True,
+                            "return_type": "Subscription!",
                             "permitted": False,
                             "deny_reason": "You do not have permission to access this.",
                             "retry_in": None
@@ -271,12 +744,32 @@ class Test(GraphQLTestCase):
                     "actions": [
                         {
                             "name": "UserList",
+                            "parameters": [
+                                {
+                                    "name": "filters",
+                                    "typename": "UserFilters",
+                                    "default": None
+                                }
+                            ],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "Paginated[User]!",
                             "permitted": False,
                             "deny_reason": "You do not have permission to access this.",
                             "retry_in": None
                         },
                         {
                             "name": "UserCreate",
+                            "parameters": [],
+                            "data": [
+                                {
+                                    "name": "username",
+                                    "typename": "String!",
+                                    "default": None
+                                }
+                            ],
+                            "mutation": True,
+                            "return_type": "User!",
                             "permitted": False,
                             "deny_reason": "You do not have permission to access this.",
                             "retry_in": None
@@ -322,7 +815,6 @@ class Test(GraphQLTestCase):
         self.assertResponseNoErrors(resp)
         self.assertJSONEqual(resp.content, ret)
         self._client.logout()
-
 
     def test_admin(self):
         admin = User.objects.create_user(username="admin", email="admin@example.com", is_staff=True)

@@ -1,6 +1,6 @@
 # Simple API
 
-![tests](https://github.com/karlosss/simple_api/workflows/Run%20tests/badge.svg)
+[![Run tests](https://github.com/ladal1/simple_api/actions/workflows/run_tests.yml/badge.svg)](https://github.com/ladal1/simple_api/actions/workflows/run_tests.yml)
 
 ## Purpose of the project
 After writing Django models, Simple API builds an API (currently, only GraphQL is supported) extracting the information from the model and requiring to write as little code as possible.
@@ -52,7 +52,7 @@ from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from django_object.django_object import DjangoObject
 from .models import CustomUser as CustomUserModel, Post as PostModel
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 
 class CustomUser(DjangoObject):
@@ -64,7 +64,7 @@ class Post(DjangoObject):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)
 ``` 
 
 And that's it! Let's explore what Simple API actually generated for us. Open up `/api/` in the browser (i.e. [http://localhost:8000/api/](http://localhost:8000/api/)) and see the schema:
@@ -431,7 +431,7 @@ from adapters.utils import generate
 from django_object.django_object import DjangoObject
 from object.datatypes import StringType
 from .models import CustomUser as CustomUserModel, Post as PostModel
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 
 class ShortCustomUser(DjangoObject):
@@ -446,7 +446,7 @@ class ShortPost(DjangoObject):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)
 ```
 
 By default, Simple API extracts all fields, models, and reverse relations. If this is not what we want, we have two ways to specify: either list the fields we want using `only_fields`, or list the fields we don't want using `exclude_fields` (but not both at the same time, of course).
@@ -485,7 +485,7 @@ from adapters.graphql.graphql import GraphQLAdapter
 from adapters.utils import generate
 from django_object.django_object import DjangoObject
 from .models import CustomUser as CustomUserModel, Post as PostModel
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 
 class CustomUser(DjangoObject):
@@ -503,7 +503,7 @@ class Post(DjangoObject):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)
 ```
 
 Everything should be self-explanatory except for `class_for_related`. When building relations automatically, Simple API needs to determine a type to return. As long as we have only one `Object` per model, it is obvious as there is no choice. But now Simple API does not know: should it make the field `author` of the `Post` model of type `CustomUser`, or `CustomUserPublic`? And this is exactly what `class_for_related` means: it uses the one which has it set to `True`. That can be seen in the schema - the type of `author` is indeed `CustomUserPublic`, because it is set to be the class to resolve relations:
@@ -531,7 +531,7 @@ from adapters.utils import generate
 from django_object.django_object import DjangoObject
 from object.datatypes import StringType, ObjectType
 from .models import CustomUser as CustomUserModel, Post as PostModel
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 
 class CustomUser(DjangoObject):
@@ -551,7 +551,7 @@ class Post(DjangoObject):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)
 
 ```
 
@@ -571,7 +571,7 @@ from adapters.utils import generate
 from django_object.actions import CreateAction
 from django_object.django_object import DjangoObject
 from .models import CustomUser as CustomUserModel, Post as PostModel
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 
 def custom_create_user(request, params, **kwargs):
@@ -597,7 +597,7 @@ class Post(DjangoObject):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)
 ```
 
 ```graphql
@@ -634,7 +634,7 @@ from adapters.utils import generate
 from django_object.actions import UpdateAction
 from django_object.django_object import DjangoObject
 from .models import CustomUser as CustomUserModel, Post as PostModel
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 class CustomUser(DjangoObject):
     model = CustomUserModel
@@ -650,7 +650,7 @@ class Post(DjangoObject):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)
 ```
 
 By default, the fields of an `UpdateAction` are not mandatory - it would be very annoying to
@@ -711,7 +711,7 @@ from django_object.permissions import IsAuthenticated
 from object.datatypes import StringType
 from object.permissions import Or
 from .models import Post as PostModel
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 
 class IsAdmin(IsAuthenticated):
@@ -767,7 +767,7 @@ class Post(DjangoObject):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)
 ```
 
 This slightly more comprehensive example shows how one could do the forum. Let's have two
@@ -867,7 +867,7 @@ from adapters.utils import generate
 from object.actions import Action
 from object.datatypes import StringType, IntegerType, ObjectType
 from object.object import Object
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 from utils import AttrDict
 
 
@@ -893,7 +893,7 @@ class Owner(Object):
     }
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)
 ```
 
 The `getById` action returns a blue BMW with the `id` specified in its parameter.

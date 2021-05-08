@@ -6,7 +6,7 @@ from simple_api.django_object.actions import CreateAction, UpdateAction, DeleteA
     ModelAction
 from simple_api.object.permissions import Or, And
 
-from tests.graphql.graphql_test_utils import build_patterns
+from simple_api.adapters.graphql.utils import build_patterns
 
 from .models import Book as BookModel, Subscription as SubscriptionModel
 from django.contrib.auth.models import User as UserModel
@@ -70,5 +70,5 @@ class User(DjangoObject):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)
 

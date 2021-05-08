@@ -11,17 +11,30 @@ class Test(GraphQLTestCase):
         
         type ActionInfo {
           name: String!
+          parameters: [FieldInfo!]!
+          data: [FieldInfo!]!
+          return_type: String!
           permitted: Boolean!
           deny_reason: String
           retry_in: Duration
+          mutation: Boolean!
+          __str__: String!
         }
         
         scalar Duration
+        
+        type FieldInfo {
+          name: String!
+          typename: String!
+          default: String
+          __str__: String!
+        }
         
         type ObjectInfo {
           name: String!
           pk_field: String
           actions: [ActionInfo!]!
+          __str__: String!
         }
         
         type Query {
@@ -29,41 +42,65 @@ class Test(GraphQLTestCase):
           getNull: [Int]
           getListNullElemNonNull: [Int!]
           getListNonNullElemNull: [Int]!
+          __types: [TypeInfo!]!
           __objects: [ObjectInfo!]!
           __actions: [ActionInfo!]!
+        }
+        
+        type TypeInfo {
+          typename: String!
+          fields: [FieldInfo!]!
+          __str__: String!
         }
     """
 
     REF_META_SCHEMA = {
-      "data": {
-        "__objects": [],
-        "__actions": [
-          {
-            "name": "getNonNull",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          },
-          {
-            "name": "getNull",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          },
-          {
-            "name": "getListNullElemNonNull",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          },
-          {
-            "name": "getListNonNullElemNull",
-            "permitted": True,
-            "deny_reason": None,
-            "retry_in": None
-          }
-        ]
-      }
+        "data": {
+            "__types": [],
+            "__objects": [],
+            "__actions": [
+                {
+                    "name": "getNonNull",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "[Integer!]!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                },
+                {
+                    "name": "getNull",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "[Integer]",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                },
+                {
+                    "name": "getListNullElemNonNull",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "[Integer!]",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                },
+                {
+                    "name": "getListNonNullElemNull",
+                    "parameters": [],
+                    "data": [],
+                    "mutation": False,
+                    "return_type": "[Integer]!",
+                    "permitted": True,
+                    "deny_reason": None,
+                    "retry_in": None
+                }
+            ]
+        }
     }
 
     def test_request_non_null(self):

@@ -11,23 +11,37 @@ class Test(GraphQLTestCase):
         
         type ActionInfo {
           name: String!
+          parameters: [FieldInfo!]!
+          data: [FieldInfo!]!
+          return_type: String!
           permitted: Boolean!
           deny_reason: String
           retry_in: Duration
+          mutation: Boolean!
+          __str__: String!
         }
         
         scalar Duration
+        
+        type FieldInfo {
+          name: String!
+          typename: String!
+          default: String
+          __str__: String!
+        }
         
         type ObjectInfo {
           name: String!
           pk_field: String
           actions: [ActionInfo!]!
+          __str__: String!
         }
         
         type Query {
           TestObjectNonNullOnly: TestObject!
           TestObjectNonNullAndNull: TestObject!
           TestObjectAll: TestObject!
+          __types: [TypeInfo!]!
           __objects: [ObjectInfo!]!
           __actions: [ActionInfo!]!
         }
@@ -36,41 +50,78 @@ class Test(GraphQLTestCase):
           string_non_null: String!
           string_null: String
           string_default: String!
+          __str__: String!
           __actions: [ActionInfo!]!
         }
-
+        
+        type TypeInfo {
+          typename: String!
+          fields: [FieldInfo!]!
+          __str__: String!
+        }
     """
 
     REF_META_SCHEMA = {
-      "data": {
-        "__objects": [
-          {
-            "name": "TestObject",
-            "pk_field": None,
-            "actions": [
-              {
-                "name": "TestObjectNonNullOnly",
-                "permitted": True,
-                "deny_reason": None,
-                "retry_in": None
-              },
-              {
-                "name": "TestObjectNonNullAndNull",
-                "permitted": True,
-                "deny_reason": None,
-                "retry_in": None
-              },
-              {
-                "name": "TestObjectAll",
-                "permitted": True,
-                "deny_reason": None,
-                "retry_in": None
-              }
-            ]
-          }
-        ],
-        "__actions": []
-      }
+        "data": {
+            "__types": [
+                {
+                    "typename": "TestObject",
+                    "fields": [
+                        {
+                            "name": "string_non_null",
+                            "typename": "String!"
+                        },
+                        {
+                            "name": "string_null",
+                            "typename": "String"
+                        },
+                        {
+                            "name": "string_default",
+                            "typename": "String!"
+                        }
+                    ]
+                }
+            ],
+            "__objects": [
+                {
+                    "name": "TestObject",
+                    "pk_field": None,
+                    "actions": [
+                        {
+                            "name": "TestObjectNonNullOnly",
+                            "parameters": [],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "TestObject!",
+                            "permitted": True,
+                            "deny_reason": None,
+                            "retry_in": None
+                        },
+                        {
+                            "name": "TestObjectNonNullAndNull",
+                            "parameters": [],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "TestObject!",
+                            "permitted": True,
+                            "deny_reason": None,
+                            "retry_in": None
+                        },
+                        {
+                            "name": "TestObjectAll",
+                            "parameters": [],
+                            "data": [],
+                            "mutation": False,
+                            "return_type": "TestObject!",
+                            "permitted": True,
+                            "deny_reason": None,
+                            "retry_in": None
+                        }
+                    ]
+                }
+            ],
+            "__actions": []
+        }
     }
 
     def test_request_non_null_only(self):

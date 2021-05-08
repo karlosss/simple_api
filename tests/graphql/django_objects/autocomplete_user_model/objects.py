@@ -1,9 +1,9 @@
 from django.contrib.auth.models import User as UserModel
 
 from simple_api.adapters.graphql.graphql import GraphQLAdapter
+from simple_api.adapters.graphql.utils import build_patterns
 from simple_api.adapters.utils import generate
 from simple_api.django_object.django_object import DjangoObject
-from tests.graphql.graphql_test_utils import build_patterns
 
 
 class User(DjangoObject):
@@ -14,4 +14,4 @@ class User(DjangoObject):
 
 
 schema = generate(GraphQLAdapter)
-patterns = build_patterns(schema)
+patterns = build_patterns("api/", schema)
