@@ -22,7 +22,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "django==3.0.7",
+        "django==3.1.12",
         "graphene==2.1.8",
         "graphene-django==2.10.1",
     ],
